@@ -4,7 +4,13 @@
          xmlns="http://maven.apache.org/POM/4.0.0">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.wso2.carbon</groupId>
+    <parent>
+        <groupId>org.wso2</groupId>
+        <artifactId>wso2</artifactId>
+        <version>1</version>
+    </parent>
+
+    <groupId>org.wso2.carbon.transport</groupId>
     <artifactId>org.wso2.carbon.transport.http.netty</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 
@@ -12,38 +18,34 @@
     <name>Carbon Netty HTTP Transport</name>
     <description>Carbon HTTP Transport based on Netty</description>
 
-    <repositories>
-        <repository>
+    <scm>
+        <url>https://github.com/wso2/carbon-transports.git</url>
+        <developerConnection>scm:git:https://github.com/wso2/carbon-transports.git</developerConnection>
+        <connection>scm:git:https://github.com/wso2/carbon-transports.git</connection>
+        <tag>HEAD</tag>
+    </scm>
+
+    <pluginRepositories>
+        <pluginRepository>
             <id>wso2-nexus</id>
-            <name>WSO2 internal Repository</name>
+            <name>WSO2 Internal Repository</name>
             <url>http://maven.wso2.org/nexus/content/groups/wso2-public/</url>
             <releases>
                 <enabled>true</enabled>
                 <updatePolicy>daily</updatePolicy>
                 <checksumPolicy>ignore</checksumPolicy>
             </releases>
-        </repository>
-    </repositories>
-
-    <pluginRepositories>
-        <pluginRepository>
-            <id>wso2-maven2-repository-1</id>
-            <url>http://dist.wso2.org/maven2</url>
-        </pluginRepository>
-        <pluginRepository>
-            <id>wso2-maven2-repository-2</id>
-            <url>http://dist.wso2.org/snapshots/maven2</url>
         </pluginRepository>
     </pluginRepositories>
 
     <dependencies>
         <dependency>
-            <groupId>org.eclipse.osgi</groupId>
+            <groupId>org.wso2.eclipse.osgi</groupId>
             <artifactId>org.eclipse.osgi</artifactId>
             <version>${equinox.osgi.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.osgi</groupId>
+            <groupId>org.wso2.eclipse.osgi</groupId>
             <artifactId>org.eclipse.osgi.services</artifactId>
             <version>${equinox.osgi.services.version}</version>
         </dependency>
@@ -80,6 +82,13 @@
     </dependencies>
 
     <build>
+        <extensions>
+            <extension>
+                <groupId>org.apache.maven.wagon</groupId>
+                <artifactId>wagon-ssh</artifactId>
+                <version>${maven.wagon.ssh.version}</version>
+            </extension>
+        </extensions>
         <pluginManagement>
             <plugins>
                 <plugin>
@@ -91,10 +100,10 @@
                             <phase>validate</phase>
                             <configuration>
                                 <configLocation>
-                                    https://raw.githubusercontent.com/wso2/carbon-kernel/5.0.x/checkstyle.xml
+                                    https://raw.githubusercontent.com/wso2/code-quality-tools/master/checkstyle/checkstyle.xml
                                 </configLocation>
                                 <suppressionsLocation>
-                                    https://raw.githubusercontent.com/wso2/carbon-kernel/5.0.x/suppressions.xml
+                                    https://raw.githubusercontent.com/wso2/code-quality-tools/master/checkstyle/suppressions.xml
                                 </suppressionsLocation>
                                 <encoding>UTF-8</encoding>
                                 <consoleOutput>true</consoleOutput>
@@ -193,6 +202,18 @@
                 <artifactId>findbugs-maven-plugin</artifactId>
                 <version>${maven.findbugsplugin.version}</version>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <configuration>
+                    <preparationGoals>clean install</preparationGoals>
+                    <autoVersionSubmodules>false</autoVersionSubmodules>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+            </plugin>
         </plugins>
     </build>
 
@@ -200,16 +221,16 @@
         <!-- Maven plugins -->
         <maven.checkstyleplugin.version>2.16</maven.checkstyleplugin.version>
         <maven.findbugsplugin.version>3.0.2</maven.findbugsplugin.version>
+        <maven.wagon.ssh.version>2.1</maven.wagon.ssh.version>
 
         <!-- Dependencies -->
         <netty.version>4.0.30.Final</netty.version>
-        <equinox.osgi.version>3.9.1.v20130814-1242</equinox.osgi.version>
-        <equinox.osgi.services.version>3.3.100.v20130513-1956</equinox.osgi.services.version>
+        <equinox.osgi.version>3.10.2.v20150203-1939</equinox.osgi.version>
+        <equinox.osgi.services.version>3.4.0.v20140312-2051</equinox.osgi.services.version>
         <org.wso2.carbon.core.version>5.0.0-m4</org.wso2.carbon.core.version>
-        <osgi.framework.import.version.range>[1.7.0, 1.8.0)</osgi.framework.import.version.range>
-        <osgi.service.tracker.import.version.range>[1.5.1, 1.6.0)</osgi.service.tracker.import.version.range>
+        <osgi.framework.import.version.range>[1.8.0, 2.0.0)</osgi.framework.import.version.range>
+        <osgi.service.tracker.import.version.range>[1.5.1, 2.0.0)</osgi.service.tracker.import.version.range>
         <slf4j.version>1.7.5</slf4j.version>
     </properties>
 
 </project>
-

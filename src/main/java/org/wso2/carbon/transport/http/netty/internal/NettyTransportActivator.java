@@ -33,10 +33,20 @@ import java.util.Set;
  */
 public class NettyTransportActivator implements BundleActivator {
 
-    @Override
-    public void start(BundleContext bundleContext) throws Exception {
-        for (NettyListener listener : createNettyListeners()) {
+    @Override public void start(BundleContext bundleContext) throws Exception {
+        Set<NettyListener> listeners = createNettyListeners();
+        for (NettyListener listener : listeners) {
             bundleContext.registerService(CarbonTransport.class, listener, null);
+            if (listeners.size() == 1) {
+                new Thread(() -> {
+                    while (true) {
+                        if (NettyTransportDataHolder.getInstance().getChannelInitializer(listener.getId()) != null) {
+                            listener.start();
+                            break;
+                        }
+                    }
+                }).start();
+            }
         }
     }
 
@@ -55,9 +65,7 @@ public class NettyTransportActivator implements BundleActivator {
         return listeners;
     }
 
-
-    @Override
-    public void stop(BundleContext bundleContext) throws Exception {
+    @Override public void stop(BundleContext bundleContext) throws Exception {
 
     }
 }
