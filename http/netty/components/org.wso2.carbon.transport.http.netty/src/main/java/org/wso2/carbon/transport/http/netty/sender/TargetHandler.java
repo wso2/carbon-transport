@@ -31,7 +31,6 @@ import org.wso2.carbon.messaging.FaultHandler;
 import org.wso2.carbon.messaging.exceptions.EndPointTimeOut;
 import org.wso2.carbon.transport.http.netty.NettyCarbonMessage;
 import org.wso2.carbon.transport.http.netty.common.Util;
-import org.wso2.carbon.transport.http.netty.common.disruptor.publisher.CarbonEventPublisher;
 import org.wso2.carbon.transport.http.netty.internal.NettyTransportContextHolder;
 import org.wso2.carbon.transport.http.netty.sender.channel.TargetChannel;
 import org.wso2.carbon.transport.http.netty.sender.channel.pool.ConnectionManager;
@@ -75,9 +74,11 @@ public class TargetHandler extends ReadTimeoutHandler {
 
             cMsg = setUpCarbonMessage(ctx, msg);
 
+
             if (cMsg.getHeaders().get(Constants.HTTP_CONTENT_LENGTH) != null
                     || cMsg.getHeaders().get(Constants.HTTP_TRANSFER_ENCODING) != null) {
-                ringBuffer.publishEvent(new CarbonEventPublisher(cMsg));
+              //  ringBuffer.publishEvent(new CarbonEventPublisher(cMsg));
+                callback.done(cMsg);
             }
         } else {
             if (cMsg != null) {
@@ -92,7 +93,8 @@ public class TargetHandler extends ReadTimeoutHandler {
                         && cMsg.getHeaders().get(Constants.HTTP_TRANSFER_ENCODING) == null) {
                         cMsg.getHeaders().put(Constants.HTTP_CONTENT_LENGTH,
                                 String.valueOf(((NettyCarbonMessage) cMsg).getMessageBodyLength()));
-                        ringBuffer.publishEvent(new CarbonEventPublisher(cMsg));
+                       // ringBuffer.publishEvent(new CarbonEventPublisher(cMsg));
+                        callback.done(cMsg);
                     }
                 } else {
                     HttpContent httpContent = (DefaultHttpContent) msg;
@@ -111,6 +113,7 @@ public class TargetHandler extends ReadTimeoutHandler {
 
     public void setCallback(CarbonCallback callback) {
         this.callback = callback;
+        this.callback.workInSeparateThread(true);
     }
 
     public void setRingBuffer(RingBuffer ringBuffer) {
@@ -143,8 +146,9 @@ public class TargetHandler extends ReadTimeoutHandler {
                 faultHandler.handleFault("504", new EndPointTimeOut(payload), incomingMsg, callback);
                 incomingMsg.getFaultHandlerStack().push(faultHandler);
             } else {
+                callback.done(createErrorMessage(payload));
 
-                ringBuffer.publishEvent(new CarbonEventPublisher(createErrorMessage(payload)));
+              //  ringBuffer.publishEvent(new CarbonEventPublisher(createErrorMessage(payload)));
             }
         }
     }

@@ -31,7 +31,6 @@ import org.wso2.carbon.transport.http.netty.common.HttpRoute;
 import org.wso2.carbon.transport.http.netty.common.Util;
 import org.wso2.carbon.transport.http.netty.common.disruptor.config.DisruptorConfig;
 import org.wso2.carbon.transport.http.netty.common.disruptor.config.DisruptorFactory;
-import org.wso2.carbon.transport.http.netty.common.disruptor.publisher.CarbonEventPublisher;
 import org.wso2.carbon.transport.http.netty.internal.NettyTransportContextHolder;
 import org.wso2.carbon.transport.http.netty.sender.channel.TargetChannel;
 import org.wso2.carbon.transport.http.netty.sender.channel.pool.ConnectionManager;
@@ -81,11 +80,16 @@ public class SourceHandler extends ChannelInboundHandlerAdapter {
             cMsg = (NettyCarbonMessage) setUPCarbonMessage(msg);
             cMsg.setProperty(org.wso2.carbon.transport.http.netty.common.Constants.IS_DISRUPTOR_ENABLE,
                              "true");
+            ResponseCallback responseCallback = new ResponseCallback(this.ctx);
+            cMsg.setProperty(Constants.CALL_BACK, responseCallback);
             if (disruptorConfig.isShared()) {
                 cMsg.setProperty(Constants.DISRUPTOR, disruptor);
             }
             //todo executeRequestContinuationValidator
-            disruptor.publishEvent(new CarbonEventPublisher(cMsg));
+
+            NettyTransportContextHolder.getInstance().getMessageProcessor().receive(cMsg, responseCallback);
+            
+      //      disruptor.publishEvent(new CarbonEventPublisher(cMsg));
         } else {
             if (cMsg != null) {
                 if (msg instanceof HttpContent) {
@@ -145,8 +149,6 @@ public class SourceHandler extends ChannelInboundHandlerAdapter {
         NettyTransportContextHolder.getInstance().getHandlerExecutor().executeAtSourceRequestReceiving(cMsg);
         cMsg.setProperty(Constants.PORT, ((InetSocketAddress) ctx.channel().remoteAddress()).getPort());
         cMsg.setProperty(Constants.HOST, ((InetSocketAddress) ctx.channel().remoteAddress()).getHostName());
-        ResponseCallback responseCallback = new ResponseCallback(this.ctx);
-        cMsg.setProperty(Constants.CALL_BACK, responseCallback);
         HttpRequest httpRequest = (HttpRequest) msg;
 
         cMsg.setProperty(Constants.TO, httpRequest.getUri());
