@@ -123,14 +123,14 @@ public class NettyListener extends TransportListener {
         }
 
         List<Parameter> parameters = nettyConfig.getParameters();
+        Map<String, String> paramMap = new HashMap<>();
         if (parameters != null && !parameters.isEmpty()) {
-            Map<String, String> paramMap = new HashMap<>(parameters.size());
+
             for (Parameter parameter : parameters) {
                 paramMap.put(parameter.getName(), parameter.getValue());
             }
-
-            channelInitializer.setup(paramMap);
         }
+        channelInitializer.setup(paramMap);
         NettyTransportContextHolder.getInstance().addNettyChannelInitializer(nettyConfig.getId(), channelInitializer);
     }
 
@@ -187,6 +187,9 @@ public class NettyListener extends TransportListener {
     public boolean listen(String host, int port) {
         try {
             //TODO check for host verification
+            if (host.equalsIgnoreCase("localhost") || host.equals("127.0.0.1")) {
+                host = "0.0.0.0";
+            }
             ChannelFuture future = bootstrap.bind(new InetSocketAddress(host, port)).sync();
             channelFutureMap.put(port, future);
             log.info("Netty Listener starting on host  " + host + " and port " + port);
@@ -210,6 +213,7 @@ public class NettyListener extends TransportListener {
                                                                keyStorePass, keyStoreFile,
                                                                trustoreFile, trustorePass);
             sslConfigMap.put(id, sslConfig);
+            listen(host, port);
         }
 
 

@@ -86,8 +86,4 @@ public class ResponseCallback implements CarbonCallback {
         }
     }
 
-    @Override
-    public void workInSeparateThread(boolean b) {
-        return;
-    }
 }

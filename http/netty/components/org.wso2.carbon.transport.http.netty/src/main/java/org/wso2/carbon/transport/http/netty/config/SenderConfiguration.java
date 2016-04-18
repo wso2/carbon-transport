@@ -41,8 +41,6 @@ public class SenderConfiguration {
 
     public static final String DEFAULT_KEY = "netty";
 
-    private boolean disruptorOn = true;
-
     private ExecutorService executorService;
 
 
@@ -163,14 +161,6 @@ public class SenderConfiguration {
             sslConfig.setTrustStore(trustStore).setTrustStorePass(trustStorePass);
 
         return sslConfig;
-    }
-
-    public boolean isDisruptorOn() {
-        return disruptorOn;
-    }
-
-    public void setDisruptorOn(boolean disruptorOn) {
-        this.disruptorOn = disruptorOn;
     }
 
 

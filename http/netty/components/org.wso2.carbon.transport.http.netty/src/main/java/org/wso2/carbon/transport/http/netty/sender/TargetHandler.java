@@ -14,7 +14,6 @@
  */
 package org.wso2.carbon.transport.http.netty.sender;
 
-import com.lmax.disruptor.RingBuffer;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.DefaultHttpContent;
 import io.netty.handler.codec.http.HttpContent;
@@ -47,7 +46,6 @@ public class TargetHandler extends ReadTimeoutHandler {
     private static Logger log = LoggerFactory.getLogger(TargetHandler.class);
 
     protected CarbonCallback callback;
-    private RingBuffer ringBuffer;
     protected CarbonMessage cMsg;
     protected ConnectionManager connectionManager;
     protected TargetChannel targetChannel;
@@ -78,7 +76,9 @@ public class TargetHandler extends ReadTimeoutHandler {
             if (cMsg.getHeaders().get(Constants.HTTP_CONTENT_LENGTH) != null
                     || cMsg.getHeaders().get(Constants.HTTP_TRANSFER_ENCODING) != null) {
               //  ringBuffer.publishEvent(new CarbonEventPublisher(cMsg));
-                callback.done(cMsg);
+               // callback.done(cMsg);
+
+                NettyTransportContextHolder.getInstance().getMessageProcessor().receive(cMsg, callback);
             }
         } else {
             if (cMsg != null) {
@@ -94,7 +94,7 @@ public class TargetHandler extends ReadTimeoutHandler {
                         cMsg.getHeaders().put(Constants.HTTP_CONTENT_LENGTH,
                                 String.valueOf(((NettyCarbonMessage) cMsg).getMessageBodyLength()));
                        // ringBuffer.publishEvent(new CarbonEventPublisher(cMsg));
-                        callback.done(cMsg);
+                        NettyTransportContextHolder.getInstance().getMessageProcessor().receive(cMsg, callback);
                     }
                 } else {
                     HttpContent httpContent = (DefaultHttpContent) msg;
@@ -113,12 +113,8 @@ public class TargetHandler extends ReadTimeoutHandler {
 
     public void setCallback(CarbonCallback callback) {
         this.callback = callback;
-        this.callback.workInSeparateThread(true);
     }
 
-    public void setRingBuffer(RingBuffer ringBuffer) {
-        this.ringBuffer = ringBuffer;
-    }
 
     public void setConnectionManager(ConnectionManager connectionManager) {
         this.connectionManager = connectionManager;
@@ -133,7 +129,7 @@ public class TargetHandler extends ReadTimeoutHandler {
     }
 
     @Override
-    protected void readTimedOut(ChannelHandlerContext ctx) {
+    protected void readTimedOut(ChannelHandlerContext ctx) throws Exception {
 
         ctx.channel().close();
 
@@ -146,8 +142,8 @@ public class TargetHandler extends ReadTimeoutHandler {
                 faultHandler.handleFault("504", new EndPointTimeOut(payload), incomingMsg, callback);
                 incomingMsg.getFaultHandlerStack().push(faultHandler);
             } else {
-                callback.done(createErrorMessage(payload));
-
+                NettyTransportContextHolder.getInstance().getMessageProcessor().
+                           receive(createErrorMessage(payload), callback);
               //  ringBuffer.publishEvent(new CarbonEventPublisher(createErrorMessage(payload)));
             }
         }
