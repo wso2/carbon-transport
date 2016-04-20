@@ -69,11 +69,6 @@ public class ListenerConfiguration {
     private int workerThreadPoolSize = Runtime.getRuntime().availableProcessors() * 2;
 
 
-
-
-    @XmlAttribute
-    private String enableDisruptor;
-
     @XmlAttribute
     private String scheme = "http";
 
@@ -203,15 +198,7 @@ public class ListenerConfiguration {
     }
 
 
-    public String getEnableDisruptor() {
-        return enableDisruptor;
-    }
-
-    public void setEnableDisruptor(String enableDisruptor) {
-        this.enableDisruptor = enableDisruptor;
-    }
-
-    public ExecutorService getExecutorService() {
+       public ExecutorService getExecutorService() {
         return executorService;
     }
 }

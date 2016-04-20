@@ -16,7 +16,6 @@
 package org.wso2.carbon.transport.http.netty.sender.channel.pool;
 
 
-import com.lmax.disruptor.RingBuffer;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.EventLoopGroup;
@@ -122,14 +121,13 @@ public class ConnectionManager {
      * @param httpRequest         http request
      * @param carbonMessage       carbon message
      * @param carbonCallback      carbon call back
-     * @param ringBuffer          ring buffer
      * @return TargetChannel
      * @throws Exception to notify any errors occur during retrieving the target channel
      */
     public TargetChannel getTargetChannel(HttpRoute httpRoute, SourceHandler sourceHandler,
                                           SenderConfiguration senderConfiguration,
                                           HttpRequest httpRequest, CarbonMessage carbonMessage,
-                                          CarbonCallback carbonCallback, RingBuffer ringBuffer)
+                                          CarbonCallback carbonCallback)
                throws Exception {
         Channel channel = null;
         TargetChannel targetChannel = null;
@@ -149,7 +147,7 @@ public class ConnectionManager {
                 executorService.submit(new ClientRequestWorker(httpRoute, sourceHandler, senderConfiguration,
                                                                httpRequest, carbonMessage,
                                                                carbonCallback, true,
-                                                               pool, this, ringBuffer));
+                                                               pool, this));
             } catch (Exception e) {
                 String msg = "Cannot borrow free channel from pool ";
                 log.error(msg, e);
@@ -162,7 +160,7 @@ public class ConnectionManager {
                            execute(new ClientRequestWorker(httpRoute, sourceHandler, senderConfiguration,
                                                            httpRequest, carbonMessage,
                                                            carbonCallback, false,
-                                                           null, this, ringBuffer));
+                                                           null, this));
             } else {
                 targetChannel = sourceHandler.getChannel(httpRoute);
                 Channel tempc = targetChannel.getChannel();
@@ -170,7 +168,7 @@ public class ConnectionManager {
                     executorService.
                                execute(new ClientRequestWorker(httpRoute, sourceHandler, senderConfiguration,
                                                                httpRequest, carbonMessage,
-                                                               carbonCallback, false, null, this, ringBuffer));
+                                                               carbonCallback, false, null, this));
                     targetChannel = null;
                     sourceHandler.removeChannelFuture(httpRoute);
                 }

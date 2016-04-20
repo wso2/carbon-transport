@@ -16,7 +16,6 @@
 
 package org.wso2.carbon.transport.http.netty.sender;
 
-import com.lmax.disruptor.RingBuffer;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
@@ -52,13 +51,12 @@ public class ClientRequestWorker implements Runnable {
     private CarbonCallback carbonCallback;
     private GenericObjectPool genericObjectPool;
     private ConnectionManager connectionManager;
-    private RingBuffer ringBuffer;
+
 
     public ClientRequestWorker(HttpRoute httpRoute, SourceHandler sourceHandler, SenderConfiguration senderConfig,
                                HttpRequest httpRequest, CarbonMessage carbonMessage, CarbonCallback carbonCallback,
                                boolean globalEndpointPooling, GenericObjectPool genericObjectPool,
-                               ConnectionManager connectionManager,
-                               RingBuffer ringBuffer) {
+                               ConnectionManager connectionManager) {
         this.globalEndpointPooling = globalEndpointPooling;
         this.httpRequest = httpRequest;
         this.sourceHandler = sourceHandler;
@@ -68,7 +66,6 @@ public class ClientRequestWorker implements Runnable {
         this.httpRoute = httpRoute;
         this.genericObjectPool = genericObjectPool;
         this.connectionManager = connectionManager;
-        this.ringBuffer = ringBuffer;
     }
 
     @Override
@@ -123,7 +120,6 @@ public class ClientRequestWorker implements Runnable {
             targetChannel.setCorrelatedSource(sourceHandler);
             targetChannel.getTargetHandler().setCallback(carbonCallback);
             targetChannel.getTargetHandler().setIncomingMsg(carbonMessage);
-            targetChannel.getTargetHandler().setRingBuffer(ringBuffer);
             targetChannel.getTargetHandler().setTargetChannel(targetChannel);
             targetChannel.getTargetHandler().setConnectionManager(connectionManager);
 
