@@ -70,6 +70,7 @@ public class SourceHandler extends ChannelInboundHandlerAdapter {
 
             cMsg = (NettyCarbonMessage) setUPCarbonMessage(msg);
 
+
             ResponseCallback responseCallback = new ResponseCallback(this.ctx);
             cMsg.setProperty(Constants.CALL_BACK, responseCallback);
 
