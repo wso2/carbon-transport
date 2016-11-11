@@ -44,7 +44,7 @@ public class ResponseCallback implements CarbonCallback {
 
     private ChannelHandlerContext ctx;
 
-    private static final Logger LOG = LoggerFactory.getLogger(ResponseCallback.class);
+    private static final Logger logger = LoggerFactory.getLogger(ResponseCallback.class);
     private static final String HTTP_CONNECTION_CLOSE = "close";
 
     public ResponseCallback(ChannelHandlerContext channelHandlerContext) {
@@ -113,7 +113,7 @@ public class ResponseCallback implements CarbonCallback {
                 cMsg.setEndOfMsgAdded(true);
                 cMsg.getHeaders().remove(Constants.HTTP_CONTENT_LENGTH);
             } else {
-                LOG.error("Message is already built but cannot find the MessageDataSource");
+                logger.error("Message is already built but cannot find the MessageDataSource");
             }
         }
         if (cMsg.getHeader(Constants.HTTP_TRANSFER_ENCODING) == null
