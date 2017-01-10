@@ -62,7 +62,7 @@ public class HTTPTransportListener extends TransportListener {
     //Map used for cache listener configurations
     private Map<String, ListenerConfiguration> listenerConfigurationMap = new HashMap<>();
     //Map used for  map listener configurations with host and post as key for used in channel initializer
-    private Map<String, ListenerConfiguration> listenerConfigMapWithHostPort = new HashMap<>();
+    private Map<String, ListenerConfiguration> listenerConfigMapWithPort = new HashMap<>();
 
     private Map<String, SSLConfig> sslConfigMap = new ConcurrentHashMap<>();
 
@@ -87,19 +87,9 @@ public class HTTPTransportListener extends TransportListener {
         listenerConfigurationMap = listenerConfigurationSet.stream()
                 .collect(Collectors.toMap(ListenerConfiguration::getId, config -> config));
         listenerConfigurationSet.forEach(config -> {
-            String host = config.getHost();
             int port = config.getPort();
-            String id = host + ":" + port;
-            listenerConfigMapWithHostPort.put(id, config);
-            if (host.equals(Constants.DEFAULT_ADDRESS) || host.equals(Constants.LOCALHOST) || host
-                    .equals(Constants.LOOP_BACK_ADDRESS)) {
-                id = Constants.LOCALHOST + ":" + port;
-                listenerConfigMapWithHostPort.put(id, config);
-                id = Constants.LOOP_BACK_ADDRESS + ":" + port;
-                listenerConfigMapWithHostPort.put(id, config);
-                id = Constants.DEFAULT_ADDRESS + ":" + port;
-                listenerConfigMapWithHostPort.put(id, config);
-            }
+            String id = String.valueOf(port);
+            listenerConfigMapWithPort.put(id, config);
         });
         Iterator itr = listenerConfigurationSet.iterator();
         if (itr.hasNext()) {
@@ -176,7 +166,7 @@ public class HTTPTransportListener extends TransportListener {
 
     //Channel Initializer is responsible for create channel pipeline
     private void addChannelInitializer() {
-        CarbonHTTPServerInitializer handler = new CarbonHTTPServerInitializer(listenerConfigMapWithHostPort);
+        CarbonHTTPServerInitializer handler = new CarbonHTTPServerInitializer(listenerConfigMapWithPort);
         handler.setSslConfig(defaultListenerConfig.getSslConfig());
         handler.setSslConfigMap(sslConfigMap);
         List<Parameter> parameters = defaultListenerConfig.getParameters();
