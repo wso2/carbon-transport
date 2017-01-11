@@ -141,27 +141,15 @@ public class HTTPTransportListener extends TransportListener {
         bootstrap.childOption(ChannelOption.SO_SNDBUF, serverBootstrapConfiguration.getSendBufferSize());
         log.debug("Netty Server Socket SO_SNDBUF " + serverBootstrapConfiguration.getSendBufferSize());
 
-        try {
-            ChannelFuture future = bootstrap
-                    .bind(new InetSocketAddress(defaultListenerConfig.getHost(), defaultListenerConfig.getPort()))
-                    .sync();
-            if (future.isSuccess()) {
-                TransportListenerManager artifactDeployer = HTTPTransportContextHolder.getInstance().getManager();
-                if (artifactDeployer != null) {
-                    artifactDeployer.registerTransportListener(this);
-                }
-                if (defaultListenerConfig.getSslConfig() == null) {
-                    log.info("HTTP Listener starting on port " + defaultListenerConfig.getPort());
-                } else {
-                    log.info("HTTPS Listener starting on port " + defaultListenerConfig.getPort());
-                }
-            } else {
-                log.error("HTTP/S Listener cannot start on port " + defaultListenerConfig.getPort());
-            }
-
-        } catch (InterruptedException e) {
-            log.error("HTTP/S Listener cannot start on port " + defaultListenerConfig.getPort(), e);
+        if (defaultListenerConfig.isBindOnStartup()) {
+            bindInterface(defaultListenerConfig);
         }
+
+        TransportListenerManager artifactDeployer = HTTPTransportContextHolder.getInstance().getManager();
+        if (artifactDeployer != null) {
+            artifactDeployer.registerTransportListener(this);
+        }
+
     }
 
     //Channel Initializer is responsible for create channel pipeline
@@ -224,49 +212,56 @@ public class HTTPTransportListener extends TransportListener {
 
     @Override
     public boolean bind(String interfaceId) {
-        try {
-            ListenerConfiguration listenerConfiguration = listenerConfigurationMap.get(interfaceId);
-            if (listenerConfiguration != null) {
-                String id = listenerConfiguration.getHost() + ":" + listenerConfiguration.getPort();
-
-                SSLConfig sslConfig = listenerConfiguration.getSslConfig();
-                if (sslConfig != null) {
-                    sslConfigMap.put(id, sslConfig);
-                    if (listenerConfiguration.getHost().equals(Constants.DEFAULT_ADDRESS) || listenerConfiguration
-                            .getHost().equals(Constants.LOCALHOST) || listenerConfiguration.getHost()
-                            .equals(Constants.LOOP_BACK_ADDRESS)) {
-                        id = Constants.LOCALHOST + ":" + listenerConfiguration.getPort();
-                        sslConfigMap.put(id, sslConfig);
-                        id = Constants.LOOP_BACK_ADDRESS + ":" + listenerConfiguration.getPort();
-                        sslConfigMap.put(id, sslConfig);
-                        id = Constants.DEFAULT_ADDRESS + ":" + listenerConfiguration.getPort();
-                        sslConfigMap.put(id, sslConfig);
-                    }
-
-                }
-
-                if (!interfaceId.equals(defaultListenerConfig.getId())) {
-                    ChannelFuture future = bootstrap.bind(new InetSocketAddress(listenerConfiguration.getHost(),
-                            listenerConfiguration.getPort())).sync();
-                    if (future.isSuccess()) {
-                        channelFutureMap.put(listenerConfiguration.getPort(), future);
-                        if (listenerConfiguration.getSslConfig() == null) {
-                            log.info("HTTP Interface " + interfaceId + " starting on host  " + listenerConfiguration
-                                    .getHost() + " and port " + listenerConfiguration.getPort());
-                        } else {
-                            log.info("HTTPS Interface " + interfaceId + " starting on host  " + listenerConfiguration
-                                    .getHost() + " and port " + listenerConfiguration.getPort());
-                        }
-                        return true;
-                    } else {
-                        log.error("Cannot bind port for host " + listenerConfiguration.getHost() + " port "
-                                + listenerConfiguration.getPort());
-                    }
-                } else {
-                    log.debug("Interface Id  equals to default interface hence using default interface");
-                }
+        ListenerConfiguration listenerConfiguration = listenerConfigurationMap.get(interfaceId);
+        if (listenerConfiguration != null) {
+            if (!listenerConfiguration.isBindOnStartup()) {
+                return bindInterface(listenerConfiguration);
             } else {
-                log.error("Cannot find defined Listener interface  for Listener id " + interfaceId);
+                log.debug("Interface is already binned at the startup, hence ignoring");
+                return true;
+            }
+        } else {
+            log.error("Cannot find defined Listener interface  for Listener id " + interfaceId);
+        }
+        return false;
+    }
+
+    private boolean bindInterface(ListenerConfiguration listenerConfiguration) {
+        try {
+
+            String id = listenerConfiguration.getHost() + ":" + listenerConfiguration.getPort();
+
+            SSLConfig sslConfig = listenerConfiguration.getSslConfig();
+            if (sslConfig != null) {
+                sslConfigMap.put(id, sslConfig);
+                if (listenerConfiguration.getHost().equals(Constants.DEFAULT_ADDRESS) || listenerConfiguration
+                        .getHost().equals(Constants.LOCALHOST) || listenerConfiguration.getHost()
+                            .equals(Constants.LOOP_BACK_ADDRESS)) {
+                    id = Constants.LOCALHOST + ":" + listenerConfiguration.getPort();
+                    sslConfigMap.put(id, sslConfig);
+                    id = Constants.LOOP_BACK_ADDRESS + ":" + listenerConfiguration.getPort();
+                    sslConfigMap.put(id, sslConfig);
+                    id = Constants.DEFAULT_ADDRESS + ":" + listenerConfiguration.getPort();
+                    sslConfigMap.put(id, sslConfig);
+                }
+
+            }
+
+            ChannelFuture future = bootstrap.bind(new InetSocketAddress(listenerConfiguration.getHost(),
+                                                                        listenerConfiguration.getPort())).sync();
+            if (future.isSuccess()) {
+                channelFutureMap.put(listenerConfiguration.getPort(), future);
+                if (listenerConfiguration.getSslConfig() == null) {
+                    log.info("HTTP Interface " + listenerConfiguration.getId() + " starting on host  " +
+                             listenerConfiguration.getHost() + " and port " + listenerConfiguration.getPort());
+                } else {
+                    log.info("HTTPS Interface " + listenerConfiguration.getId() + " starting on host  " +
+                             listenerConfiguration.getHost() + " and port " + listenerConfiguration.getPort());
+                }
+                return true;
+            } else {
+                log.error("Cannot bind port for host " + listenerConfiguration.getHost() + " port "
+                          + listenerConfiguration.getPort());
             }
 
         } catch (InterruptedException e) {
