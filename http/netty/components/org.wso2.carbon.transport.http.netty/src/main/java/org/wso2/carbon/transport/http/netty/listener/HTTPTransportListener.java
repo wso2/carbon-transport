@@ -61,7 +61,7 @@ public class HTTPTransportListener extends TransportListener {
     private Map<Integer, ChannelFuture> channelFutureMap = new ConcurrentHashMap<>();
     //Map used for cache listener configurations
     private Map<String, ListenerConfiguration> listenerConfigurationMap = new HashMap<>();
-    //Map used for  map listener configurations with host and post as key for used in channel initializer
+    //Map used for  map listener configurations with port as key for used in channel initializer
     private Map<String, ListenerConfiguration> listenerConfigMapWithPort = new HashMap<>();
 
     private Map<String, SSLConfig> sslConfigMap = new ConcurrentHashMap<>();
@@ -229,22 +229,11 @@ public class HTTPTransportListener extends TransportListener {
     private boolean bindInterface(ListenerConfiguration listenerConfiguration) {
         try {
 
-            String id = listenerConfiguration.getHost() + ":" + listenerConfiguration.getPort();
+            String id = String.valueOf(listenerConfiguration.getPort());
 
             SSLConfig sslConfig = listenerConfiguration.getSslConfig();
             if (sslConfig != null) {
                 sslConfigMap.put(id, sslConfig);
-                if (listenerConfiguration.getHost().equals(Constants.DEFAULT_ADDRESS) || listenerConfiguration
-                        .getHost().equals(Constants.LOCALHOST) || listenerConfiguration.getHost()
-                            .equals(Constants.LOOP_BACK_ADDRESS)) {
-                    id = Constants.LOCALHOST + ":" + listenerConfiguration.getPort();
-                    sslConfigMap.put(id, sslConfig);
-                    id = Constants.LOOP_BACK_ADDRESS + ":" + listenerConfiguration.getPort();
-                    sslConfigMap.put(id, sslConfig);
-                    id = Constants.DEFAULT_ADDRESS + ":" + listenerConfiguration.getPort();
-                    sslConfigMap.put(id, sslConfig);
-                }
-
             }
 
             ChannelFuture future = bootstrap.bind(new InetSocketAddress(listenerConfiguration.getHost(),
@@ -274,7 +263,7 @@ public class HTTPTransportListener extends TransportListener {
     public boolean unBind(String interfaceId) {
         ListenerConfiguration listenerConfiguration = listenerConfigurationMap.get(interfaceId);
         if (listenerConfiguration != null && !defaultListenerConfig.getId().equals(listenerConfiguration.getId())) {
-            String id = listenerConfiguration.getHost() + ":" + listenerConfiguration.getPort();
+            String id = String.valueOf(listenerConfiguration.getPort());
             //Remove cached channels and close them.
             ChannelFuture future = channelFutureMap.remove(listenerConfiguration.getPort());
             if (future != null) {
