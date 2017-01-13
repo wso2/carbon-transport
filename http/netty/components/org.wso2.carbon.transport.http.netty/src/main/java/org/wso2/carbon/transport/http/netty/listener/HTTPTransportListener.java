@@ -89,6 +89,8 @@ public class HTTPTransportListener extends TransportListener {
         listenerConfigurationSet.forEach(config -> {
             int port = config.getPort();
             String id = String.valueOf(port);
+            //TODO currently only the port is used as the key, may be need to improve with host + port
+            //TODO to support foo.com:9090,  bar.com:9090 with two different configuration.
             listenerConfigMapWithPort.put(id, config);
         });
         Iterator itr = listenerConfigurationSet.iterator();
