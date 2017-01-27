@@ -17,6 +17,8 @@
  */
 package org.wso2.carbon.transport.jms.utils;
 
+import java.util.HashMap;
+import java.util.Map;
 import javax.xml.namespace.QName;
 
 /**
@@ -31,19 +33,28 @@ public class JMSConstants {
         QUEUE, TOPIC
     }
 
-    ;
+    public static final String PROTOCOL_JMS = "JMS";
 
     public static final String TOPIC_PREFIX = "topic.";
     public static final String QUEUE_PREFIX = "queue.";
 
     public static final String CONNECTION_FACTORY_JNDI_NAME = "transport.jms.ConnectionFactoryJNDIName";
     public static final String CONNECTION_FACTORY_TYPE = "transport.jms.ConnectionFactoryType";
+
     public static final String DESTINATION_NAME = "transport.jms.Destination";
     public static final String DESTINATION_TYPE_QUEUE = "queue";
     public static final String DESTINATION_TYPE_TOPIC = "topic";
     public static final String SESSION_TRANSACTED = "transport.jms.SessionTransacted";
     public static final String SESSION_ACK = "transport.jms.SessionAcknowledgement";
 
+    /**
+     * Parameters from the user
+     */
+    public static final String CONNECTION_FACTORY_JNDI_PARAM_NAME = "ConnectionFactoryJNDIName";
+    public static final String CONNECTION_FACTORY_TYPE_PARAM_NAME = "ConnectionFactoryType";
+    public static final String DESTINATION_PARAM_NAME = "Destination";
+    public static final String NAMING_FACTORY_INITIAL_PARAM_NAME = "FactoryInitial";
+    public static final String PROVIDER_URL_PARAM_NAME = "ProviderUrl";
 
     /**
      * Namespace for JMS map payload representation
@@ -83,6 +94,20 @@ public class JMSConstants {
      * A MessageContext property or client Option indicating the JMS message type
      */
     public static final String JMS_MESSAGE_TYPE = "JMS_MESSAGE_TYPE";
+
+    /**
+     * Mapping between parameters and actual values
+     */
+    public static final Map<String, String> MAPPING_PARAMETERS;
+
+    static {
+        MAPPING_PARAMETERS = new HashMap<>();
+        MAPPING_PARAMETERS.put(CONNECTION_FACTORY_JNDI_PARAM_NAME, CONNECTION_FACTORY_JNDI_NAME);
+        MAPPING_PARAMETERS.put(CONNECTION_FACTORY_TYPE_PARAM_NAME, CONNECTION_FACTORY_TYPE);
+        MAPPING_PARAMETERS.put(DESTINATION_PARAM_NAME, DESTINATION_NAME);
+        MAPPING_PARAMETERS.put(NAMING_FACTORY_INITIAL_PARAM_NAME, NAMING_FACTORY_INITIAL);
+        MAPPING_PARAMETERS.put(PROVIDER_URL_PARAM_NAME, PROVIDER_URL);
+    }
 
     /**
      * The parameter indicating the JMS API specification to be used - if this
