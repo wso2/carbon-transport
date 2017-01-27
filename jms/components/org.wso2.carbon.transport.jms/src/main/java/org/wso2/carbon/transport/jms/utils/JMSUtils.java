@@ -19,14 +19,24 @@ package org.wso2.carbon.transport.jms.utils;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.wso2.carbon.messaging.CarbonMessage;
+import org.wso2.carbon.messaging.TextJMSCarbonMessage;
 
 import java.util.Properties;
+import javax.jms.BytesMessage;
 import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.MapMessage;
+import javax.jms.Message;
+import javax.jms.ObjectMessage;
+import javax.jms.StreamMessage;
+import javax.jms.TextMessage;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NameNotFoundException;
 import javax.naming.NamingException;
 import javax.naming.Reference;
+
 
 /**
  * Maintain the common methods used by inbound JMS protocol
@@ -122,4 +132,25 @@ public class JMSUtils {
         throw new NamingException(s);
     }
 
+    public static CarbonMessage createJMSCarbonMessage(Message message) {
+        CarbonMessage jmsCarbonMessage = null;
+        try {
+            if (message instanceof TextMessage) {
+                jmsCarbonMessage = new TextJMSCarbonMessage(((TextMessage) message).getText());
+                jmsCarbonMessage.setProperty(JMSConstants.JMS_MESSAGE_TYPE, JMSConstants.TEXT_MESSAGE_TYPE);
+
+            } else if (message instanceof BytesMessage) {
+
+            } else if (message instanceof MapMessage) {
+
+            } else if (message instanceof ObjectMessage) {
+
+            } else if (message instanceof StreamMessage) {
+
+            }
+        } catch (JMSException e) {
+            log.error("Error while chaging the jms message to carbon message");
+        }
+        return jmsCarbonMessage;
+    }
 }

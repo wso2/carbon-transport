@@ -20,7 +20,7 @@
     <parent>
         <artifactId>org.wso2.carbon.transport.parent</artifactId>
         <groupId>org.wso2.carbon.transport</groupId>
-        <version>3.0.4-SNAPSHOT</version>
+        <version>3.0.5-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -29,8 +29,10 @@
     <name>WSO2 Carbon Transport JMS Parent</name>
     <modules>
         <module>components/org.wso2.carbon.transport.jms</module>
+        <module>features/org.wso2.carbon.transport.jms.feature</module>
     </modules>
-
-
+    <properties>
+    <maven.findbugsplugin.version.exclude>findbugs-exclude.xml</maven.findbugsplugin.version.exclude>
+    </properties>
 </project>
 
