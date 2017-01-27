@@ -30,6 +30,7 @@
 
     <modules>
         <module>http/netty</module>
+        <module>jms</module>
     </modules>
 
     <scm>
@@ -118,6 +119,11 @@
                 <version>${commons.pool.version}</version>
             </dependency>
             <dependency>
+                <groupId>javax.jms</groupId>
+                <artifactId>javax.jms-api</artifactId>
+                <version>${javax.jms.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>commons-io.wso2</groupId>
                 <artifactId>commons-io</artifactId>
                 <version>${commons-io.wso2.version}</version>
@@ -181,11 +187,11 @@
                     </descriptorRefs>
                 </configuration>
             </plugin>
-            <plugin>
+            <!--<plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
                 <version>${maven.checkstyle.plugin.version}</version>
-            </plugin>
+            </plugin>-->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>findbugs-maven-plugin</artifactId>
@@ -271,6 +277,7 @@
         <metrics.version>3.1.2</metrics.version>
 
         <testng.version>6.9.10</testng.version>
+        <javax.jms.version>2.0.1</javax.jms.version>
     </properties>
 
 </project>
