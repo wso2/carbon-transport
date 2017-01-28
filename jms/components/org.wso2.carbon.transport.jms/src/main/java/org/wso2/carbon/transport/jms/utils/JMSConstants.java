@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2005-2014, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *  Copyright (c) 2017, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *  WSO2 Inc. licenses this file to you under the Apache License,
  *  Version 2.0 (the "License"); you may not use this file except
@@ -15,6 +15,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.wso2.carbon.transport.jms.utils;
 
 import java.util.HashMap;
@@ -33,7 +34,17 @@ public class JMSConstants {
         QUEUE, TOPIC
     }
 
-    public static final String PROTOCOL_JMS = "JMS";
+    public static final String PROTOCOL_JMS = "jms";
+    /**
+     * ID of the service, that this listener is bounded to
+     */
+    public static final String JMS_SERVICE_ID = "JMS_SERVICE_ID";
+    /**
+     * A MessageContext property or client Option indicating the JMS message type
+     */
+    public static final String JMS_MESSAGE_TYPE = "JMS_MESSAGE_TYPE";
+    public static final String GENERIC_MESSAGE_TYPE = "Message";
+    public static final String TEXT_MESSAGE_TYPE = "TextMessage";
 
     public static final String TOPIC_PREFIX = "topic.";
     public static final String QUEUE_PREFIX = "queue.";
@@ -90,10 +101,6 @@ public class JMSConstants {
     public static final String CONNECTION_STRING = "connectionfactory.QueueConnectionFactory";
 
     public static final String PARAM_CACHE_LEVEL = "transport.jms.CacheLevel";
-    /**
-     * A MessageContext property or client Option indicating the JMS message type
-     */
-    public static final String JMS_MESSAGE_TYPE = "JMS_MESSAGE_TYPE";
 
     /**
      * Mapping between parameters and actual values

@@ -26,9 +26,9 @@ import java.util.Properties;
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
+import javax.jms.JMSContext;
 import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
-import javax.jms.MessageProducer;
 import javax.jms.Queue;
 import javax.jms.QueueConnection;
 import javax.jms.QueueConnectionFactory;
@@ -42,6 +42,7 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NameNotFoundException;
 import javax.naming.NamingException;
+
 
 /**
  * use of factory server down and up jms spec transport.jms.MessageSelector
@@ -154,14 +155,6 @@ public class JMSConnectionFactory implements ConnectionFactory, QueueConnectionF
         }
 
         createConnectionFactory();
-    }
-
-    public ConnectionFactory getConnectionFactory() {
-        if (this.connectionFactory != null) {
-            return this.connectionFactory;
-        }
-
-        return createConnectionFactory();
     }
 
     private ConnectionFactory createConnectionFactory() {
@@ -293,6 +286,22 @@ public class JMSConnectionFactory implements ConnectionFactory, QueueConnectionF
         return null;
     }
 
+    public JMSContext createContext() {
+        return connectionFactory.createContext();
+    }
+
+    public JMSContext createContext(int sessionMode) {
+        return connectionFactory.createContext(sessionMode);
+    }
+
+    public JMSContext createContext(String userName, String password) {
+        return connectionFactory.createContext(userName, password);
+    }
+
+    public JMSContext createContext(String userName, String password, int sessionMode) {
+        return connectionFactory.createContext(userName, password, sessionMode);
+    }
+
     public QueueConnection createQueueConnection() throws JMSException {
         try {
             return ((QueueConnectionFactory) (this.connectionFactory)).createQueueConnection();
@@ -381,29 +390,6 @@ public class JMSConnectionFactory implements ConnectionFactory, QueueConnectionF
             logger.error("JMS Exception while creating consumer. " + e.getMessage(), e);
         }
         return null;
-    }
-
-    /**
-     * This is a JMS spec independent method to create a MessageProducer. Please be cautious when
-     * making any changes
-     *
-     * @param session     JMS session
-     * @param destination the Destination
-     * @param isQueue     is the Destination a queue?
-     * @return a MessageProducer to send messages to the given Destination
-     * @throws JMSException on errors, to be handled and logged by the caller
-     */
-    public MessageProducer createProducer(Session session, Destination destination, Boolean isQueue)
-            throws JMSException {
-        if ("2.0".equals(jmsSpec) || "1.1".equals(jmsSpec) || isQueue == null) {
-            return session.createProducer(destination);
-        } else {
-            if (isQueue) {
-                return ((QueueSession) session).createSender((Queue) destination);
-            } else {
-                return ((TopicSession) session).createPublisher((Topic) destination);
-            }
-        }
     }
 
     private Destination createDestination(Session session) {
@@ -505,42 +491,6 @@ public class JMSConnectionFactory implements ConnectionFactory, QueueConnectionF
         }
 
         return false;
-    }
-
-    public Context getContext() {
-        return this.ctx;
-    }
-
-    public JMSConstants.JMSDestinationType getDestinationType() {
-        return this.destinationType;
-    }
-
-    public String getConnectionFactoryString() {
-        return connectionFactoryString;
-    }
-
-    public boolean isTransactedSession() {
-        return transactedSession;
-    }
-
-    public int getSessionAckMode() {
-        return sessionAckMode;
-    }
-
-    public javax.jms.JMSContext createContext() {
-        return connectionFactory.createContext();
-    }
-
-    public javax.jms.JMSContext createContext(int sessionMode) {
-        return connectionFactory.createContext(sessionMode);
-    }
-
-    public javax.jms.JMSContext createContext(String userName, String password) {
-        return connectionFactory.createContext(userName, password);
-    }
-
-    public javax.jms.JMSContext createContext(String userName, String password, int sessionMode) {
-        return connectionFactory.createContext(userName, password, sessionMode);
     }
 
 }

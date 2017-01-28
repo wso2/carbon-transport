@@ -20,24 +20,27 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wso2.carbon.messaging.CarbonMessage;
 import org.wso2.carbon.messaging.CarbonMessageProcessor;
-import org.wso2.carbon.transport.jms.message.JMSMessage;
+import org.wso2.carbon.messaging.TextJMSCarbonMessage;
+import org.wso2.carbon.transport.jms.utils.JMSConstants;
+import org.wso2.carbon.transport.jms.utils.JMSUtils;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import javax.jms.JMSException;
 import javax.jms.Message;
-import javax.jms.TextMessage;
 
 
 /**
  * Message Listener
  */
-public class JMSMessageListener implements javax.jms.MessageListener {
+class JMSMessageListener implements javax.jms.MessageListener {
     private static final Logger LOG = LoggerFactory.getLogger(JMSMessageListener.class);
     private CarbonMessageProcessor carbonMessageProcessor;
+    private String serviceId;
 
-    public JMSMessageListener(CarbonMessageProcessor messageProcessor) {
+    public JMSMessageListener(CarbonMessageProcessor messageProcessor, String serviceId) {
         this.carbonMessageProcessor = messageProcessor;
+        this.serviceId = serviceId;
     }
 
     /**
@@ -47,13 +50,12 @@ public class JMSMessageListener implements javax.jms.MessageListener {
      */
     @Override public void onMessage(Message message) {
         try {
-            TextMessage receivedMessage = (TextMessage) message;
-            ByteBuffer byteBuffer = str_to_bb(receivedMessage.getText(), Charset.forName("UTF-8"));
-            CarbonMessage carbonMessage = new JMSMessage();
-            carbonMessage.addMessageBody(byteBuffer);
-            carbonMessage.setProperty(org.wso2.carbon.messaging.Constants.PROTOCOL, "JMS");
-            carbonMessageProcessor.receive(carbonMessage, null);
-            LOG.info("Got the message ==> " + receivedMessage.getText());
+            CarbonMessage jmsCarbonMessage = JMSUtils.createJMSCarbonMessage(message);
+            jmsCarbonMessage.setProperty(org.wso2.carbon.messaging.Constants.PROTOCOL, JMSConstants.PROTOCOL_JMS);
+            jmsCarbonMessage.setProperty(JMSConstants.JMS_SERVICE_ID, serviceId);
+            carbonMessageProcessor.receive(jmsCarbonMessage, null);
+            TextJMSCarbonMessage textJMSCarbonMessage = (TextJMSCarbonMessage) jmsCarbonMessage;
+            LOG.info("Got the message ==> " + textJMSCarbonMessage.getText());
         } catch (JMSException e) {
 
         } catch (Exception e) {
