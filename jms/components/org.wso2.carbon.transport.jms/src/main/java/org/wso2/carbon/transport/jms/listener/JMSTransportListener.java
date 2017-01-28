@@ -123,4 +123,10 @@ public class JMSTransportListener extends PollingTransportListener {
     protected void endMaintenance() {
 
     }
+
+    public void stopListening() {
+        jmsConnectionFactory.closeConnection(connection);
+        jmsConnectionFactory.closeSession(session);
+        jmsConnectionFactory.closeMessageConsumer(messageConsumer);
+    }
 }

@@ -493,4 +493,24 @@ public class JMSConnectionFactory implements ConnectionFactory, QueueConnectionF
         return false;
     }
 
+    public boolean closeSession(Session session) {
+        try {
+            session.close();
+            return true;
+        } catch (JMSException e) {
+            logger.error("JMS Exception while closing the session.");
+        }
+        return false;
+    }
+
+    public boolean closeMessageConsumer (MessageConsumer messageConsumer) {
+        try {
+            messageConsumer.close();
+            return true;
+        } catch (JMSException e) {
+            logger.error("JMS Exception while closing the subscriber.");
+        }
+        return false;
+    }
+
 }
