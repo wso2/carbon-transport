@@ -48,13 +48,17 @@ public class JMSTransportListener extends PollingTransportListener {
     private Destination destination;
     private MessageConsumer messageConsumer;
 
+    public JMSTransportListener() {
+        super("Dummylistener");
+    }
+
     public JMSTransportListener(String id) {
         super(id);
         this.serviceId = id;
     }
 
     @Override
-    public void listen(Map<String, String> map) {
+    public void poll(Map<String, String> map) {
         try {
             Properties properties = new Properties();
             Set<Map.Entry<String, String>> set = map.entrySet();
@@ -78,17 +82,11 @@ public class JMSTransportListener extends PollingTransportListener {
         } catch (JMSException e) {
             throw new RuntimeException("Client libs are added to class path. Please check and try again");
         }
-
     }
 
     @Override
     public void setMessageProcessor(CarbonMessageProcessor carbonMessageProcessor) {
         this.carbonMessageProcessor = carbonMessageProcessor;
-    }
-
-    @Override
-    public CarbonMessageProcessor getMessageProcessor() {
-        return carbonMessageProcessor;
     }
 
     @Override

@@ -64,7 +64,7 @@ public class QueueListeningTestCase {
     @Test(groups = "queueListening", description = "Testing whether queue listening is working correctly without any "
             + "exceptions")
     public void queueListeningTestCase() throws InterruptedException, JMSException {
-        jmsTransportListener.listen(listeningParametes);
+        jmsTransportListener.poll(listeningParametes);
         LOGGER.info("JMS Transport Listener is starting to listen to the queue " + JMSTestConstants.QUEUE_NAME);
         jmsServer.publishMessagesToQueue();
     }
