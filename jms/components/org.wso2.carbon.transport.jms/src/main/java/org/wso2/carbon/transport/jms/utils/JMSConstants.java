@@ -67,6 +67,11 @@ public class JMSConstants {
     public static final String NAMING_FACTORY_INITIAL_PARAM_NAME = "FactoryInitial";
     public static final String PROVIDER_URL_PARAM_NAME = "ProviderUrl";
 
+    public static final String CONNECTION_USERNAME = "ConnectionUsername";
+    public static final String CONNECTION_PASSWORD = "ConnectionPassword";
+    public static final String TRANSPORT_HEADERS = "TransportHeaders";
+    public static final String TEXT_DATA = "TextData";
+
     /**
      * Namespace for JMS map payload representation
      */
