@@ -18,8 +18,6 @@
 
 package org.wso2.carbon.transport.jms.listener;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.wso2.carbon.messaging.CarbonMessageProcessor;
 import org.wso2.carbon.messaging.PollingTransportListener;
 import org.wso2.carbon.transport.jms.factory.JMSConnectionFactory;
@@ -39,23 +37,12 @@ import javax.jms.Session;
  * This is a transport listener for JMS
  */
 public class JMSTransportListener extends PollingTransportListener {
-    private Logger logger = LoggerFactory.getLogger(JMSTransportListener.class);
     private CarbonMessageProcessor carbonMessageProcessor;
-    private String serviceId;
-    private JMSConnectionFactory jmsConnectionFactory;
+    private JMSConnectionFactory jmsConnectionFactory = null;
     private Connection connection;
     private Session session;
     private Destination destination;
     private MessageConsumer messageConsumer;
-
-    public JMSTransportListener() {
-        super("Dummylistener");
-    }
-
-    public JMSTransportListener(String id) {
-        super(id);
-        this.serviceId = id;
-    }
 
     @Override
     public void poll(Map<String, String> map) {
@@ -75,7 +62,7 @@ public class JMSTransportListener extends PollingTransportListener {
                 session = jmsConnectionFactory.getSession(connection);
                 destination = jmsConnectionFactory.getDestination(session);
                 messageConsumer = jmsConnectionFactory.createMessageConsumer(session, destination);
-                messageConsumer.setMessageListener(new JMSMessageListener(carbonMessageProcessor, serviceId));
+                messageConsumer.setMessageListener(new JMSMessageListener(carbonMessageProcessor, id));
             } else {
                 throw new RuntimeException("Cannot connect to the JMS Server. Check the connection and try again");
             }
