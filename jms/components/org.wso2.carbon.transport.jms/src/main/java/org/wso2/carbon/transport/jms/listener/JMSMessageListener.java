@@ -23,13 +23,8 @@ import org.wso2.carbon.messaging.CarbonMessageProcessor;
 import org.wso2.carbon.messaging.TextJMSCarbonMessage;
 import org.wso2.carbon.transport.jms.utils.JMSConstants;
 import org.wso2.carbon.transport.jms.utils.JMSUtils;
-
-import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
 import javax.jms.JMSException;
 import javax.jms.Message;
-
-
 /**
  * Message Listener
  */
@@ -57,26 +52,10 @@ class JMSMessageListener implements javax.jms.MessageListener {
             TextJMSCarbonMessage textJMSCarbonMessage = (TextJMSCarbonMessage) jmsCarbonMessage;
             LOG.info("Got the message ==> " + textJMSCarbonMessage.getText());
         } catch (JMSException e) {
-
+            throw new RuntimeException("Error while getting the message from jms server");
         } catch (Exception e) {
-            LOG.info("saasas");
+            throw new RuntimeException("Error while sending the messages to message processor");
         }
-
-    }
-
-    public static ByteBuffer str_to_bb(String msg, Charset charset) {
-        return ByteBuffer.wrap(msg.getBytes(charset));
-    }
-
-    public static String bb_to_str(ByteBuffer buffer, Charset charset) {
-        byte[] bytes;
-        if (buffer.hasArray()) {
-            bytes = buffer.array();
-        } else {
-            bytes = new byte[buffer.remaining()];
-            buffer.get(bytes);
-        }
-        return new String(bytes, charset);
     }
 
 }

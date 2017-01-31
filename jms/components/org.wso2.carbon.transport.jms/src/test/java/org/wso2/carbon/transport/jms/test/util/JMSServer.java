@@ -31,6 +31,8 @@ import javax.jms.QueueConnection;
 import javax.jms.QueueSession;
 import javax.jms.Session;
 import javax.jms.TextMessage;
+import javax.jms.TopicConnection;
+import javax.jms.TopicSession;
 
 /**
  * A simple jms server using Activemq embedded broker.
@@ -69,5 +71,30 @@ public class JMSServer {
         queueConn.close();
         queueSession.close();
         queueSender.close();
+    }
+
+    /**
+     * To publish the messages to a queue
+     *
+     * @throws JMSException         JMS Exception
+     * @throws InterruptedException Interrupted exception while waiting in between messages
+     */
+    public void publishMessagesToTopic() throws JMSException, InterruptedException {
+        TopicConnection topicConnection = (TopicConnection) connectionFactory.createConnection();
+        topicConnection.start();
+        TopicSession topicSession = topicConnection.createTopicSession(false, Session.DUPS_OK_ACKNOWLEDGE);
+        Destination destination = topicSession.createTopic(JMSTestConstants.TOPIC_NAME);
+        MessageProducer topicSender = topicSession.createProducer(destination);
+        topicSender.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+        for (int index = 0; index < 10; index++) {
+            String topicText = "Topic Message : " + (index + 1);
+            TextMessage topicMessage = topicSession.createTextMessage(topicText);
+            topicSender.send(topicMessage);
+            logger.info("Publishing " + topicText + " to topic " + JMSTestConstants.TOPIC_NAME);
+            Thread.sleep(1000);
+        }
+        topicConnection.close();
+        topicSession.close();
+        topicSender.close();
     }
 }

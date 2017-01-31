@@ -23,7 +23,9 @@ package org.wso2.carbon.transport.jms.test.util;
  */
 public class JMSTestConstants {
     public static final String QUEUE_CONNECTION_FACTORY = "QueueConnectionFactory";
+    public static final String TOPIC_CONNECTION_FACTORY = "TopicConnectionFactory";
     public static final String ACTIVEMQ_PROVIDER_URL = "vm://localhost?broker.persistent=false";
     public static final String QUEUE_NAME = "testqueue";
+    public static final String TOPIC_NAME = "testtopic";
     public static final String ACTIVEMQ_FACTORY_INITIAL = "org.apache.activemq.jndi.ActiveMQInitialContextFactory";
 }

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2005-2014, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *  Copyright (c) 2017, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *  WSO2 Inc. licenses this file to you under the Apache License,
  *  Version 2.0 (the "License"); you may not use this file except
@@ -46,33 +46,25 @@ import javax.naming.NamingException;
 
 
 /**
- * use of factory server down and up jms spec transport.jms.MessageSelector
- * isDurable
+ * JMSConnectionFactory that handles the JMS Connection, Session creation, closing
  */
-
 public class JMSConnectionFactory implements ConnectionFactory, QueueConnectionFactory, TopicConnectionFactory {
     private static final Log logger = LogFactory.getLog(JMSConnectionFactory.class.getName());
-
-    protected Context ctx;
-    protected ConnectionFactory connectionFactory;
-    protected String connectionFactoryString;
-
-    protected JMSConstants.JMSDestinationType destinationType;
-
+    private Context ctx;
+    private ConnectionFactory connectionFactory;
+    private String connectionFactoryString;
+    private JMSConstants.JMSDestinationType destinationType;
     private Destination destination;
-    protected String destinationName;
-
-    protected boolean transactedSession = false;
-    protected int sessionAckMode = 0;
-
-    protected String jmsSpec;
-    protected boolean isDurable;
-    protected boolean noPubSubLocal;
-
-    protected String clientId;
-    protected String subscriptionName;
-    protected String messageSelector;
-    protected boolean isSharedSubscription;
+    private String destinationName;
+    private boolean transactedSession = false;
+    private int sessionAckMode = 0;
+    private String jmsSpec;
+    private boolean isDurable;
+    private boolean noPubSubLocal;
+    private String clientId;
+    private String subscriptionName;
+    private String messageSelector;
+    private boolean isSharedSubscription;
 
     public JMSConnectionFactory(Properties properties) {
         try {
@@ -158,6 +150,10 @@ public class JMSConnectionFactory implements ConnectionFactory, QueueConnectionF
         createConnectionFactory();
     }
 
+    /**
+     * To create the JMS Connection Factory
+     * @return JMS Connection Factory
+     */
     private ConnectionFactory createConnectionFactory() {
         if (this.connectionFactory != null) {
             return this.connectionFactory;
@@ -182,10 +178,15 @@ public class JMSConnectionFactory implements ConnectionFactory, QueueConnectionF
         return this.connectionFactory;
     }
 
+    /**
+     * To get the JMS Connection
+     * @return JMS Connection
+     */
     public Connection getConnection() {
         return createConnection();
     }
 
+    @Override
     public Connection createConnection() {
         if (connectionFactory == null) {
             logger.error("Connection cannot be establish to the broker. Please check the broker libs provided.");
@@ -233,10 +234,10 @@ public class JMSConnectionFactory implements ConnectionFactory, QueueConnectionF
                 }
             }
         }
-
         return null;
     }
 
+    @Override
     public Connection createConnection(String userName, String password) {
         Connection connection = null;
         try {
@@ -287,22 +288,27 @@ public class JMSConnectionFactory implements ConnectionFactory, QueueConnectionF
         return null;
     }
 
+    @Override
     public JMSContext createContext() {
         return connectionFactory.createContext();
     }
 
+    @Override
     public JMSContext createContext(int sessionMode) {
         return connectionFactory.createContext(sessionMode);
     }
 
+    @Override
     public JMSContext createContext(String userName, String password) {
         return connectionFactory.createContext(userName, password);
     }
 
+    @Override
     public JMSContext createContext(String userName, String password, int sessionMode) {
         return connectionFactory.createContext(userName, password, sessionMode);
     }
 
+    @Override
     public QueueConnection createQueueConnection() throws JMSException {
         try {
             return ((QueueConnectionFactory) (this.connectionFactory)).createQueueConnection();
@@ -314,6 +320,7 @@ public class JMSConnectionFactory implements ConnectionFactory, QueueConnectionF
         return null;
     }
 
+    @Override
     public QueueConnection createQueueConnection(String userName, String password) throws JMSException {
         try {
             return ((QueueConnectionFactory) (this.connectionFactory)).createQueueConnection(userName, password);
@@ -326,6 +333,7 @@ public class JMSConnectionFactory implements ConnectionFactory, QueueConnectionF
         return null;
     }
 
+    @Override
     public TopicConnection createTopicConnection() throws JMSException {
         try {
             return ((TopicConnectionFactory) (this.connectionFactory)).createTopicConnection();
@@ -338,6 +346,7 @@ public class JMSConnectionFactory implements ConnectionFactory, QueueConnectionF
         return null;
     }
 
+    @Override
     public TopicConnection createTopicConnection(String userName, String password) throws JMSException {
         try {
             return ((TopicConnectionFactory) (this.connectionFactory)).createTopicConnection(userName, password);
@@ -350,6 +359,11 @@ public class JMSConnectionFactory implements ConnectionFactory, QueueConnectionF
         return null;
     }
 
+    /**
+     * To get the destination of the particular session
+     * @param session JMS session that we need to find the destination
+     * @return destination the particular is related with
+     */
     public Destination getDestination(Session session) {
         if (this.destination != null) {
             return this.destination;
@@ -358,6 +372,12 @@ public class JMSConnectionFactory implements ConnectionFactory, QueueConnectionF
         return createDestination(session);
     }
 
+    /**
+     * Create a message consumer for particular session and destination
+     * @param session JMS Session to create the consumer
+     * @param destination JMS destination which the consumer should listen to
+     * @return Message Consumer, who is listening in particular destination with the given session
+     */
     public MessageConsumer createMessageConsumer(Session session, Destination destination) {
         try {
             if (JMSConstants.JMS_SPEC_VERSION_2_0.equals(jmsSpec) && isSharedSubscription) {
@@ -411,11 +431,22 @@ public class JMSConnectionFactory implements ConnectionFactory, QueueConnectionF
         return null;
     }
 
+    /**
+     * To create a destination for particular session
+     * @param session Specific session to create the destination
+     * @return destination for particular session
+     */
     private Destination createDestination(Session session) {
         this.destination = createDestination(session, this.destinationName);
         return this.destination;
     }
 
+    /**
+     * To create the destination
+     * @param session
+     * @param destinationName
+     * @return
+     */
     public Destination createDestination(Session session, String destinationName) {
         Destination destination = null;
         try {
@@ -455,11 +486,21 @@ public class JMSConnectionFactory implements ConnectionFactory, QueueConnectionF
         return destination;
     }
 
+    /**
+     * To get the session from a particular connection
+     * @param connection Specific connection which we need to create the session from
+     * @return the session that is created from given connection
+     */
     public Session getSession(Connection connection) {
         return createSession(connection);
     }
 
-    protected Session createSession(Connection connection) {
+    /**
+     * To create a session from the given connection
+     * @param connection Specific connection which we is needed for creating session
+     * @return session created from the given connection
+     */
+    private Session createSession(Connection connection) {
         try {
             if (JMSConstants.JMS_SPEC_VERSION_1_1.equals(jmsSpec) || JMSConstants.JMS_SPEC_VERSION_2_0
                     .equals(jmsSpec)) {

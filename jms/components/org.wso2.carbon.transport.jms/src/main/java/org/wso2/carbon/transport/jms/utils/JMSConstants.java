@@ -126,12 +126,6 @@ public class JMSConstants {
      * is "1.1" the JMS 1.1 API would be used, else the JMS 1.0.2B
      */
     public static final String PARAM_JMS_SPEC_VER = "transport.jms.JMSSpecVersion";
-    /**
-     * Maximum number of shared JMS Connections when sending messages out
-     */
-    public static final String MAX_JMS_CONNECTIONS = "transport.jms.MaxJMSConnections";
-
-    public static final String MAX_JMS_SESSIONS = "transport.jms.MaxJMSSessions";
 
     public static final String PARAM_SUB_DURABLE = "transport.jms.SubscriptionDurable";
 
@@ -146,100 +140,30 @@ public class JMSConstants {
      * Should a pub-sub connection receive messages published by itself?
      */
     public static final String PARAM_PUBSUB_NO_LOCAL = "transport.jms.PubSubNoLocal";
-    /**
-     * Do not cache any JMS resources between tasks (when sending) or JMS CF's
-     * (when sending)
-     */
-    public static final int CACHE_NONE = 0;
-    /**
-     * Cache only the JMS connection between tasks (when receiving), or JMS CF's
-     * (when sending)
-     */
-    public static final int CACHE_CONNECTION = 1;
-    /**
-     * Cache only the JMS connection and Session between tasks (receiving), or
-     * JMS CF's (sending)
-     */
-    public static final int CACHE_SESSION = 2;
-    /**
-     * Cache the JMS connection, Session and Consumer between tasks when
-     * receiving
-     */
-    public static final int CACHE_CONSUMER = 3;
-    /**
-     * Cache the JMS connection, Session and Producer within a
-     * JMSConnectionFactory when sending
-     */
-    public static final int CACHE_PRODUCER = 4;
-    /**
-     * automatic choice of an appropriate caching level (depending on the
-     * transaction strategy)
-     */
-    public static final int CACHE_AUTO = 5;
-    /**
-     * The prefix that denotes JMSX properties
-     */
-    public static final String JMSX_PREFIX = "JMSX";
-    /**
-     * The JMSXGroupID property
-     */
-    public static final String JMSX_GROUP_ID = "JMSXGroupID";
-    /**
-     * A MessageContext property or client Option indicating the JMS delivery mode as an Integer or String
-     * Value 1 - javax.jms.DeliveryMode.NON_PERSISTENT
-     * Value 2 - javax.jms.DeliveryMode.PERSISTENT
-     */
-    public static final String JMS_DELIVERY_MODE = "JMS_DELIVERY_MODE";
-    /**
-     * The JMSXGroupSeq property
-     */
-    public static final String JMSX_GROUP_SEQ = "JMSXGroupSeq";
-    /**
-     * A MessageContext property or client Option indicating the JMS message expiration - a Long value
-     * specified as a String
-     */
-    public static final String JMS_EXPIRATION = "JMS_EXPIRATION";
-    /**
-     * A MessageContext property or client Option indicating the JMS message id
-     */
-    public static final String JMS_MESSAGE_ID = "JMS_MESSAGE_ID";
-    /**
-     * A MessageContext property or client Option indicating the JMS priority
-     */
-    public static final String JMS_PRIORITY = "JMS_PRIORITY";
-    /**
-     * A MessageContext property or client Option indicating the JMS timestamp (Long specified as String)
-     */
-    public static final String JMS_TIMESTAMP = "JMS_TIMESTAMP";
-
-    /**
-     * Does the JMS broker support hyphen in JMS message property names.
-     */
-    public static final String PARAM_JMS_HYPHEN_MODE = "transport.jms.MessagePropertyHyphens";
-
-    public static final String HYPHEN_MODE_NONE = "none";
-
-    public static final String HYPHEN_MODE_REPLACE = "replace";
-
-    public static final String HYPHEN_MODE_DELETE = "delete";
-
-    public static final String HYPHEN_REPLACEMENT_STR = "_DASHED_";
-
-    public static final String DEFAULT_HYPHEN_SUPPORT = HYPHEN_MODE_NONE;
-
-    public static final String JMS_RETRY_DURATION = "transport.jms.retry.duration";
 
     /**
      * JMS 2.0 Parameters
      */
     public static final String PARAM_IS_SHARED_SUBSCRIPTION = "transport.jms.SharedSubscription";
 
-    public static final String DELIVERY_COUNT = "jms.message.delivery.count";
-
     public static final String JMS_SPEC_VERSION_1_0 = "1.0";
 
     public static final String JMS_SPEC_VERSION_1_1 = "1.1";
 
     public static final String JMS_SPEC_VERSION_2_0 = "2.0";
+
+    // JMS Message Properties
+    public static final String JMS_MESSAGE_ID = "JMS_MESSAGE_ID";
+    public static final String JMS_TIME_STAMP = "JMS_TIME_STAMP";
+    public static final String JMS_CORRELATION_ID_AS_BYTES = "JMS_CORRELATION_ID_AS_BYTES";
+    public static final String JMS_CORRELATION_ID = "JMS_CORRELATION_ID";
+    public static final String JMS_REPLY_TO = "JMS_REPLY_TO";
+    public static final String JMS_DESTINATION = "JMS_DESTINATION";
+    public static final String JMS_DELIVERY_MODE = "JMS_DELIVERY_MODE";
+    public static final String JMS_RE_DELIVERED = "JMS_RE_DELIVERED";
+    public static final String JMS_TYPE = "JMS_TYPE";
+    public static final String JMS_EXPIRATION = "JMS_EXPIRATION";
+    public static final String JMS_DELIVERY_TIME = "JMS_DELIVERY_TIME";
+    public static final String JMS_PRIORITY = "JMS_PRIORITY";
 
 }

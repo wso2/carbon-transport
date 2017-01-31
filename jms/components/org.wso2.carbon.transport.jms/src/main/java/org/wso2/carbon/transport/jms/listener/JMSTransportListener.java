@@ -39,22 +39,15 @@ import javax.jms.Session;
  * This is a transport listener for JMS
  */
 public class JMSTransportListener extends PollingTransportListener {
-    private Logger logger = LoggerFactory.getLogger(JMSTransportListener.class);
     private CarbonMessageProcessor carbonMessageProcessor;
-    private String serviceId;
-    private JMSConnectionFactory jmsConnectionFactory;
+    private JMSConnectionFactory jmsConnectionFactory = null;
     private Connection connection;
     private Session session;
     private Destination destination;
     private MessageConsumer messageConsumer;
 
-    public JMSTransportListener(String id) {
-        super(id);
-        this.serviceId = id;
-    }
-
     @Override
-    public void listen(Map<String, String> map) {
+    public void poll(Map<String, String> map) {
         try {
             Properties properties = new Properties();
             Set<Map.Entry<String, String>> set = map.entrySet();
@@ -66,16 +59,18 @@ public class JMSTransportListener extends PollingTransportListener {
             }
             jmsConnectionFactory = new JMSConnectionFactory(properties);
             connection = jmsConnectionFactory.getConnection();
-            jmsConnectionFactory.start(connection);
-            session = jmsConnectionFactory.getSession(connection);
-            destination = jmsConnectionFactory.getDestination(session);
-            messageConsumer = jmsConnectionFactory.createMessageConsumer(session, destination);
-            messageConsumer.setMessageListener(
-                    new JMSMessageListener(carbonMessageProcessor, serviceId));
+            if (connection != null) {
+                jmsConnectionFactory.start(connection);
+                session = jmsConnectionFactory.getSession(connection);
+                destination = jmsConnectionFactory.getDestination(session);
+                messageConsumer = jmsConnectionFactory.createMessageConsumer(session, destination);
+                messageConsumer.setMessageListener(new JMSMessageListener(carbonMessageProcessor, id));
+            } else {
+                throw new RuntimeException("Cannot connect to the JMS Server. Check the connection and try again");
+            }
         } catch (JMSException e) {
-            logger.error("Error in initing the message listener");
+            throw new RuntimeException("Client libs are added to class path. Please check and try again");
         }
-
     }
 
     @Override
@@ -83,10 +78,6 @@ public class JMSTransportListener extends PollingTransportListener {
         this.carbonMessageProcessor = carbonMessageProcessor;
     }
 
-    @Override
-    public CarbonMessageProcessor getMessageProcessor() {
-        return carbonMessageProcessor;
-    }
 
     @Override
     public boolean bind(String s) {
@@ -110,8 +101,11 @@ public class JMSTransportListener extends PollingTransportListener {
     }
 
     @Override
-    protected void stop() {
-        // Not needed for JMS Transport
+
+    public void stop() {
+        jmsConnectionFactory.closeConnection(connection);
+        jmsConnectionFactory.closeSession(session);
+        jmsConnectionFactory.closeMessageConsumer(messageConsumer);
     }
 
     @Override
