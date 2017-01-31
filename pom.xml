@@ -135,6 +135,11 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
+                <groupId>org.wso2.andes.wso2</groupId>
+                <artifactId>andes-client</artifactId>
+                <version>${andes.wso2.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>commons-io.wso2</groupId>
                 <artifactId>commons-io</artifactId>
                 <version>${commons-io.wso2.version}</version>
@@ -274,6 +279,7 @@
         <guava.version>18.0</guava.version>
         <guava.version.range>[18.0,19.0)</guava.version.range>
         <activemq.broker.vesion>5.14.3</activemq.broker.vesion>
+        <andes.wso2.version>0.13.wso2v8</andes.wso2.version>
 
 
 

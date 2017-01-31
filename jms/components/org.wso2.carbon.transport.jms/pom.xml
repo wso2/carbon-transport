@@ -54,6 +54,10 @@
             <artifactId>activemq-broker</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.wso2.andes.wso2</groupId>
+            <artifactId>andes-client</artifactId>
+        </dependency>
     </dependencies>
 
     <properties>

@@ -17,17 +17,13 @@
  */
 package org.wso2.carbon.transport.jms.sender;
 
-import org.wso2.carbon.messaging.CarbonMessage;
-import org.wso2.carbon.messaging.Header;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import javax.jms.JMSException;
 import javax.jms.Message;

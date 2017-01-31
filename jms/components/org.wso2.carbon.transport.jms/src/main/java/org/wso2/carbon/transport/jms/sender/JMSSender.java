@@ -17,34 +17,36 @@
  */
 package org.wso2.carbon.transport.jms.sender;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.wso2.carbon.messaging.CarbonCallback;
 import org.wso2.carbon.messaging.CarbonMessage;
 import org.wso2.carbon.messaging.MessageProcessorException;
 import org.wso2.carbon.messaging.TransportSender;
 import org.wso2.carbon.transport.jms.factory.JMSConnectionFactory;
+import org.wso2.carbon.transport.jms.listener.JMSTransportListener;
 import org.wso2.carbon.transport.jms.utils.JMSConstants;
 
-import java.util.Hashtable;
+
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-
 import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
+import javax.jms.JMSException;
 import javax.jms.MapMessage;
 import javax.jms.Message;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 
 /**
  * JMS sender implementation.
  */
 
 public class JMSSender implements TransportSender {
+
+    private Logger logger = LoggerFactory.getLogger(JMSTransportListener.class);
 
     @Override public boolean send(CarbonMessage carbonMessage, CarbonCallback carbonCallback)
             throws MessageProcessorException {
@@ -156,8 +158,8 @@ public class JMSSender implements TransportSender {
             session.close();
             connection.close();
 
-        } catch (Throwable t) {
-
+        } catch (JMSException e) {
+            logger.error("Error in the message sender");
         }
 
         return false;
