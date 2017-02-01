@@ -23,7 +23,7 @@ import org.wso2.carbon.messaging.MessageProcessorException;
 import org.wso2.carbon.messaging.TransportSender;
 import org.wso2.carbon.transport.jms.factory.JMSConnectionFactory;
 import org.wso2.carbon.transport.jms.utils.JMSConstants;
-
+import org.wso2.carbon.transport.jms.utils.JMSUtils;
 
 import java.util.Map;
 import java.util.Properties;
@@ -89,7 +89,7 @@ public class JMSSender implements TransportSender {
             //Set transport headers
             Object transportHeaders = carbonMessage.getProperty(JMSConstants.TRANSPORT_HEADERS);
             if (transportHeaders != null && transportHeaders instanceof Map) {
-                JMSMessageUtils.setTransportHeaders(message, (Map<String, Object>) carbonMessage
+                JMSUtils.setTransportHeaders(message, (Map<String, Object>) carbonMessage
                         .getProperty(JMSConstants.TRANSPORT_HEADERS));
             }
 
