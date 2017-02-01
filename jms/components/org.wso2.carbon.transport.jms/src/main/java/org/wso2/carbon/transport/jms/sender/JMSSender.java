@@ -81,48 +81,6 @@ public class JMSSender implements TransportSender {
                     jmsConnectionFactory.createMessageProducer(session, destination);
 
 
-
- /*
-            // Extract Argument values.
-            String connectionFactoryName =
-                    (String) carbonMessage.getProperty(JMSConstants.CONNECTION_FACTORY_NAME);
-            String destinationName =
-                    (String) carbonMessage.getProperty(JMSConstants.DESTINATION_NAME);
-            String messageType = (String) carbonMessage.getProperty(JMSConstants.MESSAGE_TYPE);
-
-
-
-            // Create the initial context.
-            javax.naming.Context ctx = getInitialContext(
-                    (String) carbonMessage.getProperty(JMSConstants.INITIAL_CONTEXT_FACTORY),
-                    (String) carbonMessage.getProperty(JMSConstants.JNDI_PROVIDER_URL));
-            // Lookup my connection factory from the admin object store.
-            ConnectionFactory conFac = (javax.jms.ConnectionFactory) ctx.lookup(connectionFactoryName);
-*/
-            //Create a connection.
-            //todo support username and password
-            /*String conUsername =
-                    (String) carbonMessage.getProperty(JMSConstants.CONNECTION_USERNAME);
-            String conPassword =
-                    (String) carbonMessage.getProperty(JMSConstants.CONNECTION_PASSWORD);
-
-            Connection connection = null;
-            if (conUsername != null && conPassword != null) {
-                connection = conFac.createConnection(conUsername, conPassword);
-            }
-            if (connection == null) {
-                connection = conFac.createConnection();
-            }*/
-
-/*
-            //Create a session within the connection.
-            //todo let user set transacted and acknowledge mode
-            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-
-            // Lookup my queue from the admin object store.
-            Destination destination = (Destination) ctx.lookup(destinationName);
-*/
-
             //Create a message producer.
 
             //            MessageProducer producer = session.createProducer(destination);

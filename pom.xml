@@ -208,7 +208,7 @@
                 <artifactId>maven-checkstyle-plugin</artifactId>
                 <version>${maven.checkstyle.plugin.version}</version>
             </plugin>-->
-            <plugin>
+            <!--<plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>findbugs-maven-plugin</artifactId>
                 <version>${maven.findbugs.plugin.version}</version>
@@ -219,9 +219,9 @@
                     <findbugsXmlOutputDirectory>${project.build.directory}/findbugs
                     </findbugsXmlOutputDirectory>
                     <excludeFilterFile>${maven.findbugsplugin.version.exclude}</excludeFilterFile>
-                    <!--Exclude generated sources-->
+                    &lt;!&ndash;Exclude generated sources&ndash;&gt;
                 </configuration>
-            </plugin>
+            </plugin>-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>

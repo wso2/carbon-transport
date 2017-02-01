@@ -18,6 +18,9 @@
 
 package org.wso2.carbon.transport.jms.utils;
 
+import com.sun.javafx.collections.ObservableMapWrapper;
+import com.sun.javafx.collections.UnmodifiableObservableMap;
+
 import java.util.HashMap;
 import java.util.Map;
 import javax.xml.namespace.QName;
@@ -110,16 +113,18 @@ public class JMSConstants {
     /**
      * Mapping between parameters and actual values
      */
-    public static final Map<String, String> MAPPING_PARAMETERS;
+    static Map<String, String> parameters = new HashMap<>();
 
     static {
-        MAPPING_PARAMETERS = new HashMap<>();
-        MAPPING_PARAMETERS.put(CONNECTION_FACTORY_JNDI_PARAM_NAME, CONNECTION_FACTORY_JNDI_NAME);
-        MAPPING_PARAMETERS.put(CONNECTION_FACTORY_TYPE_PARAM_NAME, CONNECTION_FACTORY_TYPE);
-        MAPPING_PARAMETERS.put(DESTINATION_PARAM_NAME, DESTINATION_NAME);
-        MAPPING_PARAMETERS.put(NAMING_FACTORY_INITIAL_PARAM_NAME, NAMING_FACTORY_INITIAL);
-        MAPPING_PARAMETERS.put(PROVIDER_URL_PARAM_NAME, PROVIDER_URL);
+        parameters.put(CONNECTION_FACTORY_JNDI_PARAM_NAME, CONNECTION_FACTORY_JNDI_NAME);
+        parameters.put(CONNECTION_FACTORY_TYPE_PARAM_NAME, CONNECTION_FACTORY_TYPE);
+        parameters.put(DESTINATION_PARAM_NAME, DESTINATION_NAME);
+        parameters.put(NAMING_FACTORY_INITIAL_PARAM_NAME, NAMING_FACTORY_INITIAL);
+        parameters.put(PROVIDER_URL_PARAM_NAME, PROVIDER_URL);
     }
+
+    public static final UnmodifiableObservableMap<String, String> MAPPING_PARAMETERS =
+            new UnmodifiableObservableMap<>(new ObservableMapWrapper<>(parameters));
 
     /**
      * The parameter indicating the JMS API specification to be used - if this

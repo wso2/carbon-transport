@@ -23,13 +23,10 @@ import org.wso2.carbon.messaging.CarbonMessage;
 import org.wso2.carbon.messaging.TextJMSCarbonMessage;
 
 import java.util.Properties;
-import javax.jms.BytesMessage;
+
 import javax.jms.Destination;
 import javax.jms.JMSException;
-import javax.jms.MapMessage;
 import javax.jms.Message;
-import javax.jms.ObjectMessage;
-import javax.jms.StreamMessage;
 import javax.jms.TextMessage;
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -139,7 +136,7 @@ public class JMSUtils {
                 jmsCarbonMessage = new TextJMSCarbonMessage(((TextMessage) message).getText());
                 jmsCarbonMessage.setProperty(JMSConstants.JMS_MESSAGE_TYPE, JMSConstants.TEXT_MESSAGE_TYPE);
 
-            } else if (message instanceof BytesMessage) {
+            } /*else if (message instanceof BytesMessage) {
 
             } else if (message instanceof MapMessage) {
 
@@ -147,7 +144,7 @@ public class JMSUtils {
 
             } else if (message instanceof StreamMessage) {
 
-            }
+            }*/
         } catch (JMSException e) {
             log.error("Error while chaging the jms message to carbon message");
         }

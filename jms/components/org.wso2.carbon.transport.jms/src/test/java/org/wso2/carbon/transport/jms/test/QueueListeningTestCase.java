@@ -56,7 +56,7 @@ public class QueueListeningTestCase {
         listeningParametes.put(JMSConstants.CONNECTION_FACTORY_TYPE_PARAM_NAME, JMSConstants.DESTINATION_TYPE_QUEUE);
         jmsServer = new JMSServer();
         jmsServer.startServer();
-        jmsTransportListener = new JMSTransportListener("1");
+        jmsTransportListener = new JMSTransportListener();
         messageProcessor = new MessageProcessor();
         jmsTransportListener.setMessageProcessor(messageProcessor);
     }
@@ -64,7 +64,7 @@ public class QueueListeningTestCase {
     @Test(groups = "queueListening", description = "Testing whether queue listening is working correctly without any "
             + "exceptions")
     public void queueListeningTestCase() throws InterruptedException, JMSException {
-        jmsTransportListener.listen(listeningParametes);
+        //jmsTransportListener.listen(listeningParametes);
         LOGGER.info("JMS Transport Listener is starting to listen to the queue " + JMSTestConstants.QUEUE_NAME);
         jmsServer.publishMessagesToQueue();
     }

@@ -18,8 +18,6 @@
 
 package org.wso2.carbon.transport.jms.listener;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.wso2.carbon.messaging.CarbonMessageProcessor;
 import org.wso2.carbon.messaging.PollingTransportListener;
 import org.wso2.carbon.transport.jms.factory.JMSConnectionFactory;
