@@ -31,8 +31,5 @@
         <module>components/org.wso2.carbon.transport.jms</module>
         <module>features/org.wso2.carbon.transport.jms.feature</module>
     </modules>
-    <properties>
-    <maven.findbugsplugin.version.exclude>findbugs-exclude.xml</maven.findbugsplugin.version.exclude>
-    </properties>
 </project>
 

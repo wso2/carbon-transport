@@ -23,8 +23,11 @@ import org.wso2.carbon.messaging.CarbonMessageProcessor;
 import org.wso2.carbon.messaging.TextJMSCarbonMessage;
 import org.wso2.carbon.transport.jms.utils.JMSConstants;
 import org.wso2.carbon.transport.jms.utils.JMSUtils;
+
 import javax.jms.JMSException;
 import javax.jms.Message;
+import javax.jms.Session;
+
 /**
  * Message Listener
  */
@@ -32,10 +35,15 @@ class JMSMessageListener implements javax.jms.MessageListener {
     private static final Logger LOG = LoggerFactory.getLogger(JMSMessageListener.class);
     private CarbonMessageProcessor carbonMessageProcessor;
     private String serviceId;
+    private int ackonwledgementMode;
+    private Session session;
 
-    public JMSMessageListener(CarbonMessageProcessor messageProcessor, String serviceId) {
+    public JMSMessageListener(CarbonMessageProcessor messageProcessor, String serviceId, int acknowledgementMode,
+            Session session) {
         this.carbonMessageProcessor = messageProcessor;
         this.serviceId = serviceId;
+        this.ackonwledgementMode = acknowledgementMode;
+        this.session = session;
     }
 
     /**
@@ -43,19 +51,32 @@ class JMSMessageListener implements javax.jms.MessageListener {
      *
      * @param message - the next received message
      */
-    @Override public void onMessage(Message message) {
+    @Override
+    public void onMessage(Message message) {
         try {
             CarbonMessage jmsCarbonMessage = JMSUtils.createJMSCarbonMessage(message);
-            jmsCarbonMessage.setProperty(org.wso2.carbon.messaging.Constants.PROTOCOL, JMSConstants.PROTOCOL_JMS);
-            jmsCarbonMessage.setProperty(JMSConstants.JMS_SERVICE_ID, serviceId);
-            carbonMessageProcessor.receive(jmsCarbonMessage, null);
-            TextJMSCarbonMessage textJMSCarbonMessage = (TextJMSCarbonMessage) jmsCarbonMessage;
-            LOG.info("Got the message ==> " + textJMSCarbonMessage.getText());
+
+            if (jmsCarbonMessage != null) {
+                jmsCarbonMessage.setProperty(org.wso2.carbon.messaging.Constants.PROTOCOL, JMSConstants.PROTOCOL_JMS);
+                jmsCarbonMessage.setProperty(JMSConstants.JMS_SERVICE_ID, serviceId);
+                TextJMSCarbonMessage textJMSCarbonMessage = (TextJMSCarbonMessage) jmsCarbonMessage;
+                if (this.ackonwledgementMode == Session.CLIENT_ACKNOWLEDGE) {
+                    carbonMessageProcessor.receive(jmsCarbonMessage, new AcknowledgementCallback(message, session));
+                } else {
+                    carbonMessageProcessor.receive(jmsCarbonMessage, null);
+                }
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Received a message " + textJMSCarbonMessage.getText());
+                }
+            }
         } catch (JMSException e) {
+            LOG.error("Error while getting the message from jms server : " + e.getMessage());
             throw new RuntimeException("Error while getting the message from jms server");
         } catch (Exception e) {
+            LOG.error("Error while sending the messages to message processor : " + e.getMessage());
             throw new RuntimeException("Error while sending the messages to message processor");
         }
     }
+
 
 }

@@ -26,6 +26,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 
+import java.util.Enumeration;
+import java.util.Properties;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -35,7 +37,6 @@ import javax.naming.InitialContext;
 import javax.naming.NameNotFoundException;
 import javax.naming.NamingException;
 import javax.naming.Reference;
-
 
 /**
  * Maintain the common methods used by inbound JMS protocol
@@ -131,24 +132,41 @@ public class JMSUtils {
         throw new NamingException(s);
     }
 
+    /**
+     * Change a jms message to carbon message
+     * @param message JMS message that need to be changed as carbon message
+     * @return the carbon message converted from jms message
+     */
     public static CarbonMessage createJMSCarbonMessage(Message message) {
         CarbonMessage jmsCarbonMessage = null;
         try {
             if (message instanceof TextMessage) {
                 jmsCarbonMessage = new TextJMSCarbonMessage(((TextMessage) message).getText());
                 jmsCarbonMessage.setProperty(JMSConstants.JMS_MESSAGE_TYPE, JMSConstants.TEXT_MESSAGE_TYPE);
+            } else {
+                log.error("Other message types are currently not supported. Only text messages are supported.");
+            }
+            if (jmsCarbonMessage != null) {
+                String messageId = message.getJMSMessageID();
+                if (messageId != null) {
+                    jmsCarbonMessage.setHeader(JMSConstants.JMS_MESSAGE_ID, messageId);
+                }
+                jmsCarbonMessage
+                        .setHeader(JMSConstants.JMS_DELIVERY_MODE, String.valueOf(message.getJMSDeliveryMode()));
+                jmsCarbonMessage.setHeader(JMSConstants.JMS_PRIORITY, String.valueOf(message.getJMSPriority()));
+                jmsCarbonMessage.setHeader(JMSConstants.JMS_RE_DELIVERED, String.valueOf(message.getJMSRedelivered()));
+                jmsCarbonMessage.setHeader(JMSConstants.JMS_TIME_STAMP, String.valueOf(message.getJMSTimestamp()));
 
-            } /*else if (message instanceof BytesMessage) {
+                Enumeration<String> properties = message.getPropertyNames();
 
-            } else if (message instanceof MapMessage) {
+                while (properties.hasMoreElements()) {
+                    String name = properties.nextElement();
+                    jmsCarbonMessage.setHeader(name, message.getStringProperty(name));
+                }
 
-            } else if (message instanceof ObjectMessage) {
-
-            } else if (message instanceof StreamMessage) {
-
-            }*/
+            }
         } catch (JMSException e) {
-            log.error("Error while chaging the jms message to carbon message");
+            log.error("Error while changing the jms message to carbon message");
         }
         return jmsCarbonMessage;
     }

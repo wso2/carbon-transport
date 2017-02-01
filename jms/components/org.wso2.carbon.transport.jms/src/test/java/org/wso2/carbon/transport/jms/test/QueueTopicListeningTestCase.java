@@ -20,7 +20,7 @@ package org.wso2.carbon.transport.jms.test;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.annotations.AfterClass;
+import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import org.wso2.carbon.transport.jms.listener.JMSTransportListener;
@@ -32,18 +32,13 @@ import org.wso2.carbon.transport.jms.utils.JMSConstants;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.jms.JMSException;
-
 /**
  * A test class for testing queue listening and topic listening
  */
 public class QueueTopicListeningTestCase {
     private JMSServer jmsServer;
     private JMSTransportListener jmsQueueTransportListener;
-    private JMSTransportListener jmsTopicTransportListener;
     private Map<String, String> queueListeningParametes;
-    private Map<String, String> topicListeningParametes;
-    private MessageProcessor messageProcessor;
     private static final Logger LOGGER = LoggerFactory.getLogger(QueueTopicListeningTestCase.class);
 
     @BeforeClass(groups = "jmsListening", description = "Setting up the server, JMS listener and message processor")
@@ -58,7 +53,7 @@ public class QueueTopicListeningTestCase {
         queueListeningParametes
                 .put(JMSConstants.CONNECTION_FACTORY_TYPE_PARAM_NAME, JMSConstants.DESTINATION_TYPE_QUEUE);
 
-        topicListeningParametes = new HashMap<>();
+        Map<String, String> topicListeningParametes = new HashMap<>();
         topicListeningParametes.put(JMSConstants.DESTINATION_PARAM_NAME, JMSTestConstants.TOPIC_NAME);
         topicListeningParametes
                 .put(JMSConstants.CONNECTION_FACTORY_JNDI_PARAM_NAME, JMSTestConstants.TOPIC_CONNECTION_FACTORY);
@@ -71,38 +66,41 @@ public class QueueTopicListeningTestCase {
         jmsServer.startServer();
 
         // Create a queue transport listener
-        jmsQueueTransportListener = new JMSTransportListener();
-        jmsQueueTransportListener.setId("1");
-        messageProcessor = new MessageProcessor();
+        jmsQueueTransportListener = new JMSTransportListener("1");
+        MessageProcessor messageProcessor = new MessageProcessor();
         jmsQueueTransportListener.setMessageProcessor(messageProcessor);
         jmsQueueTransportListener.poll(queueListeningParametes);
 
         // Create a topic transport listener
-        jmsTopicTransportListener = new JMSTransportListener();
-        jmsTopicTransportListener.setId("2");
+        JMSTransportListener jmsTopicTransportListener = new JMSTransportListener("2");
         jmsTopicTransportListener.setMessageProcessor(messageProcessor);
         jmsTopicTransportListener.poll(topicListeningParametes);
     }
 
     @Test(groups = "jmsListening", description = "Testing whether queue listening is working correctly without any "
             + "exceptions")
-    public void queueListeningTestCase() throws InterruptedException, JMSException {
-        jmsQueueTransportListener.poll(queueListeningParametes);
-        LOGGER.info("JMS Transport Listener is starting to listen to the queue " + JMSTestConstants.QUEUE_NAME);
-        jmsServer.publishMessagesToQueue();
+    public void queueListeningTestCase() {
+        try {
+            jmsQueueTransportListener.poll(queueListeningParametes);
+            LOGGER.info("JMS Transport Listener is starting to listen to the queue " + JMSTestConstants.QUEUE_NAME);
+            jmsServer.publishMessagesToQueue();
+            Thread.sleep(10000);
+        } catch (Exception e) {
+            Assert.fail("Error while listing to queue");
+        }
     }
 
     @Test(groups = "jmsListening", description = "Testing whether topic listening is working correctly without any "
             + "exceptions")
-    public void topicListeningTestCase() throws InterruptedException, JMSException {
-        jmsQueueTransportListener.poll(queueListeningParametes);
-        LOGGER.info("JMS Transport Listener is starting to listen to the topic " + JMSTestConstants.TOPIC_NAME);
-        jmsServer.publishMessagesToTopic();
-    }
-
-    @AfterClass(groups = "jmsListening", description = "Closing the connection with the message broker")
-    public void cleanUp() {
-        jmsQueueTransportListener.stop();
+    public void topicListeningTestCase() {
+        try {
+            jmsQueueTransportListener.poll(queueListeningParametes);
+            LOGGER.info("JMS Transport Listener is starting to listen to the topic " + JMSTestConstants.TOPIC_NAME);
+            jmsServer.publishMessagesToTopic();
+            Thread.sleep(10000);
+        } catch (Exception e) {
+            Assert.fail("Error while listing to topic");
+        }
     }
 
 }

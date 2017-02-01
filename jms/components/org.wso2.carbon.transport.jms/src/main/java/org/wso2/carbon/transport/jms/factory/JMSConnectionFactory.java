@@ -44,7 +44,6 @@ import javax.naming.InitialContext;
 import javax.naming.NameNotFoundException;
 import javax.naming.NamingException;
 
-
 /**
  * JMSConnectionFactory that handles the JMS Connection, Session creation, closing
  */
@@ -57,7 +56,7 @@ public class JMSConnectionFactory implements ConnectionFactory, QueueConnectionF
     private Destination destination;
     private String destinationName;
     private boolean transactedSession = false;
-    private int sessionAckMode = 0;
+    private int sessionAckMode = Session.AUTO_ACKNOWLEDGE;
     private String jmsSpec;
     private boolean isDurable;
     private boolean noPubSubLocal;
@@ -66,6 +65,10 @@ public class JMSConnectionFactory implements ConnectionFactory, QueueConnectionF
     private String messageSelector;
     private boolean isSharedSubscription;
 
+    /**
+     * Initialization of JMS ConnectionFactory with the user specified properties
+     * @param properties Properties to be added to the initial context
+     */
     public JMSConnectionFactory(Properties properties) {
         try {
             ctx = new InitialContext(properties);
@@ -134,19 +137,14 @@ public class JMSConnectionFactory implements ConnectionFactory, QueueConnectionF
 
         String strSessionAck = properties.getProperty(JMSConstants.SESSION_ACK);
         if (null == strSessionAck) {
-            sessionAckMode = 1;
-        } else if (strSessionAck.equals("AUTO_ACKNOWLEDGE")) {
             sessionAckMode = Session.AUTO_ACKNOWLEDGE;
-        } else if (strSessionAck.equals("CLIENT_ACKNOWLEDGE")) {
+        }   else if (strSessionAck.equals(JMSConstants.CLIENT_ACKNOWLEDGE_MODE)) {
             sessionAckMode = Session.CLIENT_ACKNOWLEDGE;
-        } else if (strSessionAck.equals("DUPS_OK_ACKNOWLEDGE")) {
+        } else if (strSessionAck.equals(JMSConstants.DUPS_OK_ACKNOWLEDGE_MODE)) {
             sessionAckMode = Session.DUPS_OK_ACKNOWLEDGE;
-        } else if (strSessionAck.equals("SESSION_TRANSACTED")) {
+        } else if (strSessionAck.equals(JMSConstants.SESSION_TRANSACTED_MODE)) {
             sessionAckMode = Session.SESSION_TRANSACTED;
-        } else {
-            sessionAckMode = 1;
         }
-
         createConnectionFactory();
     }
 
@@ -225,12 +223,14 @@ public class JMSConnectionFactory implements ConnectionFactory, QueueConnectionF
         } catch (JMSException e) {
             logger.error(
                     "JMS Exception while creating connection through factory '" + this.connectionFactoryString + "' "
-                            + e.getMessage(), e);
+                            + e.getMessage());
+
             // Need to close the connection in the case if durable subscriptions
             if (connection != null) {
                 try {
                     connection.close();
                 } catch (Exception ex) {
+                    logger.error("Error while closing the connection");
                 }
             }
         }
@@ -443,9 +443,9 @@ public class JMSConnectionFactory implements ConnectionFactory, QueueConnectionF
 
     /**
      * To create the destination
-     * @param session
-     * @param destinationName
-     * @return
+     * @param session relevant session to create the destion
+     * @param destinationName Destination jms destionation
+     * @return the destination that is created from session
      */
     public Destination createDestination(Session session, String destinationName) {
         Destination destination = null;

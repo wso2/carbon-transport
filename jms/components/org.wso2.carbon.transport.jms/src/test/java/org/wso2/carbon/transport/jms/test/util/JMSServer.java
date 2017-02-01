@@ -57,7 +57,7 @@ public class JMSServer {
     public void publishMessagesToQueue() throws JMSException, InterruptedException {
         QueueConnection queueConn = (QueueConnection) connectionFactory.createConnection();
         queueConn.start();
-        QueueSession queueSession = queueConn.createQueueSession(false, Session.DUPS_OK_ACKNOWLEDGE);
+        QueueSession queueSession = queueConn.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
         Destination destination = queueSession.createQueue(JMSTestConstants.QUEUE_NAME);
         MessageProducer queueSender = queueSession.createProducer(destination);
         queueSender.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
@@ -82,7 +82,7 @@ public class JMSServer {
     public void publishMessagesToTopic() throws JMSException, InterruptedException {
         TopicConnection topicConnection = (TopicConnection) connectionFactory.createConnection();
         topicConnection.start();
-        TopicSession topicSession = topicConnection.createTopicSession(false, Session.DUPS_OK_ACKNOWLEDGE);
+        TopicSession topicSession = topicConnection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
         Destination destination = topicSession.createTopic(JMSTestConstants.TOPIC_NAME);
         MessageProducer topicSender = topicSession.createProducer(destination);
         topicSender.setDeliveryMode(DeliveryMode.NON_PERSISTENT);

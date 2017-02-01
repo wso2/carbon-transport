@@ -18,9 +18,6 @@
 
 package org.wso2.carbon.transport.jms.utils;
 
-import com.sun.javafx.collections.ObservableMapWrapper;
-import com.sun.javafx.collections.UnmodifiableObservableMap;
-
 import java.util.HashMap;
 import java.util.Map;
 import javax.xml.namespace.QName;
@@ -37,6 +34,9 @@ public class JMSConstants {
         QUEUE, TOPIC
     }
 
+    /**
+     * JMS protocol
+     */
     public static final String PROTOCOL_JMS = "jms";
     /**
      * ID of the service, that this listener is bounded to
@@ -62,6 +62,21 @@ public class JMSConstants {
     public static final String SESSION_ACK = "transport.jms.SessionAcknowledgement";
 
     /**
+     * Acknowledgements to client
+     */
+    public static final String JMS_MESSAGE_DELIVERY_ERROR = "JMS_MESSAGE_DELIVERY_ERROR";
+    public static final String JMS_MESSAGE_DELIVERY_SUCCESS = "JMS_MESSAGE_DELIVERY_SUCCESS";
+    public static final String JMS_MESSAGE_DELIVERY_STATUS = "JMS_MESSAGE_DELIVERY_STATUS";
+
+    /**
+     * Acknowledge Modes
+     */
+    public static final String AUTO_ACKNOWLEDGE_MODE = "AUTO_ACKNOWLEDGE";
+    public static final String CLIENT_ACKNOWLEDGE_MODE = "CLIENT_ACKNOWLEDGE";
+    public static final String DUPS_OK_ACKNOWLEDGE_MODE = "DUPS_OK_ACKNOWLEDGE";
+    public static final String SESSION_TRANSACTED_MODE = "SESSION_TRANSACTED";
+
+    /**
      * Parameters from the user
      */
     public static final String CONNECTION_FACTORY_JNDI_PARAM_NAME = "ConnectionFactoryJNDIName";
@@ -69,6 +84,7 @@ public class JMSConstants {
     public static final String DESTINATION_PARAM_NAME = "Destination";
     public static final String NAMING_FACTORY_INITIAL_PARAM_NAME = "FactoryInitial";
     public static final String PROVIDER_URL_PARAM_NAME = "ProviderUrl";
+    public static final String SESSION_ACK_MODE_PARAM_NAME = "SessionAcknowledgement";
 
     public static final String CONNECTION_USERNAME = "ConnectionUsername";
     public static final String CONNECTION_PASSWORD = "ConnectionPassword";
@@ -113,18 +129,19 @@ public class JMSConstants {
     /**
      * Mapping between parameters and actual values
      */
-    static Map<String, String> parameters = new HashMap<>();
+    @edu.umd.cs.findbugs.annotations.SuppressFBWarnings({"MS_MUTABLE_COLLECTION"})
+    public static final Map<String, String> MAPPING_PARAMETERS;
 
     static {
-        parameters.put(CONNECTION_FACTORY_JNDI_PARAM_NAME, CONNECTION_FACTORY_JNDI_NAME);
-        parameters.put(CONNECTION_FACTORY_TYPE_PARAM_NAME, CONNECTION_FACTORY_TYPE);
-        parameters.put(DESTINATION_PARAM_NAME, DESTINATION_NAME);
-        parameters.put(NAMING_FACTORY_INITIAL_PARAM_NAME, NAMING_FACTORY_INITIAL);
-        parameters.put(PROVIDER_URL_PARAM_NAME, PROVIDER_URL);
-    }
 
-    public static final UnmodifiableObservableMap<String, String> MAPPING_PARAMETERS =
-            new UnmodifiableObservableMap<>(new ObservableMapWrapper<>(parameters));
+        MAPPING_PARAMETERS = new HashMap<>();
+        MAPPING_PARAMETERS.put(CONNECTION_FACTORY_JNDI_PARAM_NAME, CONNECTION_FACTORY_JNDI_NAME);
+        MAPPING_PARAMETERS.put(CONNECTION_FACTORY_TYPE_PARAM_NAME, CONNECTION_FACTORY_TYPE);
+        MAPPING_PARAMETERS.put(DESTINATION_PARAM_NAME, DESTINATION_NAME);
+        MAPPING_PARAMETERS.put(NAMING_FACTORY_INITIAL_PARAM_NAME, NAMING_FACTORY_INITIAL);
+        MAPPING_PARAMETERS.put(PROVIDER_URL_PARAM_NAME, PROVIDER_URL);
+        MAPPING_PARAMETERS.put(SESSION_ACK_MODE_PARAM_NAME, SESSION_ACK);
+    }
 
     /**
      * The parameter indicating the JMS API specification to be used - if this

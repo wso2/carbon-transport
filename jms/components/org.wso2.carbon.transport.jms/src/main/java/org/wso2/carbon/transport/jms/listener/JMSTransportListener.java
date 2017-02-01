@@ -44,6 +44,14 @@ public class JMSTransportListener extends PollingTransportListener {
     private Destination destination;
     private MessageConsumer messageConsumer;
 
+    public JMSTransportListener(String id) {
+        super(id);
+    }
+
+    public JMSTransportListener() {
+        super("jmsTransportListener");
+    }
+
     @Override
     public void poll(Map<String, String> map) {
         try {
@@ -60,9 +68,11 @@ public class JMSTransportListener extends PollingTransportListener {
             if (connection != null) {
                 jmsConnectionFactory.start(connection);
                 session = jmsConnectionFactory.getSession(connection);
+                session.recover();
                 destination = jmsConnectionFactory.getDestination(session);
                 messageConsumer = jmsConnectionFactory.createMessageConsumer(session, destination);
-                messageConsumer.setMessageListener(new JMSMessageListener(carbonMessageProcessor, id));
+                messageConsumer.setMessageListener(
+                        new JMSMessageListener(carbonMessageProcessor, id, session.getAcknowledgeMode(), session));
             } else {
                 throw new RuntimeException("Cannot connect to the JMS Server. Check the connection and try again");
             }
@@ -76,7 +86,6 @@ public class JMSTransportListener extends PollingTransportListener {
         this.carbonMessageProcessor = carbonMessageProcessor;
     }
 
-
     @Override
     public boolean bind(String s) {
         return false;
@@ -88,18 +97,12 @@ public class JMSTransportListener extends PollingTransportListener {
     }
 
     @Override
-    public String getProtocol() {
-        return JMSConstants.PROTOCOL_JMS;
-    }
-
-    @Override
     @SuppressWarnings("unchecked")
     protected void start() {
         // Not needed for JMS Transport
     }
 
     @Override
-
     public void stop() {
         jmsConnectionFactory.closeConnection(connection);
         jmsConnectionFactory.closeSession(session);
@@ -108,17 +111,11 @@ public class JMSTransportListener extends PollingTransportListener {
 
     @Override
     protected void beginMaintenance() {
-
+        jmsConnectionFactory.stop(connection);
     }
 
     @Override
     protected void endMaintenance() {
-
-    }
-
-    public void stopListening() {
-        jmsConnectionFactory.closeConnection(connection);
-        jmsConnectionFactory.closeSession(session);
-        jmsConnectionFactory.closeMessageConsumer(messageConsumer);
+        jmsConnectionFactory.start(connection);
     }
 }
