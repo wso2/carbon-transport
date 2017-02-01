@@ -30,6 +30,7 @@
 
     <modules>
         <module>http/netty</module>
+        <module>jms</module>
     </modules>
 
     <scm>
@@ -103,6 +104,11 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.wso2.carbon.transport</groupId>
+                <artifactId>org.wso2.carbon.transport.jms</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.wso2.carbon.messaging</groupId>
                 <artifactId>org.wso2.carbon.messaging</artifactId>
                 <version>${carbon.messaging.version}</version>
@@ -116,6 +122,22 @@
                 <groupId>commons-pool.wso2</groupId>
                 <artifactId>commons-pool</artifactId>
                 <version>${commons.pool.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.code.findbugs</groupId>
+                <artifactId>findbugs</artifactId>
+                <version>${findbugs-annotations.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>javax.jms</groupId>
+                <artifactId>javax.jms-api</artifactId>
+                <version>${javax.jms.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.activemq</groupId>
+                <artifactId>activemq-broker</artifactId>
+                <version>${activemq.broker.vesion}</version>
+                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>commons-io.wso2</groupId>
@@ -247,6 +269,7 @@
         <commons-io.version.range>[2.4.0, 2.5)</commons-io.version.range>
         <guava.version>18.0</guava.version>
         <guava.version.range>[18.0,19.0)</guava.version.range>
+        <activemq.broker.vesion>5.14.3</activemq.broker.vesion>
 
 
 
@@ -271,6 +294,8 @@
         <metrics.version>3.1.2</metrics.version>
 
         <testng.version>6.9.10</testng.version>
+        <javax.jms.version>2.0.1</javax.jms.version>
+        <findbugs-annotations.version>3.0.1</findbugs-annotations.version>
     </properties>
 
 </project>
