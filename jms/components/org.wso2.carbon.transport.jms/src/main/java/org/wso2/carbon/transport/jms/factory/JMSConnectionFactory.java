@@ -29,6 +29,7 @@ import javax.jms.Destination;
 import javax.jms.JMSContext;
 import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
 import javax.jms.Queue;
 import javax.jms.QueueConnection;
 import javax.jms.QueueConnectionFactory;
@@ -408,6 +409,24 @@ public class JMSConnectionFactory implements ConnectionFactory, QueueConnectionF
             }
         } catch (JMSException e) {
             logger.error("JMS Exception while creating consumer. " + e.getMessage(), e);
+        }
+        return null;
+    }
+
+    public MessageProducer createMessageProducer(Session session, Destination destination) {
+        try {
+            if ((JMSConstants.JMS_SPEC_VERSION_1_1.equals(jmsSpec)) || (
+                    JMSConstants.JMS_SPEC_VERSION_2_0.equals(jmsSpec))) {
+                return session.createProducer(destination);
+            } else {
+                if (this.destinationType.equals(JMSConstants.JMSDestinationType.QUEUE)) {
+                    return ((QueueSession) session).createProducer((Queue) destination);
+                } else {
+                        return ((TopicSession) session).createPublisher((Topic) destination);
+                }
+            }
+        } catch (JMSException e) {
+            logger.error("JMS Exception while creating producer. " + e.getMessage(), e);
         }
         return null;
     }
