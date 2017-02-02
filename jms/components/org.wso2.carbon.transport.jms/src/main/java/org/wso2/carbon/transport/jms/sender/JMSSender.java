@@ -77,7 +77,6 @@ public class JMSSender implements TransportSender {
             Message message = null;
             String messageType = (String) carbonMessage.getProperty(JMSConstants.JMS_MESSAGE_TYPE);
 
-            //Create text message.
             if (messageType.equals(JMSConstants.TEXT_MESSAGE_TYPE)) {
                 message = session.createTextMessage();
                 TextMessage textMessage = (TextMessage) message;
@@ -86,17 +85,14 @@ public class JMSSender implements TransportSender {
                 }
             }
 
-            //Set transport headers
             Object transportHeaders = carbonMessage.getProperty(JMSConstants.TRANSPORT_HEADERS);
             if (transportHeaders != null && transportHeaders instanceof Map) {
                 JMSUtils.setTransportHeaders(message, (Map<String, Object>) carbonMessage
                         .getProperty(JMSConstants.TRANSPORT_HEADERS));
             }
 
-            //Send a message to the destination(queue/topic).
             messageProducer.send(message);
 
-            //Close the session and connection resources.
             session.close();
             connection.close();
 
