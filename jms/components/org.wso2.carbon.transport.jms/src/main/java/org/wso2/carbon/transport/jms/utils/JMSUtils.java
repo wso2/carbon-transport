@@ -22,12 +22,11 @@ import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.messaging.CarbonMessage;
 import org.wso2.carbon.messaging.TextJMSCarbonMessage;
 
+import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 
-import java.util.Enumeration;
-import java.util.Properties;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
