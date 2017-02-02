@@ -64,8 +64,8 @@ public class JMSConstants {
     /**
      * Acknowledgements to client
      */
-    public static final String JMS_MESSAGE_DELIVERY_ERROR = "JMS_MESSAGE_DELIVERY_ERROR";
-    public static final String JMS_MESSAGE_DELIVERY_SUCCESS = "JMS_MESSAGE_DELIVERY_SUCCESS";
+    public static final String JMS_MESSAGE_DELIVERY_ERROR = "ERROR";
+    public static final String JMS_MESSAGE_DELIVERY_SUCCESS = "SUCCESS";
     public static final String JMS_MESSAGE_DELIVERY_STATUS = "JMS_MESSAGE_DELIVERY_STATUS";
 
     /**

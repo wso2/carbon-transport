@@ -18,25 +18,23 @@
 
 package org.wso2.carbon.transport.jms.test.util;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.wso2.carbon.messaging.CarbonCallback;
 import org.wso2.carbon.messaging.CarbonMessage;
 import org.wso2.carbon.messaging.CarbonMessageProcessor;
-import org.wso2.carbon.messaging.TextJMSCarbonMessage;
+import org.wso2.carbon.messaging.TextCarbonMessage;
 import org.wso2.carbon.messaging.TransportSender;
 
 /**
  * Message processor for testing purposes
  */
 public class MessageProcessor implements CarbonMessageProcessor {
-    private static final Logger LOGGER = LoggerFactory.getLogger(MessageProcessor.class);
+    private int count;
 
     @Override
     public boolean receive(CarbonMessage carbonMessage, CarbonCallback carbonCallback) throws Exception {
-        if (carbonMessage instanceof TextJMSCarbonMessage) {
-            TextJMSCarbonMessage textJMSCarbonMessage = (TextJMSCarbonMessage) carbonMessage;
-            LOGGER.info(textJMSCarbonMessage.getText());
+        if (carbonMessage instanceof TextCarbonMessage) {
+            TextCarbonMessage textJMSCarbonMessage = (TextCarbonMessage) carbonMessage;
+            count++;
         }
         return true;
     }
@@ -47,5 +45,9 @@ public class MessageProcessor implements CarbonMessageProcessor {
     @Override
     public String getId() {
         return null;
+    }
+
+    public int getCount() {
+        return count;
     }
 }

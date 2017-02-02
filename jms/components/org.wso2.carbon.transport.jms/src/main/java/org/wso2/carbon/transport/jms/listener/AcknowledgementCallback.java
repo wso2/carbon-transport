@@ -43,15 +43,15 @@ public class AcknowledgementCallback implements CarbonCallback {
 
     @Override
     public void done(CarbonMessage carbonMessage) {
-        if (carbonMessage.getProperty(JMSConstants.JMS_MESSAGE_DELIVERY_STATUS).equals(JMSConstants
+        if (carbonMessage.getProperty(JMSConstants.JMS_MESSAGE_DELIVERY_STATUS).toString().equalsIgnoreCase(JMSConstants
                 .JMS_MESSAGE_DELIVERY_SUCCESS)) {
             try {
                 message.acknowledge();
             } catch (JMSException e) {
                 logger.error("Error while acknowledging the message." + e.getMessage());
             }
-        } else if (carbonMessage.getProperty(JMSConstants.JMS_MESSAGE_DELIVERY_STATUS).equals(JMSConstants
-                .JMS_MESSAGE_DELIVERY_ERROR)) {
+        } else if (carbonMessage.getProperty(JMSConstants.JMS_MESSAGE_DELIVERY_STATUS).toString()
+                .equalsIgnoreCase(JMSConstants.JMS_MESSAGE_DELIVERY_ERROR)) {
             try {
                 session.recover();
             } catch (JMSException e) {
@@ -59,6 +59,5 @@ public class AcknowledgementCallback implements CarbonCallback {
             }
 
         }
-
     }
 }

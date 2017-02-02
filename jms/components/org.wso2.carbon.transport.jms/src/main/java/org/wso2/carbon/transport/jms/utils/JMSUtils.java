@@ -20,7 +20,7 @@ package org.wso2.carbon.transport.jms.utils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.messaging.CarbonMessage;
-import org.wso2.carbon.messaging.TextJMSCarbonMessage;
+import org.wso2.carbon.messaging.TextCarbonMessage;
 
 import java.util.Enumeration;
 import java.util.Iterator;
@@ -140,7 +140,7 @@ public class JMSUtils {
         CarbonMessage jmsCarbonMessage = null;
         try {
             if (message instanceof TextMessage) {
-                jmsCarbonMessage = new TextJMSCarbonMessage(((TextMessage) message).getText());
+                jmsCarbonMessage = new TextCarbonMessage(((TextMessage) message).getText());
                 jmsCarbonMessage.setProperty(JMSConstants.JMS_MESSAGE_TYPE, JMSConstants.TEXT_MESSAGE_TYPE);
             } else {
                 log.error("Other message types are currently not supported. Only text messages are supported.");

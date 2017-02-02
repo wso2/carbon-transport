@@ -20,21 +20,21 @@ package org.wso2.carbon.transport.jms.error.handler;
 
 import org.wso2.carbon.messaging.CarbonCallback;
 import org.wso2.carbon.messaging.CarbonMessage;
-import org.wso2.carbon.messaging.TransportListenerErrorHandler;
+import org.wso2.carbon.messaging.ServerConnectorErrorHandler;
 import org.wso2.carbon.transport.jms.utils.JMSConstants;
 
 /**
  * Error handler for jms listener
  */
-public class JMSListenerErrorHandler implements TransportListenerErrorHandler {
+public class JMSServerConnectorErrorHandler implements ServerConnectorErrorHandler {
     @Override
-    public void handleError(Throwable throwable, CarbonMessage carbonMessage, CarbonCallback carbonCallback) {
+    public void handleError(Exception e, CarbonMessage carbonMessage, CarbonCallback carbonCallback) {
         if (carbonCallback != null) {
             carbonMessage
                     .setProperty(JMSConstants.JMS_MESSAGE_DELIVERY_STATUS, JMSConstants.JMS_MESSAGE_DELIVERY_ERROR);
             carbonCallback.done(carbonMessage);
         } else {
-            throw new RuntimeException(throwable);
+            throw new RuntimeException(e);
         }
     }
 
