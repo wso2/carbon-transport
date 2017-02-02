@@ -57,18 +57,18 @@ public class JMSServer {
      * @throws JMSException         JMS Exception
      * @throws InterruptedException Interrupted exception while waiting in between messages
      */
-    public void publishMessagesToQueue() throws JMSException, InterruptedException {
+    public void publishMessagesToQueue(String queueName) throws JMSException, InterruptedException {
         QueueConnection queueConn = (QueueConnection) connectionFactory.createConnection();
         queueConn.start();
         QueueSession queueSession = queueConn.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
-        Destination destination = queueSession.createQueue(JMSTestConstants.QUEUE_NAME);
+        Destination destination = queueSession.createQueue(queueName);
         MessageProducer queueSender = queueSession.createProducer(destination);
         queueSender.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
         for (int index = 0; index < 10; index++) {
             String queueText = "Queue Message : " + (index + 1);
             TextMessage queueMessage = queueSession.createTextMessage(queueText);
             queueSender.send(queueMessage);
-            logger.info("Publishing " + queueText + " to queue " + JMSTestConstants.QUEUE_NAME);
+            logger.info("Publishing " + queueText + " to queue " + queueName);
             Thread.sleep(1000);
         }
         queueConn.close();
@@ -82,18 +82,18 @@ public class JMSServer {
      * @throws JMSException         JMS Exception
      * @throws InterruptedException Interrupted exception while waiting in between messages
      */
-    public void publishMessagesToTopic() throws JMSException, InterruptedException {
+    public void publishMessagesToTopic(String topicName) throws JMSException, InterruptedException {
         TopicConnection topicConnection = (TopicConnection) connectionFactory.createConnection();
         topicConnection.start();
         TopicSession topicSession = topicConnection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
-        Destination destination = topicSession.createTopic(JMSTestConstants.TOPIC_NAME);
+        Destination destination = topicSession.createTopic(topicName);
         MessageProducer topicSender = topicSession.createProducer(destination);
         topicSender.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
         for (int index = 0; index < 10; index++) {
             String topicText = "Topic Message : " + (index + 1);
             TextMessage topicMessage = topicSession.createTextMessage(topicText);
             topicSender.send(topicMessage);
-            logger.info("Publishing " + topicText + " to topic " + JMSTestConstants.TOPIC_NAME);
+            logger.info("Publishing " + topicText + " to topic " + topicName);
             Thread.sleep(1000);
         }
         topicConnection.close();
@@ -110,7 +110,7 @@ public class JMSServer {
     public void receiveMessagesFromQueue() throws JMSException, InterruptedException {
         QueueConnection queueConn = (QueueConnection) connectionFactory.createConnection();
         QueueSession queueSession = queueConn.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
-        Destination destination = queueSession.createQueue(JMSTestConstants.QUEUE_NAME);
+        Destination destination = queueSession.createQueue(JMSTestConstants.QUEUE_NAME_1);
         MessageConsumer queueReceiver = queueSession.createConsumer(destination);
         MessageListener listener = new MessageListener() {
             @Override public void onMessage(Message message) {

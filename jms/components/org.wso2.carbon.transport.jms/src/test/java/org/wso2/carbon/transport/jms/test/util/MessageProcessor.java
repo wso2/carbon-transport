@@ -23,18 +23,29 @@ import org.wso2.carbon.messaging.CarbonMessage;
 import org.wso2.carbon.messaging.CarbonMessageProcessor;
 import org.wso2.carbon.messaging.TextCarbonMessage;
 import org.wso2.carbon.messaging.TransportSender;
+import org.wso2.carbon.transport.jms.utils.JMSConstants;
 
 /**
  * Message processor for testing purposes
  */
 public class MessageProcessor implements CarbonMessageProcessor {
-    private int count;
+    private int count = 0;
 
     @Override
     public boolean receive(CarbonMessage carbonMessage, CarbonCallback carbonCallback) throws Exception {
         if (carbonMessage instanceof TextCarbonMessage) {
-            TextCarbonMessage textJMSCarbonMessage = (TextCarbonMessage) carbonMessage;
             count++;
+            if (carbonCallback != null) {
+                if (count <= 2) {
+                    carbonMessage.setProperty(JMSConstants.JMS_MESSAGE_DELIVERY_STATUS,
+                            JMSConstants.JMS_MESSAGE_DELIVERY_SUCCESS);
+
+                } else {
+                    carbonMessage.setProperty(JMSConstants.JMS_MESSAGE_DELIVERY_STATUS,
+                            JMSConstants.JMS_MESSAGE_DELIVERY_ERROR);
+                }
+                carbonCallback.done(carbonMessage);
+            }
         }
         return true;
     }

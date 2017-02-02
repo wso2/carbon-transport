@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2017, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  * WSO2 Inc. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -43,7 +43,7 @@ public class SendMessageTestCase {
     @BeforeClass(groups = "queueSending", description = "Setting up the server and carbon message to be sent")
     public void setUp() {
         carbonMessage = new DefaultCarbonMessage();
-        carbonMessage.setProperty(JMSConstants.DESTINATION_PARAM_NAME, JMSTestConstants.QUEUE_NAME);
+        carbonMessage.setProperty(JMSConstants.DESTINATION_PARAM_NAME, JMSTestConstants.QUEUE_NAME_1);
         carbonMessage.setProperty(JMSConstants.CONNECTION_FACTORY_JNDI_PARAM_NAME,
                                   JMSTestConstants.QUEUE_CONNECTION_FACTORY);
         carbonMessage.setProperty(JMSConstants.NAMING_FACTORY_INITIAL_PARAM_NAME,
@@ -63,7 +63,7 @@ public class SendMessageTestCase {
             "exceptions") public void queueListeningTestCase()
             throws InterruptedException, JMSException, MessageProcessorException {
         LOGGER.info("JMS Transport Sender is sending a message to the queue " +
-                    JMSTestConstants.QUEUE_NAME);
+                    JMSTestConstants.QUEUE_NAME_1);
         JMSSender sender = new JMSSender();
         jmsServer.receiveMessagesFromQueue();
         sender.send(carbonMessage, null);

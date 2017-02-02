@@ -1,20 +1,21 @@
 /*
-*  Copyright (c) 2005-2014, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
-*
-*  WSO2 Inc. licenses this file to you under the Apache License,
-*  Version 2.0 (the "License"); you may not use this file except
-*  in compliance with the License.
-*  You may obtain a copy of the License at
-*
-*    http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing,
-* software distributed under the License is distributed on an
-* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-* KIND, either express or implied.  See the License for the
-* specific language governing permissions and limitations
-* under the License.
-*/
+ *  Copyright (c) 2017, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *
+ *  WSO2 Inc. licenses this file to you under the Apache License,
+ *  Version 2.0 (the "License"); you may not use this file except
+ *  in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 package org.wso2.carbon.transport.jms.utils;
 
 import org.apache.commons.logging.Log;
@@ -38,7 +39,7 @@ import javax.naming.NamingException;
 import javax.naming.Reference;
 
 /**
- * Maintain the common methods used by inbound JMS protocol
+ * This class is maintains the common methods used by JMS transport
  */
 public class JMSUtils {
 
@@ -94,18 +95,26 @@ public class JMSUtils {
                                     "dynamicQueues/") + destinationName);
                 }
 
-            } catch (NamingException x) {
+            } catch (NamingException ex) {
                 log.warn("Cannot locate destination : " + destinationName);
-                throw x;
+                throw ex;
             }
-        } catch (NamingException e) {
-            log.warn("Cannot locate destination : " + destinationName, e);
-            throw e;
+        } catch (NamingException ex) {
+            log.warn("Cannot locate destination : " + destinationName, ex);
+            throw ex;
         }
     }
 
+    /**
+     * JNDI look up in the context
+     * @param context Context that need to looked up
+     * @param clazz Class of the object that need to be found
+     * @param name Name of the object that need to be looked up
+     * @param <T> Class of the Object that need to be found
+     * @return the relevant object, if found in the context
+     * @throws NamingException, if the found object is different from the expected object
+     */
     private static <T> T lookup(Context context, Class<T> clazz, String name) throws NamingException {
-
         Object object = context.lookup(name);
         try {
             return clazz.cast(object);
@@ -114,21 +123,16 @@ public class JMSUtils {
             // more information.
             if (object instanceof Reference) {
                 Reference ref = (Reference) object;
-                handleException("JNDI failed to de-reference Reference with name " + name + "; is the factory " + ref
-                        .getFactoryClassName() + " in your classpath?");
-                return null;
+                String errorMessage = "JNDI failed to de-reference Reference with name " + name + "; is the "
+                        + "factory " + ref.getFactoryClassName() + " in your classpath?";
+                throw new NamingException(errorMessage);
             } else {
-                handleException(
-                        "JNDI lookup of name " + name + " returned a " + object.getClass().getName() + " while a "
-                                + clazz + " was expected");
-                return null;
+                String errorMessage = "JNDI lookup of name " + name + " returned a " + object.getClass().getName() +
+                        " while a " + clazz + " was expected";
+                log.error(errorMessage);
+                throw new NamingException(errorMessage);
             }
         }
-    }
-
-    protected static void handleException(String s) throws NamingException {
-        log.error(s);
-        throw new NamingException(s);
     }
 
     /**
@@ -170,6 +174,11 @@ public class JMSUtils {
         return jmsCarbonMessage;
     }
 
+    /**
+     * To set the relevant transport headers to the jms message
+     * @param message Relevant message to set the header
+     * @param headerMap Header that need to be set
+     */
     public static void setTransportHeaders(Message message, Map<String, Object> headerMap) {
         try {
             if (headerMap != null) {
@@ -184,8 +193,7 @@ public class JMSUtils {
 
                         Object headerName = iterator.next();
                         name = (String) headerName;
-                    } while (name.startsWith("JMSX") && !name.equals("JMSXGroupID") &&
-                             !name.equals("JMSXGroupSeq"));
+                    } while (name.startsWith("JMSX") && !name.equals("JMSXGroupID") && !name.equals("JMSXGroupSeq"));
 
                     if ("JMS_COORELATION_ID".equals(name)) {
                         message.setJMSCorrelationID((String) headerMap.get("JMS_COORELATION_ID"));
@@ -205,16 +213,13 @@ public class JMSUtils {
 
                             }
                         } else if ("JMS_EXPIRATION".equals(name)) {
-                            message.setJMSExpiration(
-                                    Long.parseLong((String) headerMap.get("JMS_EXPIRATION")));
+                            message.setJMSExpiration(Long.parseLong((String) headerMap.get("JMS_EXPIRATION")));
                         } else if ("JMS_MESSAGE_ID".equals(name)) {
                             message.setJMSMessageID((String) headerMap.get("JMS_MESSAGE_ID"));
                         } else if ("JMS_PRIORITY".equals(name)) {
-                            message.setJMSPriority(
-                                    Integer.parseInt((String) headerMap.get("JMS_PRIORITY")));
+                            message.setJMSPriority(Integer.parseInt((String) headerMap.get("JMS_PRIORITY")));
                         } else if ("JMS_TIMESTAMP".equals(name)) {
-                            message.setJMSTimestamp(
-                                    Long.parseLong((String) headerMap.get("JMS_TIMESTAMP")));
+                            message.setJMSTimestamp(Long.parseLong((String) headerMap.get("JMS_TIMESTAMP")));
                         } else if ("JMS_MESSAGE_TYPE".equals(name)) {
                             message.setJMSType((String) headerMap.get("JMS_MESSAGE_TYPE"));
                         } else {

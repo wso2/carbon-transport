@@ -23,6 +23,7 @@ import org.wso2.carbon.messaging.ServerConnectorProvider;
 import org.wso2.carbon.transport.jms.listener.JMSServerConnector;
 import org.wso2.carbon.transport.jms.utils.JMSConstants;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -39,7 +40,10 @@ public class JMSServerConnectorProvider extends ServerConnectorProvider {
 
     @Override
     public List<ServerConnector> initializeConnectors() {
-        return null;
+        List<ServerConnector> dummyServerConnectorList = new ArrayList<ServerConnector>();
+        dummyServerConnectorList.add(new JMSServerConnector("dummyjms"));
+        return  dummyServerConnectorList;
+
     }
 
     @Override

@@ -42,9 +42,9 @@ import javax.jms.TextMessage;
 
 public class JMSSender implements TransportSender {
 
-    @Override public boolean send(CarbonMessage carbonMessage, CarbonCallback carbonCallback)
+    @Override
+    public boolean send(CarbonMessage carbonMessage, CarbonCallback carbonCallback)
             throws MessageProcessorException {
-
         try {
             Properties properties = new Properties();
             Set<Map.Entry<String, Object>> set = carbonMessage.getProperties().entrySet();
@@ -56,10 +56,8 @@ public class JMSSender implements TransportSender {
             }
             JMSConnectionFactory jmsConnectionFactory = new JMSConnectionFactory(properties);
 
-            String conUsername =
-                    (String) carbonMessage.getProperty(JMSConstants.CONNECTION_USERNAME);
-            String conPassword =
-                    (String) carbonMessage.getProperty(JMSConstants.CONNECTION_PASSWORD);
+            String conUsername = (String) carbonMessage.getProperty(JMSConstants.CONNECTION_USERNAME);
+            String conPassword = (String) carbonMessage.getProperty(JMSConstants.CONNECTION_PASSWORD);
 
             Connection connection = null;
             if (conUsername != null && conPassword != null) {
@@ -71,8 +69,7 @@ public class JMSSender implements TransportSender {
 
             Session session = jmsConnectionFactory.getSession(connection);
             Destination destination = jmsConnectionFactory.getDestination(session);
-            MessageProducer messageProducer =
-                    jmsConnectionFactory.createMessageProducer(session, destination);
+            MessageProducer messageProducer = jmsConnectionFactory.createMessageProducer(session, destination);
 
             Message message = null;
             String messageType = (String) carbonMessage.getProperty(JMSConstants.JMS_MESSAGE_TYPE);
@@ -87,8 +84,8 @@ public class JMSSender implements TransportSender {
 
             Object transportHeaders = carbonMessage.getProperty(JMSConstants.TRANSPORT_HEADERS);
             if (transportHeaders != null && transportHeaders instanceof Map) {
-                JMSUtils.setTransportHeaders(message, (Map<String, Object>) carbonMessage
-                        .getProperty(JMSConstants.TRANSPORT_HEADERS));
+                JMSUtils.setTransportHeaders(message,
+                        (Map<String, Object>) carbonMessage.getProperty(JMSConstants.TRANSPORT_HEADERS));
             }
 
             messageProducer.send(message);
@@ -99,12 +96,12 @@ public class JMSSender implements TransportSender {
         } catch (JMSException e) {
             throw new RuntimeException("Exception occurred while sending the message.");
         }
-
         return false;
     }
 
 
-    @Override public String getId() {
+    @Override
+    public String getId() {
         return "JMS";
     }
 }
