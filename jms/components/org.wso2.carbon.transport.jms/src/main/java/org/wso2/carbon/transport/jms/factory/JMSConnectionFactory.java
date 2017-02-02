@@ -413,6 +413,12 @@ public class JMSConnectionFactory implements ConnectionFactory, QueueConnectionF
         return null;
     }
 
+    /**
+     * Create a message producer for particular session and destination
+     * @param session     JMS Session to create the producer
+     * @param destination JMS destination which the producer should publish to
+     * @return MessageProducer, who publish messages to particular destination with the given session
+     */
     public MessageProducer createMessageProducer(Session session, Destination destination) {
         try {
             if ((JMSConstants.JMS_SPEC_VERSION_1_1.equals(jmsSpec)) || (

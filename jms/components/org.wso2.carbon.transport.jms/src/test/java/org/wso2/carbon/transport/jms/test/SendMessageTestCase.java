@@ -25,26 +25,23 @@ import org.testng.annotations.Test;
 import org.wso2.carbon.messaging.CarbonMessage;
 import org.wso2.carbon.messaging.DefaultCarbonMessage;
 import org.wso2.carbon.messaging.MessageProcessorException;
-import org.wso2.carbon.transport.jms.listener.JMSTransportListener;
 import org.wso2.carbon.transport.jms.sender.JMSSender;
 import org.wso2.carbon.transport.jms.test.util.JMSServer;
 import org.wso2.carbon.transport.jms.test.util.JMSTestConstants;
 import org.wso2.carbon.transport.jms.utils.JMSConstants;
 
 import javax.jms.JMSException;
-import java.util.Map;
 
 /**
  * A test class for testing queue listening
  */
 public class SendMessageTestCase {
     private JMSServer jmsServer;
-    private JMSTransportListener jmsTransportListener;
-    private Map<String, String> listeningParametes;
     private CarbonMessage carbonMessage;
     private static final Logger LOGGER = LoggerFactory.getLogger(SendMessageTestCase.class);
 
-    @BeforeClass(groups = "queueSending", description = "Setting up the server and carbon message sent") public void setUp() {
+    @BeforeClass(groups = "queueSending", description = "Setting up the server and carbon message to be sent")
+    public void setUp() {
         carbonMessage = new DefaultCarbonMessage();
         carbonMessage.setProperty(JMSConstants.DESTINATION_PARAM_NAME, JMSTestConstants.QUEUE_NAME);
         carbonMessage.setProperty(JMSConstants.CONNECTION_FACTORY_JNDI_PARAM_NAME,
