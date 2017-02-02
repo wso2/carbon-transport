@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-import org.wso2.carbon.transport.jms.listener.JMSTransportListener;
+import org.wso2.carbon.transport.jms.listener.JMSServerConnector;
 import org.wso2.carbon.transport.jms.test.util.JMSServer;
 import org.wso2.carbon.transport.jms.test.util.JMSTestConstants;
 import org.wso2.carbon.transport.jms.test.util.MessageProcessor;
@@ -37,8 +37,10 @@ import java.util.Map;
  */
 public class QueueTopicListeningTestCase {
     private JMSServer jmsServer;
-    private JMSTransportListener jmsQueueTransportListener;
+    private JMSServerConnector jmsQueueTransportListener;
     private Map<String, String> queueListeningParametes;
+    private MessageProcessor queueMessageProcessor;
+    private MessageProcessor topicMessageProcessor;
     private static final Logger LOGGER = LoggerFactory.getLogger(QueueTopicListeningTestCase.class);
 
     @BeforeClass(groups = "jmsListening", description = "Setting up the server, JMS listener and message processor")
@@ -66,14 +68,15 @@ public class QueueTopicListeningTestCase {
         jmsServer.startServer();
 
         // Create a queue transport listener
-        jmsQueueTransportListener = new JMSTransportListener("1");
-        MessageProcessor messageProcessor = new MessageProcessor();
-        jmsQueueTransportListener.setMessageProcessor(messageProcessor);
+        jmsQueueTransportListener = new JMSServerConnector("1");
+        queueMessageProcessor = new MessageProcessor();
+        jmsQueueTransportListener.setMessageProcessor(queueMessageProcessor);
         jmsQueueTransportListener.poll(queueListeningParametes);
 
         // Create a topic transport listener
-        JMSTransportListener jmsTopicTransportListener = new JMSTransportListener("2");
-        jmsTopicTransportListener.setMessageProcessor(messageProcessor);
+        JMSServerConnector jmsTopicTransportListener = new JMSServerConnector("2");
+        topicMessageProcessor = new MessageProcessor();
+        jmsTopicTransportListener.setMessageProcessor(topicMessageProcessor);
         jmsTopicTransportListener.poll(topicListeningParametes);
     }
 
@@ -85,6 +88,8 @@ public class QueueTopicListeningTestCase {
             LOGGER.info("JMS Transport Listener is starting to listen to the queue " + JMSTestConstants.QUEUE_NAME);
             jmsServer.publishMessagesToQueue();
             Thread.sleep(10000);
+            Assert.assertEquals(queueMessageProcessor.getCount(), 10, "Expected message count is not received when "
+                    + "listing to queue " + JMSTestConstants.QUEUE_NAME);
         } catch (Exception e) {
             Assert.fail("Error while listing to queue");
         }
@@ -98,6 +103,8 @@ public class QueueTopicListeningTestCase {
             LOGGER.info("JMS Transport Listener is starting to listen to the topic " + JMSTestConstants.TOPIC_NAME);
             jmsServer.publishMessagesToTopic();
             Thread.sleep(10000);
+            Assert.assertEquals(topicMessageProcessor.getCount(), 10, "Expected message count is not received when "
+                    + "listening to topic " +  JMSTestConstants.TOPIC_NAME);
         } catch (Exception e) {
             Assert.fail("Error while listing to topic");
         }

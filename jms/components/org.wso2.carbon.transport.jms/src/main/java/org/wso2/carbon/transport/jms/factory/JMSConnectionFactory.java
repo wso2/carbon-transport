@@ -220,7 +220,7 @@ public class JMSConnectionFactory implements ConnectionFactory, QueueConnectionF
                 }
                 return connection;
             }
-        } catch (JMSException e) {
+        } catch (Throwable e) {
             logger.error(
                     "JMS Exception while creating connection through factory '" + this.connectionFactoryString + "' "
                             + e.getMessage());
@@ -233,8 +233,8 @@ public class JMSConnectionFactory implements ConnectionFactory, QueueConnectionF
                     logger.error("Error while closing the connection");
                 }
             }
+            throw new RuntimeException("Error while creating the jms connection factory");
         }
-        return null;
     }
 
     @Override

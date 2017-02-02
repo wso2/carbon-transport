@@ -19,7 +19,7 @@
 package org.wso2.carbon.transport.jms.listener;
 
 import org.wso2.carbon.messaging.CarbonMessageProcessor;
-import org.wso2.carbon.messaging.PollingTransportListener;
+import org.wso2.carbon.messaging.PollingServerConnector;
 import org.wso2.carbon.transport.jms.factory.JMSConnectionFactory;
 import org.wso2.carbon.transport.jms.utils.JMSConstants;
 
@@ -28,7 +28,6 @@ import java.util.Properties;
 import java.util.Set;
 import javax.jms.Connection;
 import javax.jms.Destination;
-import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.Session;
 
@@ -36,7 +35,7 @@ import javax.jms.Session;
 /**
  * This is a transport listener for JMS
  */
-public class JMSTransportListener extends PollingTransportListener {
+public class JMSServerConnector extends PollingServerConnector {
     private CarbonMessageProcessor carbonMessageProcessor;
     private JMSConnectionFactory jmsConnectionFactory = null;
     private Connection connection;
@@ -44,12 +43,12 @@ public class JMSTransportListener extends PollingTransportListener {
     private Destination destination;
     private MessageConsumer messageConsumer;
 
-    public JMSTransportListener(String id) {
+    public JMSServerConnector(String id) {
         super(id);
     }
 
-    public JMSTransportListener() {
-        super("jmsTransportListener");
+    public JMSServerConnector() {
+        super("jms");
     }
 
     @Override
@@ -76,24 +75,14 @@ public class JMSTransportListener extends PollingTransportListener {
             } else {
                 throw new RuntimeException("Cannot connect to the JMS Server. Check the connection and try again");
             }
-        } catch (JMSException e) {
-            throw new RuntimeException("Client libs are added to class path. Please check and try again");
+        } catch (Throwable e) {
+            throw new RuntimeException("Cannot connect to the JMS Server. Check the connection and other properties");
         }
     }
 
     @Override
     public void setMessageProcessor(CarbonMessageProcessor carbonMessageProcessor) {
         this.carbonMessageProcessor = carbonMessageProcessor;
-    }
-
-    @Override
-    public boolean bind(String s) {
-        return false;
-    }
-
-    @Override
-    public boolean unBind(String s) {
-        return false;
     }
 
     @Override

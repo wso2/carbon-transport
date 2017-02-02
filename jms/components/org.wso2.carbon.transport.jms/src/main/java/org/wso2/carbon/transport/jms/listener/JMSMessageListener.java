@@ -20,7 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wso2.carbon.messaging.CarbonMessage;
 import org.wso2.carbon.messaging.CarbonMessageProcessor;
-import org.wso2.carbon.messaging.TextJMSCarbonMessage;
+import org.wso2.carbon.messaging.TextCarbonMessage;
 import org.wso2.carbon.transport.jms.utils.JMSConstants;
 import org.wso2.carbon.transport.jms.utils.JMSUtils;
 
@@ -48,7 +48,6 @@ class JMSMessageListener implements javax.jms.MessageListener {
 
     /**
      * Override this method and add the operation which is needed to be done when a message is arrived
-     *
      * @param message - the next received message
      */
     @Override
@@ -59,7 +58,7 @@ class JMSMessageListener implements javax.jms.MessageListener {
             if (jmsCarbonMessage != null) {
                 jmsCarbonMessage.setProperty(org.wso2.carbon.messaging.Constants.PROTOCOL, JMSConstants.PROTOCOL_JMS);
                 jmsCarbonMessage.setProperty(JMSConstants.JMS_SERVICE_ID, serviceId);
-                TextJMSCarbonMessage textJMSCarbonMessage = (TextJMSCarbonMessage) jmsCarbonMessage;
+                TextCarbonMessage textJMSCarbonMessage = (TextCarbonMessage) jmsCarbonMessage;
                 if (this.ackonwledgementMode == Session.CLIENT_ACKNOWLEDGE) {
                     carbonMessageProcessor.receive(jmsCarbonMessage, new AcknowledgementCallback(message, session));
                 } else {
