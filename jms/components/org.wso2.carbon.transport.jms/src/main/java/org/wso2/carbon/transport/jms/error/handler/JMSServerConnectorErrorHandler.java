@@ -27,15 +27,26 @@ import org.wso2.carbon.transport.jms.utils.JMSConstants;
  * Error handler for jms listener
  */
 public class JMSServerConnectorErrorHandler implements ServerConnectorErrorHandler {
+
     @Override
-    public void handleError(Exception e, CarbonMessage carbonMessage, CarbonCallback carbonCallback) {
+    public void handleError(Throwable throwable, CarbonMessage carbonMessage, CarbonCallback carbonCallback) {
         if (carbonCallback != null) {
             carbonMessage
                     .setProperty(JMSConstants.JMS_MESSAGE_DELIVERY_STATUS, JMSConstants.JMS_MESSAGE_DELIVERY_ERROR);
             carbonCallback.done(carbonMessage);
         } else {
-            throw new RuntimeException(e);
+            if (throwable instanceof RuntimeException) {
+                handleError((RuntimeException) throwable);
+            }
         }
+    }
+
+    /** To handle the exception
+     *
+     * @param exception Run time exception that need b ethrown
+     */
+    private void handleError (RuntimeException exception) {
+        throw exception;
     }
 
     @Override
