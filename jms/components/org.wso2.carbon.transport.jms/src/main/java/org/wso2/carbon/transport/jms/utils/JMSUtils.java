@@ -22,6 +22,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.messaging.CarbonMessage;
 import org.wso2.carbon.messaging.TextCarbonMessage;
+import org.wso2.carbon.transport.jms.exception.JMSServerConnectorException;
 
 import java.util.Enumeration;
 import java.util.Iterator;
@@ -140,16 +141,12 @@ public class JMSUtils {
      * @param message JMS message that need to be changed as carbon message
      * @return the carbon message converted from jms message
      */
-    public static CarbonMessage createJMSCarbonMessage(Message message) {
-        CarbonMessage jmsCarbonMessage = null;
+    public static CarbonMessage createJMSCarbonMessage(Message message) throws JMSServerConnectorException {
+        CarbonMessage jmsCarbonMessage;
         try {
             if (message instanceof TextMessage) {
                 jmsCarbonMessage = new TextCarbonMessage(((TextMessage) message).getText());
                 jmsCarbonMessage.setProperty(JMSConstants.JMS_MESSAGE_TYPE, JMSConstants.TEXT_MESSAGE_TYPE);
-            } else {
-                log.error("Other message types are currently not supported. Only text messages are supported.");
-            }
-            if (jmsCarbonMessage != null) {
                 String messageId = message.getJMSMessageID();
                 if (messageId != null) {
                     jmsCarbonMessage.setHeader(JMSConstants.JMS_MESSAGE_ID, messageId);
@@ -166,12 +163,14 @@ public class JMSUtils {
                     String name = properties.nextElement();
                     jmsCarbonMessage.setHeader(name, message.getStringProperty(name));
                 }
-
+                return jmsCarbonMessage;
             }
+            log.warn("Other message types are currently not supported. Only text messages are supported.");
+            return null;
         } catch (JMSException e) {
             log.error("Error while changing the jms message to carbon message");
+            throw new JMSServerConnectorException("Error while changing the jms message to carbon message", e);
         }
-        return jmsCarbonMessage;
     }
 
     /**

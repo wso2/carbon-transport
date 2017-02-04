@@ -21,6 +21,7 @@ import org.wso2.carbon.messaging.CarbonCallback;
 import org.wso2.carbon.messaging.CarbonMessage;
 import org.wso2.carbon.messaging.MessageProcessorException;
 import org.wso2.carbon.messaging.TransportSender;
+import org.wso2.carbon.transport.jms.exception.JMSServerConnectorException;
 import org.wso2.carbon.transport.jms.factory.JMSConnectionFactory;
 import org.wso2.carbon.transport.jms.utils.JMSConstants;
 import org.wso2.carbon.transport.jms.utils.JMSUtils;
@@ -64,10 +65,10 @@ public class JMSSender implements TransportSender {
                 connection = jmsConnectionFactory.createConnection(conUsername, conPassword);
             }
             if (connection == null) {
-                connection = jmsConnectionFactory.getConnection();
+                connection = jmsConnectionFactory.createConnection();
             }
 
-            Session session = jmsConnectionFactory.getSession(connection);
+            Session session = jmsConnectionFactory.createSession(connection);
             Destination destination = jmsConnectionFactory.getDestination(session);
             MessageProducer messageProducer = jmsConnectionFactory.createMessageProducer(session, destination);
 
@@ -95,6 +96,8 @@ public class JMSSender implements TransportSender {
 
         } catch (JMSException e) {
             throw new RuntimeException("Exception occurred while sending the message.");
+        } catch (JMSServerConnectorException e) {
+            throw new RuntimeException("Exception occurred while sending the message", e);
         }
         return false;
     }

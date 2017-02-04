@@ -50,8 +50,7 @@ public class AcknowledgementCallback implements CarbonCallback {
             } catch (JMSException e) {
                 logger.error("Error while acknowledging the message." + e.getMessage());
             }
-        } else if (carbonMessage.getProperty(JMSConstants.JMS_MESSAGE_DELIVERY_STATUS).toString()
-                .equalsIgnoreCase(JMSConstants.JMS_MESSAGE_DELIVERY_ERROR)) {
+        } else {
             try {
                 session.recover();
             } catch (JMSException e) {

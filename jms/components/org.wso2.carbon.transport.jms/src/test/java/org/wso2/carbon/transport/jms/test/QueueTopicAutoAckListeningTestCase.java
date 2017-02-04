@@ -39,7 +39,7 @@ public class QueueTopicAutoAckListeningTestCase {
     private JMSServer jmsServer;
     private MessageProcessor queueMessageProcessor;
     private MessageProcessor topicMessageProcessor;
-    private static final Logger LOGGER = LoggerFactory.getLogger(QueueTopicAutoAckListeningTestCase.class);
+    private static final Logger logger = LoggerFactory.getLogger(QueueTopicAutoAckListeningTestCase.class);
 
     @BeforeClass(groups = "jmsListening", description = "Setting up the server, JMS listener and message processor")
     public void setUp() {
@@ -69,20 +69,22 @@ public class QueueTopicAutoAckListeningTestCase {
         JMSServerConnector jmsQueueTransportListener = new JMSServerConnector("1");
         queueMessageProcessor = new MessageProcessor();
         jmsQueueTransportListener.setMessageProcessor(queueMessageProcessor);
-        jmsQueueTransportListener.poll(queueListeningParametes);
+        jmsQueueTransportListener.init(queueListeningParametes);
+        jmsQueueTransportListener.bind();
 
         // Create a topic transport listener
         JMSServerConnector jmsTopicTransportListener = new JMSServerConnector("2");
         topicMessageProcessor = new MessageProcessor();
         jmsTopicTransportListener.setMessageProcessor(topicMessageProcessor);
-        jmsTopicTransportListener.poll(topicListeningParametes);
+        jmsTopicTransportListener.init(topicListeningParametes);
+        jmsTopicTransportListener.bind();
     }
 
     @Test(groups = "jmsListening", description = "Testing whether queue listening is working correctly without any "
             + "exceptions in auto ack mode")
     public void queueListeningTestCase() {
         try {
-            LOGGER.info("JMS Transport Listener is starting to listen to the queue " + JMSTestConstants.QUEUE_NAME);
+            logger.info("JMS Transport Listener is starting to listen to the queue " + JMSTestConstants.QUEUE_NAME);
             jmsServer.publishMessagesToQueue(JMSTestConstants.QUEUE_NAME);
             Assert.assertEquals(queueMessageProcessor.getCount(), 10, "Expected message count is not received when "
                     + "listing to queue " + JMSTestConstants.QUEUE_NAME);
@@ -95,7 +97,7 @@ public class QueueTopicAutoAckListeningTestCase {
             + "exceptions in auto ack mode")
     public void topicListeningTestCase() {
         try {
-            LOGGER.info("JMS Transport Listener is starting to listen to the topic " + JMSTestConstants.TOPIC_NAME);
+            logger.info("JMS Transport Listener is starting to listen to the topic " + JMSTestConstants.TOPIC_NAME);
             jmsServer.publishMessagesToTopic(JMSTestConstants.TOPIC_NAME);
             Assert.assertEquals(topicMessageProcessor.getCount(), 10, "Expected message count is not received when "
                     + "listening to topic " +  JMSTestConstants.TOPIC_NAME);
