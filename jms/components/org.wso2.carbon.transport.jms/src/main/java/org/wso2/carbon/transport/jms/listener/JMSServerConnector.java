@@ -18,6 +18,7 @@
 
 package org.wso2.carbon.transport.jms.listener;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.messaging.CarbonMessageProcessor;
@@ -31,7 +32,6 @@ import java.util.Properties;
 import java.util.Set;
 import javax.jms.Connection;
 import javax.jms.Destination;
-import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.Session;
 
@@ -47,6 +47,8 @@ public class JMSServerConnector extends ListeningServerConnector {
     private Destination destination;
     private MessageConsumer messageConsumer;
     private Properties properties;
+    private int retryInterval = 1;
+    private int maxRetryCount = 5;
 
     public JMSServerConnector(String id) {
         super(id);
@@ -61,6 +63,27 @@ public class JMSServerConnector extends ListeningServerConnector {
                 properties.put(mappedParameter, entry.getValue());
             }
         }
+
+        String retryInterval = map.get(JMSConstants.RETRY_INTERVAL);
+        if (retryInterval != null) {
+            try {
+                this.retryInterval = Integer.parseInt(retryInterval);
+            } catch (NumberFormatException ex) {
+                logger.error("Provided value for retry interval is invalid, using the default retry interval value "
+                        + retryInterval);
+            }
+        }
+
+        String maxRetryCount = map.get(JMSConstants.MAX_RETRY_COUNT);
+        if (maxRetryCount != null) {
+            try {
+                this.maxRetryCount = Integer.parseInt(maxRetryCount);
+            } catch (NumberFormatException ex) {
+                logger.error("Provided value for max retry count is invalid, using the default max retry count "
+                        + maxRetryCount);
+            }
+        }
+
     }
 
 
@@ -76,8 +99,9 @@ public class JMSServerConnector extends ListeningServerConnector {
                             + " properties and re-deploy the jms service");
                 }
                 closeAll();
-                JMSConnectionRetryHandler jmsConnectionRetryHandler = new JMSConnectionRetryHandler(this, 1, 5);
-                jmsConnectionRetryHandler.start();
+                JMSConnectionRetryHandler jmsConnectionRetryHandler = new JMSConnectionRetryHandler(this,
+                        retryInterval, maxRetryCount);
+                jmsConnectionRetryHandler.run();
             } catch (JMSServerConnectorException e1) {
                 throw new RuntimeException(e1.getMessage(), e1);
             }
@@ -85,6 +109,7 @@ public class JMSServerConnector extends ListeningServerConnector {
         return false;
     }
 
+    @SuppressFBWarnings({"REC_CATCH_EXCEPTION"})
     void createDestinationListener() throws JMSServerConnectorException {
         try {
             jmsConnectionFactory = new JMSConnectionFactory(properties);
@@ -95,8 +120,8 @@ public class JMSServerConnector extends ListeningServerConnector {
             messageConsumer = jmsConnectionFactory.createMessageConsumer(session, destination);
             messageConsumer.setMessageListener(
                     new JMSMessageListener(carbonMessageProcessor, id, session.getAcknowledgeMode(), session));
-        } catch (JMSException e) {
-            logger.error("Error while creating the connection from connection factory", e);
+        } catch (Exception e) {
+            logger.error("Error while creating the connection from connection factory. " + e.getMessage());
             throw new JMSServerConnectorException("Error while creating the connection from connection factory", e);
         }
 

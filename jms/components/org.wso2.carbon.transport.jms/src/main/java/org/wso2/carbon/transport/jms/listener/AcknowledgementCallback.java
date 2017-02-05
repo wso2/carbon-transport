@@ -29,7 +29,7 @@ import javax.jms.Message;
 import javax.jms.Session;
 
 /**
- * JMSAcknowlegementCallback to be used when there is a need for acknowledgement
+ * JMSAcknowlegementCallback to be used when there is a need for acknowledgement or commiting the session
  */
 public class AcknowledgementCallback implements CarbonCallback {
     private Message message;
@@ -43,20 +43,38 @@ public class AcknowledgementCallback implements CarbonCallback {
 
     @Override
     public void done(CarbonMessage carbonMessage) {
-        if (carbonMessage.getProperty(JMSConstants.JMS_MESSAGE_DELIVERY_STATUS).toString().equalsIgnoreCase(JMSConstants
-                .JMS_MESSAGE_DELIVERY_SUCCESS)) {
-            try {
-                message.acknowledge();
-            } catch (JMSException e) {
-                logger.error("Error while acknowledging the message." + e.getMessage());
+        try {
+            if (session.getAcknowledgeMode() == Session.CLIENT_ACKNOWLEDGE) {
+                if (carbonMessage.getProperty(JMSConstants.JMS_MESSAGE_DELIVERY_STATUS).toString()
+                        .equalsIgnoreCase(JMSConstants.JMS_MESSAGE_DELIVERY_SUCCESS)) {
+                    try {
+                        message.acknowledge();
+                    } catch (JMSException e) {
+                        logger.error("Error while acknowledging the message " + e.getMessage());
+                    }
+                } else {
+                    try {
+                        session.recover();
+                    } catch (JMSException e) {
+                        logger.error("Error while recovering the session " + e.getMessage());
+                    }
+                }
+            } else if (carbonMessage.getProperty(JMSConstants.JMS_SESSION_COMMIT_OR_ROLLBACK)
+                    .equals(JMSConstants.JMS_SESSION_COMMIT)) {
+                try {
+                    session.commit();
+                } catch (JMSException e) {
+                    logger.error("Error while commiting the session " + e.getMessage());
+                }
+            } else {
+                try {
+                    session.rollback();
+                } catch (JMSException e) {
+                    logger.error("Error while rolling back the session " + e.getMessage());
+                }
             }
-        } else {
-            try {
-                session.recover();
-            } catch (JMSException e) {
-                logger.error("Error while recovering the session." + e.getMessage());
-            }
-
+        } catch (JMSException e) {
+            logger.error("Error while getting the acknowledgement mode from the session " + e.getMessage());
         }
     }
 }

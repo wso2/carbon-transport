@@ -188,4 +188,11 @@ public class JMSConstants {
     public static final String JMS_DELIVERY_TIME = "JMS_DELIVERY_TIME";
     public static final String JMS_PRIORITY = "JMS_PRIORITY";
 
+    public static final String RETRY_INTERVAL = "retryInterval";
+    public static final String MAX_RETRY_COUNT = "maxRetryCount";
+
+    public static final String JMS_SESSION_COMMIT = "commit";
+    public static final String JMS_SESSION_ROLLBACK = "rollback";
+    public static final String JMS_SESSION_COMMIT_OR_ROLLBACK = "JMS_COMMIT_OR_ROLLBACK";
+
 }
