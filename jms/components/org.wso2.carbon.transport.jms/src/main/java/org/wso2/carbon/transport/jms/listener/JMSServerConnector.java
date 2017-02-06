@@ -22,7 +22,8 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.messaging.CarbonMessageProcessor;
-import org.wso2.carbon.messaging.ListeningServerConnector;
+import org.wso2.carbon.messaging.ServerConnector;
+import org.wso2.carbon.messaging.exceptions.ServerConnectorException;
 import org.wso2.carbon.transport.jms.exception.JMSServerConnectorException;
 import org.wso2.carbon.transport.jms.factory.JMSConnectionFactory;
 import org.wso2.carbon.transport.jms.utils.JMSConstants;
@@ -38,7 +39,7 @@ import javax.jms.Session;
 /**
  * This is a transport listener for JMS
  */
-public class JMSServerConnector extends ListeningServerConnector {
+public class JMSServerConnector extends ServerConnector {
     private static final Log logger = LogFactory.getLog(JMSServerConnector.class.getName());
     private CarbonMessageProcessor carbonMessageProcessor;
     private JMSConnectionFactory jmsConnectionFactory = null;
@@ -53,8 +54,71 @@ public class JMSServerConnector extends ListeningServerConnector {
     public JMSServerConnector(String id) {
         super(id);
     }
+    public JMSServerConnector() {
+        super("jms");
+    }
 
-    public void init(Map<String, String> map) {
+    @SuppressFBWarnings({"REC_CATCH_EXCEPTION"})
+    void createMessageListener() throws JMSServerConnectorException {
+        try {
+            jmsConnectionFactory = new JMSConnectionFactory(properties);
+            connection = jmsConnectionFactory.createConnection();
+            jmsConnectionFactory.start(connection);
+            session = jmsConnectionFactory.createSession(connection);
+            destination = jmsConnectionFactory.getDestination(session);
+            messageConsumer = jmsConnectionFactory.createMessageConsumer(session, destination);
+            messageConsumer.setMessageListener(
+                    new JMSMessageListener(carbonMessageProcessor, id, session.getAcknowledgeMode(), session));
+        } catch (Exception e) {
+            logger.error("Error while creating the connection from connection factory. " + e.getMessage());
+            throw new JMSServerConnectorException("Error while creating the connection from connection factory", e);
+        }
+
+    }
+
+    /** Close the connection, session and consumer
+     * @throws JMSServerConnectorException Exception that can be thrown when trying to close the connection, session
+     * and message consumer
+     */
+    void closeAll() throws JMSServerConnectorException {
+        jmsConnectionFactory.closeConnection(connection);
+        jmsConnectionFactory.closeSession(session);
+        jmsConnectionFactory.closeMessageConsumer(messageConsumer);
+    }
+
+    @Override
+    public void setMessageProcessor(CarbonMessageProcessor carbonMessageProcessor) {
+        this.carbonMessageProcessor = carbonMessageProcessor;
+    }
+
+    @Override
+    public void init() throws ServerConnectorException {
+        // not needed
+    }
+
+    @Override
+    public void destroy() throws JMSServerConnectorException {
+        closeAll();
+    }
+
+
+    @Override
+    public void stop() throws JMSServerConnectorException {
+       closeAll();
+    }
+
+    @Override
+    protected void beginMaintenance() throws JMSServerConnectorException {
+        jmsConnectionFactory.stop(connection);
+    }
+
+    @Override
+    protected void endMaintenance() throws JMSServerConnectorException {
+        jmsConnectionFactory.start(connection);
+    }
+
+    @Override
+    public void start(Map<String, String> map) throws ServerConnectorException {
         properties = new Properties();
         Set<Map.Entry<String, String>> set = map.entrySet();
         for (Map.Entry<String, String> entry : set) {
@@ -84,105 +148,23 @@ public class JMSServerConnector extends ListeningServerConnector {
             }
         }
 
-    }
-
-
-    @Override
-    public boolean bind() {
         try {
-            createDestinationListener();
-            return true;
-        } catch (Exception e) {
-            try {
-                if (jmsConnectionFactory == null) {
-                    throw new RuntimeException("Cannot create the jms connection factory. please check the connection"
-                            + " properties and re-deploy the jms service");
-                }
+            createMessageListener();
+        } catch (JMSServerConnectorException e) {
+            if (jmsConnectionFactory == null) {
+                throw new JMSServerConnectorException(
+                        "Cannot create the jms connection factory. please check the connection"
+                                + " properties and re-deploy the jms service. " + e.getMessage());
+            } else if (connection != null) {
                 closeAll();
-                JMSConnectionRetryHandler jmsConnectionRetryHandler = new JMSConnectionRetryHandler(this,
-                        retryInterval, maxRetryCount);
-                jmsConnectionRetryHandler.run();
-            } catch (JMSServerConnectorException e1) {
-                throw new RuntimeException(e1.getMessage(), e1);
+                throw e;
             }
-        }
-        return false;
-    }
+            closeAll();
+            JMSConnectionRetryHandler jmsConnectionRetryHandler = new JMSConnectionRetryHandler(this, this
+                    .retryInterval, this.maxRetryCount);
+            jmsConnectionRetryHandler.run();
 
-    @SuppressFBWarnings({"REC_CATCH_EXCEPTION"})
-    void createDestinationListener() throws JMSServerConnectorException {
-        try {
-            jmsConnectionFactory = new JMSConnectionFactory(properties);
-            connection = jmsConnectionFactory.createConnection();
-            jmsConnectionFactory.start(connection);
-            session = jmsConnectionFactory.createSession(connection);
-            destination = jmsConnectionFactory.getDestination(session);
-            messageConsumer = jmsConnectionFactory.createMessageConsumer(session, destination);
-            messageConsumer.setMessageListener(
-                    new JMSMessageListener(carbonMessageProcessor, id, session.getAcknowledgeMode(), session));
-        } catch (Exception e) {
-            logger.error("Error while creating the connection from connection factory. " + e.getMessage());
-            throw new JMSServerConnectorException("Error while creating the connection from connection factory", e);
         }
 
-    }
-
-    void closeAll() {
-        try {
-            jmsConnectionFactory.closeConnection(connection);
-            jmsConnectionFactory.closeSession(session);
-            jmsConnectionFactory.closeMessageConsumer(messageConsumer);
-        } catch (JMSServerConnectorException e) {
-            logger.error("Error while closing the connection, session and message consumer ", e);
-        }
-    }
-
-    @Override
-    public boolean unbind() {
-        return false;
-    }
-
-    public JMSServerConnector() {
-        super("jms");
-    }
-
-    @Override
-    public void setMessageProcessor(CarbonMessageProcessor carbonMessageProcessor) {
-        this.carbonMessageProcessor = carbonMessageProcessor;
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    protected void start() {
-        // Not needed for JMS Transport
-    }
-
-    @Override
-    public void stop() {
-        try {
-            jmsConnectionFactory.closeConnection(connection);
-            jmsConnectionFactory.closeSession(session);
-            jmsConnectionFactory.closeMessageConsumer(messageConsumer);
-        } catch (JMSServerConnectorException e) {
-            logger.error("Error while closing the connection, session and consumer ", e);
-        }
-    }
-
-    @Override
-    protected void beginMaintenance() {
-        try {
-            jmsConnectionFactory.stop(connection);
-        } catch (JMSServerConnectorException e) {
-            logger.error("Error while trying to stop the connection to stop receiving the messages");
-        }
-    }
-
-    @Override
-    protected void endMaintenance() {
-        try {
-            jmsConnectionFactory.start(connection);
-        } catch (JMSServerConnectorException e) {
-            logger.error("Error while trying to start the connection to start receiving the messages");
-        }
     }
 }

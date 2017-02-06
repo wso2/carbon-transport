@@ -129,13 +129,6 @@ public class JMSConnectionFactory implements ConnectionFactory, QueueConnectionF
             destinationName = "QUEUE_" + System.currentTimeMillis();
         }
 
-        String strTransactedSession = properties.getProperty(JMSConstants.SESSION_TRANSACTED);
-        if (strTransactedSession == null || "".equals(strTransactedSession) || !strTransactedSession.equals("true")) {
-            transactedSession = false;
-        } else if ("true".equals(strTransactedSession)) {
-            transactedSession = true;
-        }
-
         String strSessionAck = properties.getProperty(JMSConstants.SESSION_ACK);
         if (null == strSessionAck) {
             sessionAckMode = Session.AUTO_ACKNOWLEDGE;
@@ -145,6 +138,7 @@ public class JMSConnectionFactory implements ConnectionFactory, QueueConnectionF
             sessionAckMode = Session.DUPS_OK_ACKNOWLEDGE;
         } else if (strSessionAck.equals(JMSConstants.SESSION_TRANSACTED_MODE)) {
             sessionAckMode = Session.SESSION_TRANSACTED;
+            transactedSession = true;
         }
         createConnectionFactory();
     }
@@ -175,7 +169,8 @@ public class JMSConnectionFactory implements ConnectionFactory, QueueConnectionF
         return this.connectionFactory;
     }
 
-    @Override public Connection createConnection() throws JMSException {
+    @Override
+    public Connection createConnection() throws JMSException {
         if (connectionFactory == null) {
             logger.error("Connection cannot be establish to the broker. Please check the broker libs provided.");
             return null;
@@ -227,7 +222,8 @@ public class JMSConnectionFactory implements ConnectionFactory, QueueConnectionF
 
     }
 
-    @Override public Connection createConnection(String userName, String password) throws JMSException {
+    @Override
+    public Connection createConnection(String userName, String password) throws JMSException {
         Connection connection = null;
         try {
             if (JMSConstants.JMS_SPEC_VERSION_1_1.equals(jmsSpec)) {

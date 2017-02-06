@@ -61,6 +61,11 @@ public class JMSConstants {
     public static final String SESSION_TRANSACTED = "transport.jms.SessionTransacted";
     public static final String SESSION_ACK = "transport.jms.SessionAcknowledgement";
 
+    // Durable subscription related parameters
+    public static final String PARAM_SUB_DURABLE = "transport.jms.SubscriptionDurable";
+    public static final String PARAM_DURABLE_SUB_NAME = "transport.jms.DurableSubscriberName";
+    public static final String PARAM_DURABLE_SUB_CLIENT_ID = "transport.jms.DurableSubscriberClientID";
+
     /**
      * Acknowledgements to client
      */
@@ -85,6 +90,9 @@ public class JMSConstants {
     public static final String NAMING_FACTORY_INITIAL_PARAM_NAME = "FactoryInitial";
     public static final String PROVIDER_URL_PARAM_NAME = "ProviderUrl";
     public static final String SESSION_ACK_MODE_PARAM_NAME = "SessionAcknowledgement";
+    public static final String SUBSCRIPTION_DURABLE_PARAM_NAME = "SubscriptionDurable";
+    public static final String DURABLE_SUBSCRIBER_CLIENT_ID_PARAM_NAME = "DurableSubscriberClientID";
+    public static final String DURABLE_SUBSCRIBER_PARAM_NAME = "DurableSubscriberName";
 
     public static final String CONNECTION_USERNAME = "ConnectionUsername";
     public static final String CONNECTION_PASSWORD = "ConnectionPassword";
@@ -133,7 +141,6 @@ public class JMSConstants {
     public static final Map<String, String> MAPPING_PARAMETERS;
 
     static {
-
         MAPPING_PARAMETERS = new HashMap<>();
         MAPPING_PARAMETERS.put(CONNECTION_FACTORY_JNDI_PARAM_NAME, CONNECTION_FACTORY_JNDI_NAME);
         MAPPING_PARAMETERS.put(CONNECTION_FACTORY_TYPE_PARAM_NAME, CONNECTION_FACTORY_TYPE);
@@ -141,6 +148,9 @@ public class JMSConstants {
         MAPPING_PARAMETERS.put(NAMING_FACTORY_INITIAL_PARAM_NAME, NAMING_FACTORY_INITIAL);
         MAPPING_PARAMETERS.put(PROVIDER_URL_PARAM_NAME, PROVIDER_URL);
         MAPPING_PARAMETERS.put(SESSION_ACK_MODE_PARAM_NAME, SESSION_ACK);
+        MAPPING_PARAMETERS.put(SUBSCRIPTION_DURABLE_PARAM_NAME, PARAM_SUB_DURABLE);
+        MAPPING_PARAMETERS.put(DURABLE_SUBSCRIBER_CLIENT_ID_PARAM_NAME, PARAM_DURABLE_SUB_CLIENT_ID);
+        MAPPING_PARAMETERS.put(DURABLE_SUBSCRIBER_PARAM_NAME, PARAM_DURABLE_SUB_NAME);
     }
 
     /**
@@ -148,11 +158,6 @@ public class JMSConstants {
      * is "1.1" the JMS 1.1 API would be used, else the JMS 1.0.2B
      */
     public static final String PARAM_JMS_SPEC_VER = "transport.jms.JMSSpecVersion";
-
-    public static final String PARAM_SUB_DURABLE = "transport.jms.SubscriptionDurable";
-
-    public static final String PARAM_DURABLE_SUB_NAME = "transport.jms.DurableSubscriberName";
-    public static final String PARAM_DURABLE_SUB_CLIENT_ID = "transport.jms.DurableSubscriberClientID";
 
     /**
      * A message selector to be used when messages are sought for this service

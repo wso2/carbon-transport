@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+import org.wso2.carbon.messaging.exceptions.ServerConnectorException;
 import org.wso2.carbon.transport.jms.listener.JMSServerConnector;
 import org.wso2.carbon.transport.jms.test.util.JMSServer;
 import org.wso2.carbon.transport.jms.test.util.JMSTestConstants;
@@ -42,7 +43,7 @@ public class QueueTopicClientAckListeningTestCase {
     private static final Logger logger = LoggerFactory.getLogger(QueueTopicAutoAckListeningTestCase.class);
 
     @BeforeClass(groups = "jmsListening", description = "Setting up the server, JMS listener and message processor")
-    public void setUp() {
+    public void setUp() throws ServerConnectorException {
         Map<String, String> queueListeningParametes = new HashMap<>();
         queueListeningParametes.put(JMSConstants.DESTINATION_PARAM_NAME, JMSTestConstants.QUEUE_NAME_2);
         queueListeningParametes
@@ -71,15 +72,15 @@ public class QueueTopicClientAckListeningTestCase {
         JMSServerConnector jmsQueueTransportListener = new JMSServerConnector("1");
         queueMessageProcessor = new MessageProcessor();
         jmsQueueTransportListener.setMessageProcessor(queueMessageProcessor);
-        jmsQueueTransportListener.init(queueListeningParametes);
-        jmsQueueTransportListener.bind();
+        jmsQueueTransportListener.start(queueListeningParametes);
+        jmsQueueTransportListener.init();
 
         // Create a topic transport listener
         JMSServerConnector jmsTopicTransportListener = new JMSServerConnector("2");
         topicMessageProcessor = new MessageProcessor();
         jmsTopicTransportListener.setMessageProcessor(topicMessageProcessor);
-        jmsTopicTransportListener.init(topicListeningParametes);
-        jmsTopicTransportListener.bind();
+        jmsTopicTransportListener.start(topicListeningParametes);
+        jmsTopicTransportListener.init();
     }
 
     @Test(groups = "jmsListening", description = "Testing whether queue listening is working correctly without any "

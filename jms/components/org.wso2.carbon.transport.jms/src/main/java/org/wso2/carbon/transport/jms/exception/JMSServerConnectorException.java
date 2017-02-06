@@ -18,10 +18,12 @@
 
 package org.wso2.carbon.transport.jms.exception;
 
+import org.wso2.carbon.messaging.exceptions.ServerConnectorException;
+
 /**
  * Exception that happens in JMSServer connector level
  */
-public class JMSServerConnectorException extends Exception {
+public class JMSServerConnectorException extends ServerConnectorException {
     public JMSServerConnectorException(String message, Exception e) {
         super(message, e);
     }

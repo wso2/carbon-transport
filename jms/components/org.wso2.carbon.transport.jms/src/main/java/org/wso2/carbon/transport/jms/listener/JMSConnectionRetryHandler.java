@@ -48,7 +48,7 @@ class JMSConnectionRetryHandler {
         while (retryCount < maxRetryCount) {
             try {
                 retryCount++;
-                jmsServerConnector.createDestinationListener();
+                jmsServerConnector.createMessageListener();
                 logger.info("Connected to the message broker after retrying for " + retryCount + " time(s)");
                 return;
             } catch (JMSServerConnectorException ex) {
