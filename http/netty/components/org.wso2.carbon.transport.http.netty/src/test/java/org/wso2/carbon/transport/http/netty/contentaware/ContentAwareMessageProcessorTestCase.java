@@ -25,9 +25,10 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import org.wso2.carbon.messaging.CarbonMessageProcessor;
+import org.wso2.carbon.messaging.exceptions.ServerConnectorException;
 import org.wso2.carbon.transport.http.netty.config.TransportsConfiguration;
 import org.wso2.carbon.transport.http.netty.config.YAMLTransportConfigurationBuilder;
-import org.wso2.carbon.transport.http.netty.listener.HTTPTransportListener;
+import org.wso2.carbon.transport.http.netty.listener.HTTPServerConnector;
 import org.wso2.carbon.transport.http.netty.passthrough.PassthroughMessageProcessor;
 import org.wso2.carbon.transport.http.netty.util.TestUtil;
 import org.wso2.carbon.transport.http.netty.util.server.HTTPServer;
@@ -35,6 +36,7 @@ import org.wso2.carbon.transport.http.netty.util.server.HTTPServer;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URI;
+import java.util.List;
 
 import static org.testng.AssertJUnit.assertEquals;
 
@@ -44,7 +46,7 @@ import static org.testng.AssertJUnit.assertEquals;
 public class ContentAwareMessageProcessorTestCase {
     private static final Logger log = LoggerFactory.getLogger(ContentAwareMessageProcessorTestCase.class);
 
-    private HTTPTransportListener httpTransportListener;
+    private List<HTTPServerConnector> serverConnectors;
 
     private TransportsConfiguration configuration;
 
@@ -55,7 +57,7 @@ public class ContentAwareMessageProcessorTestCase {
     public void setUp() {
         configuration = YAMLTransportConfigurationBuilder
                 .build("src/test/resources/simple-test-config/netty-transports.yml");
-        httpTransportListener = TestUtil.startCarbonTransport(configuration, new PassthroughMessageProcessor());
+        serverConnectors = TestUtil.startConnectors(configuration, new PassthroughMessageProcessor());
         httpServer = TestUtil.startHTTPServer(TestUtil.TEST_SERVER_PORT);
     }
 
@@ -70,7 +72,7 @@ public class ContentAwareMessageProcessorTestCase {
             assertEquals(testValue, content);
             urlConn.disconnect();
         } catch (IOException e) {
-            log.error("Error while running the test", e);
+            TestUtil.handleException("IOException occurred while running messageEchoingFromProcessorTestCase", e);
         }
 
     }
@@ -91,7 +93,8 @@ public class ContentAwareMessageProcessorTestCase {
             assertEquals(expectedValue, content);
             urlConn.disconnect();
         } catch (IOException e) {
-            log.error("Error while running the test", e);
+            TestUtil.handleException(
+                    "IOException occurred while running requestResponseTransformFromProcessorTestCase", e);
         }
     }
 
@@ -111,7 +114,8 @@ public class ContentAwareMessageProcessorTestCase {
             assertEquals(expectedValue, content);
             urlConn.disconnect();
         } catch (IOException e) {
-            log.error("Error while running the test", e);
+            TestUtil.handleException(
+                    "IOException occurred while running requestResponseCreationFromProcessorTestCase", e);
         }
 
     }
@@ -130,7 +134,8 @@ public class ContentAwareMessageProcessorTestCase {
             assertEquals(requestValue, content);
             urlConn.disconnect();
         } catch (IOException e) {
-            log.error("Error while running the test", e);
+            TestUtil.handleException(
+                    "IOException occurred while running requestResponseStreamingFromProcessorTestCase", e);
         }
 
     }
@@ -149,9 +154,9 @@ public class ContentAwareMessageProcessorTestCase {
             assertEquals(requestValue, content);
             urlConn.disconnect();
         } catch (IOException e) {
-            log.error("Error while running the test", e);
+            TestUtil.handleException(
+                    "IOException occurred while running requestResponseTransformStreamingFromProcessorTestCase", e);
         }
-
     }
 
     @Test
@@ -168,14 +173,13 @@ public class ContentAwareMessageProcessorTestCase {
             assertEquals(requestValue, content);
             urlConn.disconnect();
         } catch (IOException e) {
-            log.error("Error while running the test", e);
+            TestUtil.handleException("IOException occurred while running responseStreamingWithoutBufferingTestCase", e);
         }
-
     }
 
     @AfterClass
-    public void cleanUp() {
-        TestUtil.cleanUp(httpTransportListener, httpServer);
+    public void cleanUp() throws ServerConnectorException {
+        TestUtil.cleanUp(serverConnectors, httpServer);
     }
 
 }

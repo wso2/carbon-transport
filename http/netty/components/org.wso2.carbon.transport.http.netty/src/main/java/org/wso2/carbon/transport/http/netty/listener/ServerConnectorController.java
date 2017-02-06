@@ -26,7 +26,10 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.wso2.carbon.messaging.BufferFactory;
+import org.wso2.carbon.messaging.handler.HandlerExecutor;
 import org.wso2.carbon.transport.http.netty.common.Constants;
+import org.wso2.carbon.transport.http.netty.common.Util;
 import org.wso2.carbon.transport.http.netty.config.ListenerConfiguration;
 import org.wso2.carbon.transport.http.netty.config.TransportProperty;
 import org.wso2.carbon.transport.http.netty.config.TransportsConfiguration;
@@ -34,7 +37,10 @@ import org.wso2.carbon.transport.http.netty.internal.HTTPTransportContextHolder;
 
 import java.io.PrintStream;
 import java.net.InetSocketAddress;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * {@code ServerConnectorController} is the heart of the HTTP Server Connector.
@@ -49,22 +55,26 @@ public class ServerConnectorController {
 
     private HTTPServerChannelInitializer handler;
 
+    private TransportsConfiguration transportsConfiguration;
+
     private boolean initialized = false;
 
     private static PrintStream outStream = System.out;
 
-    public ServerConnectorController (TransportsConfiguration trpConfig) {
+    public ServerConnectorController(TransportsConfiguration transportsConfiguration) {
+        this.transportsConfiguration = transportsConfiguration;
+    }
 
-        Set<TransportProperty> transportProperties = trpConfig.getTransportProperties();
+    public void start() {
 
-        // Thread Pool configurations
-        int bossGroupSize = 0, workerGroupSize = 0;
-        for (TransportProperty property : transportProperties) {
-            if (property.getName().equals(Constants.SERVER_BOOTSTRAP_BOSS_GROUP_SIZE)) {
-                bossGroupSize = (Integer) property.getValue();
-            } else if (property.getName().equals(Constants.SERVER_BOOTSTRAP_WORKER_GROUP_SIZE)) {
-                workerGroupSize = (Integer) property.getValue();
-            }
+        Set<TransportProperty> transportPropertiesSet = transportsConfiguration.getTransportProperties();
+
+        Map<String, Object> transportProperties = new HashMap<>();
+
+        if (transportPropertiesSet != null && !transportPropertiesSet.isEmpty()) {
+            transportProperties = transportPropertiesSet.stream().collect(
+                    Collectors.toMap(TransportProperty::getName, TransportProperty::getValue));
+
         }
 
         // Create Bootstrap Configuration from listener parameters
@@ -74,28 +84,42 @@ public class ServerConnectorController {
         // Create Boss Group - boss group is for accepting channels
         EventLoopGroup bossGroup = HTTPTransportContextHolder.getInstance().getBossGroup();
         if (bossGroup == null) {
-            bossGroup = new NioEventLoopGroup(
-                    bossGroupSize != 0 ? bossGroupSize : Runtime.getRuntime().availableProcessors());
+            int bossGroupSize =
+                    Util.getIntTransportProperty(transportProperties,
+                                                 Constants.SERVER_BOOTSTRAP_BOSS_GROUP_SIZE,
+                                                 Runtime.getRuntime().availableProcessors());
+
+            bossGroup = new NioEventLoopGroup(bossGroupSize);
             HTTPTransportContextHolder.getInstance().setBossGroup(bossGroup);
         }
 
         // Create Worker Group - worker group is for processing IO
         EventLoopGroup workerGroup = HTTPTransportContextHolder.getInstance().getWorkerGroup();
         if (workerGroup == null) {
-            workerGroup = new NioEventLoopGroup(
-                    workerGroupSize != 0 ? workerGroupSize : Runtime.getRuntime().availableProcessors() * 2);
+            int workerGroupSize =
+                    Util.getIntTransportProperty(transportProperties,
+                                                 Constants.SERVER_BOOTSTRAP_WORKER_GROUP_SIZE,
+                                                 Runtime.getRuntime().availableProcessors() * 2);
+            workerGroup = new NioEventLoopGroup(workerGroupSize);
             HTTPTransportContextHolder.getInstance().setWorkerGroup(workerGroup);
         }
+        // Set Handler Executor
+        HTTPTransportContextHolder.getInstance().setHandlerExecutor(new HandlerExecutor());
 
         bootstrap = new ServerBootstrap();
         bootstrap.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class);
 
         // Register Channel initializer
         handler = new HTTPServerChannelInitializer();
-        handler.setup(null);
         handler.setupConnectionManager(transportProperties);
         bootstrap.childHandler(handler);
 
+        int bufferSize =
+                Util.getIntTransportProperty(transportProperties, Constants.OUTPUT_CONTENT_BUFFER_SIZE, 0);
+
+        if (bufferSize != 0) {
+            BufferFactory.createInstance(bufferSize);
+        }
 
         // Set other bootstrap parameters
         bootstrap.option(ChannelOption.SO_BACKLOG, serverBootstrapConfiguration.getSoBackLog());
@@ -108,15 +132,36 @@ public class ServerConnectorController {
         log.debug(" Netty Server Socket CONNECT_TIMEOUT_MILLIS " + serverBootstrapConfiguration.getConnectTimeOut());
         bootstrap.option(ChannelOption.SO_SNDBUF, serverBootstrapConfiguration.getSendBufferSize());
         log.debug("Netty Server Socket SO_SNDBUF " + serverBootstrapConfiguration.getSendBufferSize());
-        bootstrap.option(ChannelOption.SO_RCVBUF, serverBootstrapConfiguration.getReciveBufferSize());
-        log.debug("Netty Server Socket SO_RCVBUF " + serverBootstrapConfiguration.getReciveBufferSize());
-        bootstrap.childOption(ChannelOption.SO_RCVBUF, serverBootstrapConfiguration.getReciveBufferSize());
-        log.debug("Netty Server Socket SO_RCVBUF " + serverBootstrapConfiguration.getReciveBufferSize());
+        bootstrap.option(ChannelOption.SO_RCVBUF, serverBootstrapConfiguration.getReceiveBufferSize());
+        log.debug("Netty Server Socket SO_RCVBUF " + serverBootstrapConfiguration.getReceiveBufferSize());
+        bootstrap.childOption(ChannelOption.SO_RCVBUF, serverBootstrapConfiguration.getReceiveBufferSize());
+        log.debug("Netty Server Socket SO_RCVBUF " + serverBootstrapConfiguration.getReceiveBufferSize());
         bootstrap.childOption(ChannelOption.SO_SNDBUF, serverBootstrapConfiguration.getSendBufferSize());
         log.debug("Netty Server Socket SO_SNDBUF " + serverBootstrapConfiguration.getSendBufferSize());
 
         initialized = true;
+    }
 
+    public void stop() {
+        shutdownEventLoops();
+    }
+
+    private void shutdownEventLoops() {
+        try {
+            EventLoopGroup bossGroup = HTTPTransportContextHolder.getInstance().getBossGroup();
+            if (bossGroup != null) {
+                bossGroup.shutdownGracefully().sync();
+                HTTPTransportContextHolder.getInstance().setBossGroup(null);
+            }
+            EventLoopGroup workerGroup = HTTPTransportContextHolder.getInstance().getWorkerGroup();
+            if (workerGroup != null) {
+                workerGroup.shutdownGracefully().sync();
+                HTTPTransportContextHolder.getInstance().setWorkerGroup(null);
+            }
+            log.info("HTTP transport event loops stopped successfully");
+        } catch (InterruptedException e) {
+            log.error("Error while shutting down event loops " + e.getMessage());
+        }
     }
 
     public boolean bindInterface(HTTPServerConnector serverConnector) {
