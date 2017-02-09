@@ -27,7 +27,6 @@ import java.util.Map;
  */
 public abstract class PollingServerConnector extends ServerConnector {
     private static final String POLLING_INTERVAL = "pollingInterval";
-    private Map<String, String> parameters;
     private long interval = 1000L;  //default polling interval
     private PollingTaskRunner pollingTaskRunner;
 
@@ -40,9 +39,23 @@ public abstract class PollingServerConnector extends ServerConnector {
      * @param parameters parameters passed from starting this polling connector.
      */
     @Override
+    @Deprecated
     public void start(Map<String, String> parameters) throws ServerConnectorException {
-        this.parameters = parameters;
         String pollingInterval = parameters.get(POLLING_INTERVAL);
+        if (pollingInterval != null) {
+            this.interval = Long.parseLong(pollingInterval);
+        }
+        pollingTaskRunner = new PollingTaskRunner(this);
+        pollingTaskRunner.start();
+    }
+
+    /**
+     * The start polling method which should be called when starting the polling with given interval.
+     * @throws ServerConnectorException if a error happen while starting the connector.
+     */
+    @Override
+    public void start() throws ServerConnectorException {
+        String pollingInterval = getProperties().get(POLLING_INTERVAL);
         if (pollingInterval != null) {
             this.interval = Long.parseLong(pollingInterval);
         }
@@ -66,9 +79,5 @@ public abstract class PollingServerConnector extends ServerConnector {
 
     public long getInterval() {
         return interval;
-    }
-
-    public Map<String, String> getParameters() {
-        return parameters;
     }
 }
