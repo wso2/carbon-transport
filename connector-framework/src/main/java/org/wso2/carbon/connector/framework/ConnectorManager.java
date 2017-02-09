@@ -17,6 +17,7 @@
  */
 package org.wso2.carbon.connector.framework;
 
+import org.wso2.carbon.connector.framework.server.internal.DataHolder;
 import org.wso2.carbon.messaging.CarbonMessageProcessor;
 import org.wso2.carbon.messaging.ClientConnector;
 import org.wso2.carbon.messaging.ServerConnector;
@@ -50,6 +51,10 @@ public class ConnectorManager {
 
     private void registerServerConnector(ServerConnector serverConnector) {
         serverConnectors.put(serverConnector.getId(), serverConnector);
+        // If we are running in OSGi mode we need to register each ServerConnector
+        if (DataHolder.getInstance().getBundleContext() != null) {
+            DataHolder.getInstance().getBundleContext().registerService(ServerConnector.class, serverConnector, null);
+        }
     }
 
     private void registerClientConnector(ClientConnector clientConnector) {
@@ -97,6 +102,32 @@ public class ConnectorManager {
     }
 
     /**
+     * Creates and return a server connector using the given protocol and id. The protocol is used with acquiring the
+     * correct server connector provider. An error will be thrown, if there are no server connector provider registered
+     * for the given protocol.
+     *
+     * @param protocol transport protocol used with finding the correct server connector provider.
+     * @param id unique id to use when creating the server connector instance.
+     * @param properties require for connector.
+     * @return returns the newly created instance.
+     * @throws ServerConnectorException error if there are no server connector provider found.
+     */
+    public ServerConnector createServerConnector(String protocol, String id, Map<String, String> properties)
+            throws ServerConnectorException {
+        Optional<ServerConnectorProvider> serverConnectorProviderOptional = getServerConnectorProvider(protocol);
+
+        if (!serverConnectorProviderOptional.isPresent()) {
+            throw new ServerConnectorException("Cannot create a new server connector as there are no connector " +
+                                               "provider available for protocol : " + protocol);
+        }
+
+        ServerConnector serverConnector = serverConnectorProviderOptional.get().createConnector(id, properties);
+        serverConnector.setMessageProcessor(messageProcessor);
+        registerServerConnector(serverConnector);
+        return serverConnector;
+    }
+
+    /**
      * Returns the client connector instance associated with the given protocol.
      * @param protocol of the client connector.
      * @return client connector instance.
@@ -105,8 +136,15 @@ public class ConnectorManager {
         return clientConnectors.get(protocol);
     }
 
-    private void registerServerConnectorProvider(ServerConnectorProvider serverConnectorProvider) {
+    /**
+     * Register ServerConnectorProvider to the ConnectionManager.
+     * @param serverConnectorProvider to be register
+     */
+    public void registerServerConnectorProvider(ServerConnectorProvider serverConnectorProvider) {
         serverConnectorProviders.put(serverConnectorProvider.getProtocol(), serverConnectorProvider);
+        if (DataHolder.getInstance().getBundleContext() != null) {
+            serverConnectorProvider.initializeConnectors().forEach(this::registerServerConnector);
+        }
     }
 
     private Optional<ServerConnectorProvider> getServerConnectorProvider(String protocol) {
@@ -166,6 +204,16 @@ public class ConnectorManager {
 
         //3. Initialize all server connectors
         initializeServerConnectors();
+    }
+
+    /**
+     * Start all the server Connectors.
+     * @throws ServerConnectorException if error occure while starting connector.
+     */
+    public void startConnectors() throws ServerConnectorException {
+        for (ServerConnector serverConnector: serverConnectors.values()) {
+            serverConnector.start();
+        }
     }
 
     /**
