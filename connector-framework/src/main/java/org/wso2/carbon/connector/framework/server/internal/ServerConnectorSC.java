@@ -50,14 +50,11 @@ public class ServerConnectorSC implements RequiredCapabilityListener {
             policy = ReferencePolicy.DYNAMIC,
             unbind = "unregisterServerConnectorProvider"
     )
-    protected void registerServerConnectorProvider(ServerConnectorProvider serverConnectorProvider,
-                                                   Map<String, ?> ref) {
+    protected void registerServerConnectorProvider(ServerConnectorProvider serverConnectorProvider, Map properties) {
         connectorManager.registerServerConnectorProvider(serverConnectorProvider);
     }
 
-    protected void unregisterServerConnectorProvider(ServerConnectorProvider serverConnectorProvider,
-                                                     Map<String, ?> ref) {
-        //TODO
+    protected void unregisterServerConnectorProvider(ServerConnectorProvider serverConnectorProvider, Map properties) {
     }
 
     @Override

@@ -18,7 +18,7 @@ package org.wso2.carbon.connector.framework.server.internal;
 import org.osgi.framework.BundleContext;
 
 /**
- * DataHolder objec tto keep BundleContext TODO
+ * DataHolder object to keep BundleContext.
  */
 public class DataHolder {
     private static final DataHolder instance = new DataHolder();
