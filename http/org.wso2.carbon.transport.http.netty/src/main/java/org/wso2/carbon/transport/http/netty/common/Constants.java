@@ -121,6 +121,10 @@ public final class Constants {
 
     public static final String PORT = "PORT";
 
+    public static final int DEFAULT_HTTP_PORT = 80;
+
+    public static final int DEFAULT_HTTPS_PORT = 443;
+
     public static final String TO = "TO";
 
     public static final String PROTOCOL = "PROTOCOL";
@@ -173,7 +177,7 @@ public final class Constants {
 
     public static final String CHNL_HNDLR_CTX = "CHNL_HNDLR_CTX";
 
-    public static final String SRC_HNDLR = "SRC_HNDLR";
+    public static final String SRC_HANDLER = "SRC_HANDLER";
 
     //Server Connection Related Parameters
     public static final String LOCAL_ADDRESS = "LOCAL_ADDRESS";
@@ -193,7 +197,7 @@ public final class Constants {
     public static final String LOCALHOST = "localhost";
 
     public static final String CONNECTION = "Connection";
-    public static final String UPGRADE = "upgrade";
+    public static final String UPGRADE = "Upgrade";
 
     public static final String WEBSOCKET_SESSION = "WEBSOCKET_SESSION";
     public static final String WEBSOCKET_PROTOCOL = "ws";
