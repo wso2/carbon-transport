@@ -21,6 +21,7 @@ package org.wso2.carbon.transport.http.netty.websocket;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -29,12 +30,11 @@ import org.wso2.carbon.transport.http.netty.common.Constants;
 import org.wso2.carbon.transport.http.netty.config.TransportsConfiguration;
 import org.wso2.carbon.transport.http.netty.config.YAMLTransportConfigurationBuilder;
 import org.wso2.carbon.transport.http.netty.listener.HTTPServerConnector;
-import org.wso2.carbon.transport.http.netty.passthrough.PassthroughMessageProcessor;
 import org.wso2.carbon.transport.http.netty.util.TestUtil;
+import org.wso2.carbon.transport.http.netty.util.clients.websocket.WebSocketClient;
+import org.wso2.carbon.transport.http.netty.util.clients.websocket.WebSocketClientHandler;
 import org.wso2.carbon.transport.http.netty.util.server.HTTPServer;
-import org.wso2.carbon.transport.http.netty.util.websocket.client.WebSocketClient;
 
-import java.net.URISyntaxException;
 import java.util.List;
 
 import static org.testng.Assert.assertTrue;
@@ -50,18 +50,24 @@ public class PassTroughWebSocketUpgradeTestCase {
     private WebSocketClient client = new WebSocketClient();
     private static final String testValue = "Test Message";
 
-    @BeforeClass(groups = "passthroughUPGRADE")
+    @BeforeClass
     public void setup() {
         TransportsConfiguration configuration = YAMLTransportConfigurationBuilder
                 .build("src/test/resources/simple-test-config/netty-transports.yml");
-        serverConnectors = TestUtil.startConnectors(configuration, new PassthroughMessageProcessor());
+        serverConnectors = TestUtil.startConnectors(configuration, new WebSocketPassthroughMessageProcessor());
         httpServer = TestUtil.startHTTPServer(TestUtil.TEST_SERVER_PORT, testValue, Constants.TEXT_PLAIN);
     }
 
-    @Test(groups = "passthroughUPGRADE")
-    public void testHandshake() throws URISyntaxException {
+    @Test(description = "Test the handshake of WebSocket")
+    public void testHandshake() throws Exception {
         try {
-            assertTrue(client.handhshake(TestUtil.TEST_HOST, TestUtil.TEST_SERVER_PORT));
+            client.handshake(TestUtil.TEST_SERVER_PORT);
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                Assert.assertTrue(false, "Interrupt exception occurred.");
+            }
+            Assert.assertTrue(WebSocketClientHandler.isHandshakeSuccessful());
             logger.info("Handshake test completed.");
         } catch (InterruptedException e) {
             logger.error("Handshake interruption.");
@@ -69,7 +75,21 @@ public class PassTroughWebSocketUpgradeTestCase {
         }
     }
 
-    @AfterClass(groups = "passthroughUPGRADE")
+    @Test(description = "Send and receive text messages")
+    public void testTextMessage() {
+        String testText = "test";
+        client.sendText(testText);
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            Assert.assertTrue(false, "Interrupt exception occurred.");
+        }
+        String receivesText = WebSocketClientHandler.getReceivedText();
+        logger.info("Sent text : " + testText + " -> " + "received text : " + receivesText);
+        Assert.assertEquals(receivesText, testText, "Not received the same text sent");
+    }
+
+    @AfterClass
     public void cleaUp() throws ServerConnectorException {
         TestUtil.cleanUp(serverConnectors, httpServer);
     }
