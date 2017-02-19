@@ -24,6 +24,7 @@ import org.wso2.carbon.messaging.SerializableCarbonMessage;
 import org.wso2.carbon.messaging.TextCarbonMessage;
 import org.wso2.carbon.transport.jms.exception.JMSConnectorException;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Enumeration;
 import java.util.Properties;
 
@@ -32,6 +33,7 @@ import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.MapMessage;
 import javax.jms.Message;
+import javax.jms.MessageEOFException;
 import javax.jms.ObjectMessage;
 import javax.jms.TextMessage;
 import javax.naming.Context;
@@ -147,12 +149,61 @@ public class JMSUtils {
                 jmsCarbonMessage = mapCarbonMessage;
                 jmsCarbonMessage.setProperty(JMSConstants.JMS_MESSAGE_TYPE, JMSConstants.MAP_MESSAGE_TYPE);
             } else if (message instanceof ObjectMessage) {
-                jmsCarbonMessage = (SerializableCarbonMessage) ((ObjectMessage) message).getObject();
+                SerializableCarbonMessage serializableCarbonMessage = new SerializableCarbonMessage();
+
+                if (((ObjectMessage) message).getObject() instanceof SerializableCarbonMessage) {
+                    jmsCarbonMessage = (SerializableCarbonMessage) ((ObjectMessage) message).getObject();
+                } else {
+                    serializableCarbonMessage.setPayload(((ObjectMessage) message).getObject().toString());
+                    jmsCarbonMessage = serializableCarbonMessage;
+                }
                 jmsCarbonMessage.setProperty(JMSConstants.JMS_MESSAGE_TYPE, JMSConstants.OBJECT_MESSAGE_TYPE);
             } else {
-                jmsCarbonMessage = new TextCarbonMessage(((BytesMessage) message).readUTF());
+                BytesMessage bytesMessage = (BytesMessage) message;
+                String value = "";
+
+                /*
+                 * Convert the message to a string message.
+                 */
+                try {
+                    bytesMessage.reset();
+                    value = bytesMessage.readUTF();
+                    if (value.isEmpty()) {
+                        bytesMessage.reset();
+                        byte[] byteArr = new byte[(int) bytesMessage.getBodyLength()];
+                        bytesMessage.readBytes(byteArr);
+                        value = String.valueOf(bytesMessage);
+                    }
+                } catch (MessageEOFException e) {
+                    try {
+                        bytesMessage.reset();
+                        byte[] byteArr = new byte[(int) bytesMessage.getBodyLength()];
+                        bytesMessage.readBytes(byteArr);
+                        value = new String(byteArr, StandardCharsets.UTF_8);
+                    } catch (MessageEOFException ex) {
+                        try {
+                            bytesMessage.reset();
+                            value = String.valueOf(bytesMessage.readDouble());
+                        } catch (MessageEOFException e1) {
+                            try {
+                                bytesMessage.reset();
+                                value = String.valueOf(bytesMessage.readInt());
+                            } catch (MessageEOFException e2) {
+                                try {
+                                    bytesMessage.reset();
+                                    value = String.valueOf(bytesMessage.readLong());
+                                } catch (MessageEOFException e5) {
+                                    bytesMessage.reset();
+                                    value = String.valueOf(bytesMessage.readBoolean());
+                                }
+                            }
+                        }
+                    }
+                }
+                jmsCarbonMessage = new TextCarbonMessage(value);
                 jmsCarbonMessage.setProperty(JMSConstants.JMS_MESSAGE_TYPE, JMSConstants.BYTES_MESSAGE_TYPE);
             }
+
             String messageId = message.getJMSMessageID();
             if (null != messageId) {
                 jmsCarbonMessage.setHeader(JMSConstants.JMS_MESSAGE_ID, messageId);
