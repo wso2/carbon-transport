@@ -24,6 +24,7 @@ import org.wso2.carbon.messaging.SerializableCarbonMessage;
 import org.wso2.carbon.messaging.TextCarbonMessage;
 import org.wso2.carbon.transport.jms.exception.JMSConnectorException;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Enumeration;
 import java.util.Properties;
 
@@ -169,23 +170,32 @@ public class JMSUtils {
                     value = bytesMessage.readUTF();
                     if (value.isEmpty()) {
                         bytesMessage.reset();
-                        value = String.valueOf(bytesMessage.readDouble());
+                        byte[] byteArr = new byte[(int) bytesMessage.getBodyLength()];
+                        bytesMessage.readBytes(byteArr);
+                        value = String.valueOf(bytesMessage);
                     }
                 } catch (MessageEOFException e) {
                     try {
                         bytesMessage.reset();
-                        value = String.valueOf(bytesMessage.readDouble());
-                    } catch (MessageEOFException e1) {
+                        byte[] byteArr = new byte[(int) bytesMessage.getBodyLength()];
+                        bytesMessage.readBytes(byteArr);
+                        value = new String(byteArr, StandardCharsets.UTF_8);
+                    } catch (MessageEOFException ex) {
                         try {
                             bytesMessage.reset();
-                            value = String.valueOf(bytesMessage.readInt());
-                        } catch (MessageEOFException e2) {
+                            value = String.valueOf(bytesMessage.readDouble());
+                        } catch (MessageEOFException e1) {
                             try {
                                 bytesMessage.reset();
-                                value = String.valueOf(bytesMessage.readLong());
-                            } catch (MessageEOFException e5) {
-                                bytesMessage.reset();
-                                value = String.valueOf(bytesMessage.readBoolean());
+                                value = String.valueOf(bytesMessage.readInt());
+                            } catch (MessageEOFException e2) {
+                                try {
+                                    bytesMessage.reset();
+                                    value = String.valueOf(bytesMessage.readLong());
+                                } catch (MessageEOFException e5) {
+                                    bytesMessage.reset();
+                                    value = String.valueOf(bytesMessage.readBoolean());
+                                }
                             }
                         }
                     }
