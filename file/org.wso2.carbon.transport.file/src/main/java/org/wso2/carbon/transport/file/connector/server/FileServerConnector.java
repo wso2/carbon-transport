@@ -43,6 +43,11 @@ public class FileServerConnector extends PollingServerConnector {
         interval = FILE_CONNECTOR_DEFAULT_INTERVAL; //this might be overridden in super.start()
     }
 
+    public FileServerConnector(String id, Map<String, String> properties) {
+        super(id, properties);
+        interval = FILE_CONNECTOR_DEFAULT_INTERVAL; //this might be overridden in super.start()
+    }
+
     @Override
     public void setMessageProcessor(CarbonMessageProcessor carbonMessageProcessor) {
         messageProcessor = carbonMessageProcessor;
@@ -67,6 +72,17 @@ public class FileServerConnector extends PollingServerConnector {
         } catch (RuntimeException e) {
             throw new ServerConnectorException("Failed to start File server connector for Service: " +
                     "" + id, e);
+        }
+    }
+
+    @Override
+    public void start() throws ServerConnectorException {
+        try {
+            consumer = new FileConsumer(id, super.properties, messageProcessor);
+            super.start();
+        } catch (RuntimeException e) {
+            throw new ServerConnectorException("Failed to start File server connector for Service: " +
+                                               "" + id, e);
         }
     }
 

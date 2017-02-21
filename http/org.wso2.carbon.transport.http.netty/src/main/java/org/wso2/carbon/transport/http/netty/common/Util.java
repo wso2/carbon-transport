@@ -28,8 +28,10 @@ import org.wso2.carbon.kernel.utils.Utils;
 import org.wso2.carbon.messaging.CarbonMessage;
 import org.wso2.carbon.messaging.Header;
 import org.wso2.carbon.messaging.Headers;
+import org.wso2.carbon.messaging.MessageDataSource;
 import org.wso2.carbon.transport.http.netty.common.ssl.SSLConfig;
 import org.wso2.carbon.transport.http.netty.config.Parameter;
+import org.wso2.carbon.transport.http.netty.listener.RequestDataHolder;
 
 import java.io.File;
 import java.util.LinkedList;
@@ -133,6 +135,91 @@ public class Util {
         return outgoingRequest;
     }
 
+    /**
+     * Prepare request message with Transfer-Encoding/Content-Length
+     *
+     * @param cMsg CarbonMessage
+     */
+    public static void setupTransferEncodingForRequest(CarbonMessage cMsg) {
+        if (cMsg.getHeader(Constants.HTTP_TRANSFER_ENCODING) != null) {
+            cMsg.removeHeader(Constants.HTTP_CONTENT_LENGTH);
+        } else if (cMsg.isAlreadyRead() || (cMsg.getHeader(Constants.HTTP_CONTENT_LENGTH) == null && !cMsg.isEmpty())) {
+            int contentLength = cMsg.getFullMessageLength();
+            if (contentLength > 0) {
+                cMsg.setHeader(Constants.HTTP_CONTENT_LENGTH, String.valueOf(contentLength));
+            }
+        }
+    }
+
+    /**
+     * Prepare response message with Transfer-Encoding/Content-Length
+     *
+     * @param cMsg CarbonMessage
+     */
+    public static void setupTransferEncodingForResponse(CarbonMessage cMsg, RequestDataHolder requestDataHolder) {
+
+        // 1. Remove Transfer-Encoding and Content-Length as per rfc7230#section-3.3.1
+        int statusCode = Util.getIntValue(cMsg, Constants.HTTP_STATUS_CODE, 200);
+        String httpMethod = requestDataHolder.getHttpMethod();
+        if (statusCode == 204 ||
+            statusCode >= 100 && statusCode < 200 ||
+            (HttpMethod.CONNECT.name().equals(httpMethod) && statusCode >= 200 && statusCode < 300)) {
+            cMsg.removeHeader(Constants.HTTP_TRANSFER_ENCODING);
+            cMsg.removeHeader(Constants.HTTP_CONTENT_LENGTH);
+            return;
+        }
+
+        // 2. Check for transfer encoding header is set in the request
+        // As per RFC 2616, Section 4.4, Content-Length must be ignored if Transfer-Encoding header
+        // is present and its value not equal to 'identity'
+        String requestTransferEncodingHeader = requestDataHolder.getTransferEncodingHeader();
+        if (requestTransferEncodingHeader != null &&
+            !Constants.HTTP_TRANSFER_ENCODING_IDENTITY.equalsIgnoreCase(requestTransferEncodingHeader)) {
+            cMsg.setHeader(Constants.HTTP_TRANSFER_ENCODING, requestTransferEncodingHeader);
+            cMsg.removeHeader(Constants.HTTP_CONTENT_LENGTH);
+            return;
+        }
+
+        // 3. Check for request Content-Length header
+        String requestContentLength = requestDataHolder.getContentLengthHeader();
+        if (requestContentLength != null &&
+            (cMsg.isAlreadyRead() || (cMsg.getHeader(Constants.HTTP_CONTENT_LENGTH) == null && !cMsg.isEmpty()))) {
+            int contentLength = cMsg.getFullMessageLength();
+            if (contentLength > 0) {
+                cMsg.setHeader(Constants.HTTP_CONTENT_LENGTH, String.valueOf(contentLength));
+            }
+            cMsg.removeHeader(Constants.HTTP_TRANSFER_ENCODING);
+            return;
+        }
+
+        // 4. If request doesn't have Transfer-Encoding or Content-Length header look for response properties
+        if (cMsg.getHeader(Constants.HTTP_TRANSFER_ENCODING) != null) {
+            cMsg.getHeaders().remove(Constants.HTTP_CONTENT_LENGTH);  // remove Content-Length if present
+        } else if (cMsg.isAlreadyRead() || (cMsg.getHeader(Constants.HTTP_CONTENT_LENGTH) == null && !cMsg.isEmpty())) {
+            int contentLength = cMsg.getFullMessageLength();
+            if (contentLength > 0) {
+                cMsg.setHeader(Constants.HTTP_CONTENT_LENGTH, String.valueOf(contentLength));
+            }
+        }
+
+    }
+
+    /**
+     * Prepare built message to transfer through the wire.
+     * This will populate the message content from the DataSource into the output stream of the carbon message
+     *
+     * @param cMsg Carbon Message
+     */
+    public static void prepareBuiltMessageForTransfer(CarbonMessage cMsg) {
+        if (cMsg.isAlreadyRead()) {
+            MessageDataSource messageDataSource = cMsg.getMessageDataSource();
+            if (messageDataSource != null) {
+                messageDataSource.serializeData();
+                cMsg.setEndOfMsgAdded(true);
+            }
+        }
+    }
+
     public static SSLConfig getSSLConfigForListener(String certPass, String keyStorePass, String keyStoreFilePath,
             String trustStoreFilePath, String trustStorePass, List<Parameter> parametersList) {
         if (certPass == null) {
@@ -205,17 +292,16 @@ public class Util {
 
         sslConfig.setTrustStore(trustStore).setTrustStorePass(trustStorePass);
         sslConfig.setClientMode(true);
-        for (Parameter parameter : parametersList) {
-            if (parameter.getName()
-                    .equals(Constants.CLIENT_SUPPORT_CIPHERS)) {
-                sslConfig.setCipherSuites(parameter.getValue());
-
-            } else if (parameter.getName()
-                    .equals(Constants.CLIENT_SUPPORT_HTTPS_PROTOCOLS)) {
-                sslConfig.setEnableProtocols(parameter.getValue());
-            } else if (parameter.getName()
-                    .equals(Constants.CLIENT_ENABLE_SESSION_CREATION)) {
-                sslConfig.setEnableSessionCreation(Boolean.parseBoolean(parameter.getValue()));
+        if (parametersList != null) {
+            for (Parameter parameter : parametersList) {
+                String paramName = parameter.getName();
+                if (Constants.CLIENT_SUPPORT_CIPHERS.equals(paramName)) {
+                    sslConfig.setCipherSuites(parameter.getValue());
+                } else if (Constants.CLIENT_SUPPORT_HTTPS_PROTOCOLS.equals(paramName)) {
+                    sslConfig.setEnableProtocols(parameter.getValue());
+                } else if (Constants.CLIENT_ENABLE_SESSION_CREATION.equals(paramName)) {
+                    sslConfig.setEnableSessionCreation(Boolean.parseBoolean(parameter.getValue()));
+                }
             }
         }
         return sslConfig;

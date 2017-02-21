@@ -33,6 +33,10 @@ public abstract class PollingServerConnector extends ServerConnector {
         super(id);
     }
 
+    public PollingServerConnector(String id, Map<String, String> properties) {
+        super(id, properties);
+    }
+
     /**
      * The start polling method which should be called when starting the polling with given interval.
      * @param parameters parameters passed from starting this polling connector.

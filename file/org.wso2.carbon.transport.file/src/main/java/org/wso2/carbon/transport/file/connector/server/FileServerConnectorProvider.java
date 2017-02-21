@@ -23,6 +23,7 @@ import org.wso2.carbon.messaging.ServerConnectorProvider;
 import org.wso2.carbon.transport.file.connector.server.util.Constants;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Server connector provider for File transport.
@@ -44,5 +45,10 @@ public class FileServerConnectorProvider extends ServerConnectorProvider {
     @Override
     public ServerConnector createConnector(String s) {
         return new FileServerConnector(s);
+    }
+
+    @Override
+    public ServerConnector createConnector(String id, Map<String, String> properties) {
+        return new FileServerConnector(id, properties);
     }
 }

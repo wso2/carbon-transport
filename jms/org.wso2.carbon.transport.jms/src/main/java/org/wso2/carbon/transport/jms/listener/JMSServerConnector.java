@@ -98,6 +98,16 @@ public class JMSServerConnector extends ServerConnector {
     }
 
     /**
+     * Creates a jms server connector with the id.
+     *
+     * @param id Unique identifier for the server connector.
+     * @param properties require to initialize
+     */
+    public JMSServerConnector(String id, Map<String, String> properties) {
+        super(id, properties);
+    }
+
+    /**
      * Creates a jms server connector with the protocol name.
      */
     public JMSServerConnector() {
@@ -139,6 +149,9 @@ public class JMSServerConnector extends ServerConnector {
         jmsConnectionFactory.closeMessageConsumer(messageConsumer);
         jmsConnectionFactory.closeSession(session);
         jmsConnectionFactory.closeConnection(connection);
+        messageConsumer = null;
+        session = null;
+        connection = null;
     }
 
     /**
@@ -204,6 +217,7 @@ public class JMSServerConnector extends ServerConnector {
     /**
      * {@inheritDoc}
      */
+    @Deprecated
     @Override
     public void start(Map<String, String> map) throws ServerConnectorException {
         properties = new Properties();
@@ -251,6 +265,58 @@ public class JMSServerConnector extends ServerConnector {
             closeAll();
             JMSConnectionRetryHandler jmsConnectionRetryHandler = new JMSConnectionRetryHandler(this,
                     this.retryInterval, this.maxRetryCount);
+            jmsConnectionRetryHandler.retry();
+
+        }
+    }
+
+    @Override
+    public void start() throws ServerConnectorException {
+        properties = new Properties();
+        Set<Map.Entry<String, String>> set = getProperties().entrySet();
+        for (Map.Entry<String, String> entry : set) {
+            String mappedParameter = JMSConstants.MAPPING_PARAMETERS.get(entry.getKey());
+            if (mappedParameter != null) {
+                properties.put(mappedParameter, entry.getValue());
+            }
+        }
+
+        userName = super.properties.get(JMSConstants.CONNECTION_USERNAME);
+        password = super.properties.get(JMSConstants.CONNECTION_PASSWORD);
+        String retryInterval = super.properties.get(JMSConstants.RETRY_INTERVAL);
+        if (retryInterval != null) {
+            try {
+                this.retryInterval = Long.parseLong(retryInterval);
+            } catch (NumberFormatException ex) {
+                logger.error("Provided value for retry interval is invalid, using the default retry interval value "
+                             + this.retryInterval);
+            }
+        }
+
+        String maxRetryCount = super.properties.get(JMSConstants.MAX_RETRY_COUNT);
+        if (maxRetryCount != null) {
+            try {
+                this.maxRetryCount = Integer.parseInt(maxRetryCount);
+            } catch (NumberFormatException ex) {
+                logger.error("Provided value for max retry count is invalid, using the default max retry count "
+                             + this.maxRetryCount);
+            }
+        }
+
+        try {
+            jmsConnectionFactory = new JMSConnectionFactory(properties);
+            createMessageListener();
+        } catch (JMSConnectorException e) {
+            if (null == jmsConnectionFactory) {
+                throw new JMSConnectorException("Cannot create the jms connection factory. please check the connection"
+                                                + " properties and re-deploy the jms service. " + e.getMessage());
+            } else if (connection != null) {
+                closeAll();
+                throw e;
+            }
+            closeAll();
+            JMSConnectionRetryHandler jmsConnectionRetryHandler =
+                    new JMSConnectionRetryHandler(this, this.retryInterval, this.maxRetryCount);
             jmsConnectionRetryHandler.retry();
 
         }

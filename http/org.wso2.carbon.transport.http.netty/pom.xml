@@ -19,7 +19,7 @@
     <parent>
         <groupId>org.wso2.carbon.transport</groupId>
         <artifactId>org.wso2.carbon.transport.http.parent</artifactId>
-        <version>4.2.2-SNAPSHOT</version>
+        <version>4.2.6-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -197,6 +197,7 @@
             javax.net.ssl.*;version="${javax.net.ssl.import.version.range}",javax.management,
             javax.websocket.*;version="${javax.websocket.version.range}",
             org.yaml.snakeyaml.*;version="${org.snakeyaml.package.import.version.range}",
+            org.wso2.carbon.kernel.utils;version="${carbon.kernel.package.import.version.range}",
             org.wso2.carbon.messaging.*;version="${carbon.messaging.package.import.version.range}",
             org.apache.commons.pool.*;version="${commons.pool.package.import.version.range}",
             com.lmax.disruptor.*;version="${disruptor.package.import.version.range}",
