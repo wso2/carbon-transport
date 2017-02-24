@@ -22,6 +22,7 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.handler.codec.http2.DefaultHttp2Headers;
@@ -73,22 +74,23 @@ public class HTTP2ResponseCallback implements CarbonCallback {
 
         if (ctx.handler() instanceof HTTP2SourceHandler) {
             HTTP2SourceHandler http2SourceHandler = (HTTP2SourceHandler) ctx.handler();
-            http2SourceHandler.encoder().writeHeaders(ctx, streamId, http2Headers, 0, false,
-                    ctx.newPromise());
+            final ChannelPromise channelPromise = ctx.newPromise();
+            http2SourceHandler.encoder().frameWriter().writeHeaders(ctx, streamId, http2Headers, 0, false,
+                    channelPromise);
             try {
                 if (cMsg instanceof HTTPCarbonMessage) {
                     HTTPCarbonMessage nettyCMsg = (HTTPCarbonMessage) cMsg;
                     while (true) {
                         if (nettyCMsg.isEndOfMsgAdded() && nettyCMsg.isEmpty()) {
-                            http2SourceHandler.encoder().writeData(ctx, streamId, Unpooled.EMPTY_BUFFER, 0, true,
-                                    ctx.newPromise());
+                            http2SourceHandler.encoder().frameWriter().writeData(ctx, streamId, Unpooled
+                                    .EMPTY_BUFFER, 0, true, channelPromise);
                             http2SourceHandler.flush(ctx);
                             break;
                         }
                         HttpContent httpContent = nettyCMsg.getHttpContent();
                         if (httpContent instanceof LastHttpContent) {
-                            http2SourceHandler.encoder().writeData(ctx, streamId, httpContent.content(), 0, true,
-                                    ctx.newPromise());
+                            http2SourceHandler.encoder().frameWriter().writeData(ctx, streamId, httpContent.content()
+                                    , 0, true, channelPromise);
                             http2SourceHandler.flush(ctx);
                             if (HTTPTransportContextHolder.getInstance().getHandlerExecutor() != null) {
                                 HTTPTransportContextHolder.getInstance().getHandlerExecutor().
@@ -96,25 +98,25 @@ public class HTTP2ResponseCallback implements CarbonCallback {
                             }
                             break;
                         }
-                        http2SourceHandler.encoder().writeData(ctx, streamId, httpContent.content(), 0, false,
-                                ctx.newPromise());
+                        http2SourceHandler.encoder().frameWriter().writeData(ctx, streamId, httpContent.content(), 0,
+                                false, channelPromise);
                     }
                 } else if (cMsg instanceof DefaultCarbonMessage) {
                     DefaultCarbonMessage defaultCMsg = (DefaultCarbonMessage) cMsg;
                     if (defaultCMsg.isEndOfMsgAdded() && defaultCMsg.isEmpty()) {
-                        http2SourceHandler.encoder().writeData(ctx, streamId, Unpooled.EMPTY_BUFFER, 0, true,
-                                ctx.newPromise());
+                        http2SourceHandler.encoder().frameWriter().writeData(ctx, streamId, Unpooled.EMPTY_BUFFER, 0,
+                                true, channelPromise);
                         http2SourceHandler.flush(ctx);
                         return;
                     }
                     while (true) {
                         ByteBuffer byteBuffer = defaultCMsg.getMessageBody();
                         ByteBuf bbuf = Unpooled.wrappedBuffer(byteBuffer);
-                        http2SourceHandler.encoder().writeData(ctx, streamId, bbuf, 0, false, ctx
-                                .newPromise());
+                        http2SourceHandler.encoder().frameWriter().writeData(ctx, streamId, bbuf, 0, false,
+                                channelPromise);
                         if (defaultCMsg.isEndOfMsgAdded() && defaultCMsg.isEmpty()) {
-                            ChannelFuture future = http2SourceHandler.encoder().writeData(ctx, streamId, Unpooled
-                                    .EMPTY_BUFFER, 0, true, ctx.newPromise());
+                            ChannelFuture future = http2SourceHandler.encoder().frameWriter().writeData(ctx,
+                                    streamId, Unpooled.EMPTY_BUFFER, 0, true, channelPromise);
                             http2SourceHandler.flush(ctx);
                             if (HTTPTransportContextHolder.getInstance().getHandlerExecutor() != null) {
                                 HTTPTransportContextHolder.getInstance().getHandlerExecutor().
