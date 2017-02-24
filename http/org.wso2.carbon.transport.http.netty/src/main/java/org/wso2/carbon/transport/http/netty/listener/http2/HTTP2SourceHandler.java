@@ -63,7 +63,6 @@ public final class HTTP2SourceHandler extends Http2ConnectionHandler implements 
      * http2 tcp connections
      */
     private Map<Integer, HTTPCarbonMessage> streamIdRequestMap = PlatformDependent.newConcurrentHashMap();
-    private ConnectionManager connectionManager;
     private ListenerConfiguration listenerConfiguration;
     private ChannelHandlerContext ctx;
 
@@ -72,7 +71,6 @@ public final class HTTP2SourceHandler extends Http2ConnectionHandler implements 
                                listenerConfiguration) {
         super(decoder, encoder, initialSettings);
         this.listenerConfiguration = listenerConfiguration;
-        this.connectionManager = connectionManager;
     }
 
     @Override
@@ -152,7 +150,6 @@ public final class HTTP2SourceHandler extends Http2ConnectionHandler implements 
             HTTPTransportContextHolder.getInstance().getHandlerExecutor()
                     .executeAtSourceConnectionTermination(Integer.toString(ctx.hashCode()));
         }
-        connectionManager.notifyChannelInactive();
     }
 
 
