@@ -15,10 +15,13 @@
 
 package org.wso2.carbon.transport.http.netty.listener;
 
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
+import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.http.HttpContentCompressor;
+import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpRequestDecoder;
 import io.netty.handler.codec.http.HttpResponseEncoder;
 import io.netty.handler.codec.http.HttpServerCodec;
@@ -35,6 +38,7 @@ import org.wso2.carbon.messaging.CarbonTransportInitializer;
 import org.wso2.carbon.transport.http.netty.common.ssl.SSLHandlerFactory;
 import org.wso2.carbon.transport.http.netty.config.ListenerConfiguration;
 import org.wso2.carbon.transport.http.netty.config.RequestSizeValidationConfiguration;
+import org.wso2.carbon.transport.http.netty.internal.HTTPTransportContextHolder;
 import org.wso2.carbon.transport.http.netty.listener.http2.HTTP2SourceHandlerBuilder;
 import org.wso2.carbon.transport.http.netty.listener.http2.HTTPProtocolNegotiationHandler;
 import org.wso2.carbon.transport.http.netty.sender.channel.pool.ConnectionManager;
@@ -157,7 +161,25 @@ public class HTTPServerChannelInitializer extends ChannelInitializer<SocketChann
          * Requests will be propagated to next handlers if no upgrade has been attempted and the client is just
          * talking HTTP.
          */
-        configureHTTPPipeline(ch, listenerConfiguration);
+        p.addLast(new SimpleChannelInboundHandler<HttpObject>() {
+            @Override
+            protected void channelRead0(ChannelHandlerContext ctx, HttpObject msg) throws Exception {
+                // If this handler is hit then no upgrade has been attempted and the client is just talking HTTP.
+                configureHTTPPipeline(ch, listenerConfiguration);
+                ctx.fireChannelRead(msg);
+                ctx.pipeline().remove(this);
+            }
+
+            @Override
+            public void channelActive(final ChannelHandlerContext ctx) throws Exception {
+                // Start the server connection Timer
+                if (HTTPTransportContextHolder.getInstance().getHandlerExecutor() != null) {
+                    HTTPTransportContextHolder.getInstance().getHandlerExecutor()
+                            .executeAtSourceConnectionInitiation(Integer.toString(ctx.hashCode()));
+                }
+            }
+        });
+
     }
 
     /**
