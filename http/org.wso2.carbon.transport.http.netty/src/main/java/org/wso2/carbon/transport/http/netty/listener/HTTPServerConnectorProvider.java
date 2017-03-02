@@ -73,11 +73,6 @@ public class HTTPServerConnectorProvider extends ServerConnectorProvider {
     }
 
     @Override
-    public ServerConnector createConnector(String s) {
-        return null;
-    }
-
-    @Override
     public ServerConnector createConnector(String id, Map<String, String> properties) {
         return null;
     }

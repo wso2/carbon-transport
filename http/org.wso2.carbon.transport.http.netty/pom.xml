@@ -206,11 +206,11 @@
             startup.listener;componentName="netty-transports-mgt";
             requiredService="org.wso2.carbon.messaging.CarbonTransportInitializer,
             org.wso2.carbon.messaging.CarbonMessageProcessor",
-            osgi.service;
+            <!--osgi.service;
             objectClass="org.wso2.carbon.transport.http.netty.internal.HTTPTransportServiceComponent";
-            requiredByComponentName="carbon-transport-mgt",
-            osgi.service;objectClass="org.wso2.carbon.kernel.startupresolver.CapabilityProvider";
-            capabilityName="org.wso2.carbon.kernel.transports.CarbonTransport",
+            requiredByComponentName="carbon-runtime-mgt",-->
+            <!--osgi.service;objectClass="org.wso2.carbon.kernel.startupresolver.CapabilityProvider";
+            capabilityName="org.wso2.carbon.kernel.transports.CarbonTransport",-->
             osgi.service; objectClass="org.wso2.carbon.messaging.ServerConnectorProvider"
         </carbon.component>
     </properties>

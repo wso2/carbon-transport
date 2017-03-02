@@ -26,7 +26,7 @@ import org.wso2.carbon.messaging.exceptions.ServerConnectorException;
 import org.wso2.carbon.transport.http.netty.config.ListenerConfiguration;
 import org.wso2.carbon.transport.http.netty.internal.HTTPTransportContextHolder;
 
-import java.util.Map;
+import java.util.Collections;
 
 /**
  * HTTP ServerConnector implementation
@@ -42,20 +42,7 @@ public class HTTPServerConnector extends ServerConnector {
     private ServerConnectorController serverConnectorController;
 
     public HTTPServerConnector(String id) {
-        super(id);
-    }
-
-    @Override
-    @Deprecated
-    public void start(Map<String, String> map) throws ServerConnectorException {
-        if (listenerConfiguration.isBindOnStartup()) { // Already bind at the startup, hence skipping
-            return;
-        }
-        try {
-            serverConnectorController.bindInterface(this);
-        } catch (Exception e) {
-            throw new ServerConnectorException("Cannot bind to " + this + " : " + e.getMessage(), e);
-        }
+        super(id, Collections.emptyMap());
     }
 
     @Override
@@ -86,12 +73,12 @@ public class HTTPServerConnector extends ServerConnector {
 
     @Override
     public void init() throws ServerConnectorException {
-        log.info("Initializing  HTTP Transport Listener");
+        log.info("Initializing HTTP Transport Listener");
     }
 
     @Override
     protected void destroy() throws ServerConnectorException {
-        log.info("Destroying  HTTP Transport Listener");
+        log.info("Destroying HTTP Transport Listener");
     }
 
     public ChannelFuture getChannelFuture() {

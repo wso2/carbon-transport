@@ -84,30 +84,6 @@ public class ConnectorManager {
      *
      * @param protocol transport protocol used with finding the correct server connector provider.
      * @param id unique id to use when creating the server connector instance.
-     * @return returns the newly created instance.
-     * @throws ServerConnectorException error if there are no server connector provider found.
-     */
-    public ServerConnector createServerConnector(String protocol, String id) throws ServerConnectorException {
-        Optional<ServerConnectorProvider> serverConnectorProviderOptional = getServerConnectorProvider(protocol);
-
-        if (!serverConnectorProviderOptional.isPresent()) {
-            throw new ServerConnectorException("Cannot create a new server connector as there are no connector " +
-                    "provider available for protocol : " + protocol);
-        }
-
-        ServerConnector serverConnector = serverConnectorProviderOptional.get().createConnector(id);
-        serverConnector.setMessageProcessor(messageProcessor);
-        registerServerConnector(serverConnector);
-        return serverConnector;
-    }
-
-    /**
-     * Creates and return a server connector using the given protocol and id. The protocol is used with acquiring the
-     * correct server connector provider. An error will be thrown, if there are no server connector provider registered
-     * for the given protocol.
-     *
-     * @param protocol transport protocol used with finding the correct server connector provider.
-     * @param id unique id to use when creating the server connector instance.
      * @param properties require for connector.
      * @return returns the newly created instance.
      * @throws ServerConnectorException error if there are no server connector provider found.
@@ -143,7 +119,10 @@ public class ConnectorManager {
     public void registerServerConnectorProvider(ServerConnectorProvider serverConnectorProvider) {
         serverConnectorProviders.put(serverConnectorProvider.getProtocol(), serverConnectorProvider);
         if (DataHolder.getInstance().getBundleContext() != null) {
-            serverConnectorProvider.initializeConnectors().forEach(this::registerServerConnector);
+            List<ServerConnector> serverConnectors = serverConnectorProvider.initializeConnectors();
+            if (serverConnectors != null) {
+                serverConnectors.forEach(this::registerServerConnector);
+            }
         }
     }
 

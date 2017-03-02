@@ -22,6 +22,7 @@ import org.osgi.service.component.annotations.ReferencePolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wso2.carbon.connector.framework.ConnectorManager;
+import org.wso2.carbon.kernel.CarbonRuntime;
 import org.wso2.carbon.kernel.startupresolver.RequiredCapabilityListener;
 import org.wso2.carbon.messaging.ServerConnectorProvider;
 import org.wso2.carbon.messaging.exceptions.ServerConnectorException;
@@ -55,6 +56,20 @@ public class ServerConnectorSC implements RequiredCapabilityListener {
     }
 
     protected void unregisterServerConnectorProvider(ServerConnectorProvider serverConnectorProvider, Map properties) {
+    }
+
+    @Reference(
+            name = "carbonRuntime",
+            service = CarbonRuntime.class,
+            cardinality = ReferenceCardinality.AT_LEAST_ONE,
+            policy = ReferencePolicy.DYNAMIC,
+            unbind = "unregisterCarbonRuntime"
+    )
+    protected void registerCarbonRuntime(CarbonRuntime carbonRuntime, Map properties) {
+        // No use of the CarbonRuntime reference. We just need this for OSGi startup order resolving.
+    }
+
+    protected void unregisterCarbonRuntime(CarbonRuntime carbonRuntime, Map properties) {
     }
 
     @Override
