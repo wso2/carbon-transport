@@ -46,7 +46,7 @@ import static org.testng.AssertJUnit.assertTrue;
  */
 public class WebSocketTestCases {
 
-    Logger logger = LoggerFactory.getLogger(WebSocketTestCases.class);
+    private static Logger log = LoggerFactory.getLogger(WebSocketTestCases.class);
     private List<HTTPServerConnector> serverConnectors;
     private final int threadSleepTime = 100;
     private WebSocketClient primaryClient = new WebSocketClient();
@@ -54,7 +54,7 @@ public class WebSocketTestCases {
 
     @BeforeClass
     public void setup() {
-        logger.info(System.lineSeparator() + "-------WebSocket Test Cases-------");
+        log.info(System.lineSeparator() + "-------WebSocket Test Cases-------");
         TransportsConfiguration configuration = YAMLTransportConfigurationBuilder
                 .build("src/test/resources/simple-test-config/netty-transports.yml");
         serverConnectors = TestUtil.startConnectors(configuration, new WebSocketMessageProcessor());
@@ -64,9 +64,9 @@ public class WebSocketTestCases {
     public void handshakeTest() throws URISyntaxException, SSLException {
         try {
             assertTrue(primaryClient.handhshake());
-            logger.info("Handshake test completed.");
+            log.info("Handshake test completed.");
         } catch (InterruptedException e) {
-            logger.error("Handshake interruption.");
+            log.error("Handshake interruption.");
             assertTrue(false);
         }
     }
@@ -79,7 +79,7 @@ public class WebSocketTestCases {
         Thread.sleep(threadSleepTime);
         String textReceived = primaryClient.getTextReceived();
         assertEquals("Not received the same text.", textReceived, textSent);
-        logger.info("pushing and receiving text data from server completed.");
+        log.info("pushing and receiving text data from server completed.");
         primaryClient.shutDown();
     }
 
@@ -94,7 +94,7 @@ public class WebSocketTestCases {
         assertTrue("Buffer capacity is not the same.",
                    bufferSent.capacity() == bufferReceived.capacity());
         assertEquals("Buffers data are not equal.", bufferReceived, bufferSent);
-        logger.info("pushing and receiving binary data from server completed.");
+        log.info("pushing and receiving binary data from server completed.");
         primaryClient.shutDown();
     }
 
@@ -109,10 +109,10 @@ public class WebSocketTestCases {
         secondaryClient.handhshake();
         Thread.sleep(threadSleepTime);
         String textReceived = primaryClient.getTextReceived();
-        logger.info("Received text : " + textReceived);
+        log.info("Received text : " + textReceived);
         assertEquals("New Client was not connected.",
                      textReceived, WebSocketTestConstants.NEW_CLIENT_CONNECTED);
-        logger.info("New client successfully connected to the server.");
+        log.info("New client successfully connected to the server.");
         secondaryClient.shutDown();
         primaryClient.shutDown();
     }
@@ -130,9 +130,9 @@ public class WebSocketTestCases {
         secondaryClient.shutDown();
         Thread.sleep(threadSleepTime);
         String textReceived = primaryClient.getTextReceived();
-        logger.info("Received Text : " + textReceived);
+        log.info("Received Text : " + textReceived);
         assertEquals("Connection close is unsuccessful.", textReceived, WebSocketTestConstants.CLIENT_LEFT);
-        logger.info("Client left the server successfully.");
+        log.info("Client left the server successfully.");
         primaryClient.shutDown();
         secondaryClient.shutDown();
     }
@@ -146,13 +146,12 @@ public class WebSocketTestCases {
         Thread.sleep(threadSleepTime);
         ByteBuffer bufferReceived = primaryClient.getBufferReceived();
         assertEquals("Didn't receive the correct pong.", bufferReceived, bufferSent);
-        logger.info("Receiving a pong message is completed.");
+        log.info("Receiving a pong message is completed.");
+        primaryClient.shutDown();
     }
 
     @AfterClass
-    public void cleaUp() throws ServerConnectorException, InterruptedException {
-        primaryClient.shutDown();
-        secondaryClient.shutDown();
+    public void cleanUp() throws ServerConnectorException, InterruptedException {
         serverConnectors.forEach(
                 serverConnector -> {
                     serverConnector.stop();
