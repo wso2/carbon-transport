@@ -33,6 +33,7 @@ import org.wso2.carbon.transport.http.netty.config.ConfigurationBuilder;
         service = CapabilityProvider.class,
         property = "capabilityName=org.wso2.carbon.kernel.transports.CarbonTransport"
 )
+@Deprecated
 public class TransportServiceCapabilityProvider implements CapabilityProvider {
 
     @Activate

@@ -209,7 +209,8 @@
             objectClass="org.wso2.carbon.transport.http.netty.internal.HTTPTransportServiceComponent";
             requiredByComponentName="carbon-transport-mgt",
             osgi.service;objectClass="org.wso2.carbon.kernel.startupresolver.CapabilityProvider";
-            capabilityName="org.wso2.carbon.kernel.transports.CarbonTransport"
+            capabilityName="org.wso2.carbon.kernel.transports.CarbonTransport",
+            osgi.service; objectClass="org.wso2.carbon.messaging.ServerConnectorProvider"
         </carbon.component>
     </properties>
 </project>

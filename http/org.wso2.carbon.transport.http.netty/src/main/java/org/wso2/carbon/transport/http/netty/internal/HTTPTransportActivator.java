@@ -37,6 +37,7 @@ import java.util.Set;
 /**
  * OSGi BundleActivator of the Netty transport component.
  */
+@Deprecated
 public class HTTPTransportActivator implements BundleActivator {
 
     @Override

@@ -38,6 +38,7 @@ public abstract class PollingServerConnector extends ServerConnector {
      * @param parameters parameters passed from starting this polling connector.
      */
     @Override
+    @Deprecated
     public void start(Map<String, String> parameters) throws ServerConnectorException {
         String pollingInterval = parameters.get(Constants.POLLING_INTERVAL);
         if (pollingInterval != null) {
@@ -47,6 +48,20 @@ public abstract class PollingServerConnector extends ServerConnector {
                 throw new ServerConnectorException("Could not parse parameter: " + Constants.POLLING_INTERVAL
                         + " to numeric type: Long", e);
             }
+        }
+        pollingTaskRunner = new PollingTaskRunner(this);
+        pollingTaskRunner.start();
+    }
+
+    /**
+     * The start polling method which should be called when starting the polling with given interval.
+     * @throws ServerConnectorException if a error happen while starting the connector.
+     */
+    @Override
+    public void start() throws ServerConnectorException {
+        String pollingInterval = getProperties().get(POLLING_INTERVAL);
+        if (pollingInterval != null) {
+            this.interval = Long.parseLong(pollingInterval);
         }
         pollingTaskRunner = new PollingTaskRunner(this);
         pollingTaskRunner.start();
@@ -76,5 +91,10 @@ public abstract class PollingServerConnector extends ServerConnector {
     /**
      * Generic polling method which will be invoked with each polling invocation.
      */
-    protected abstract void poll();
+    public abstract void poll();
+
+
+    public long getInterval() {
+        return interval;
+    }
 }

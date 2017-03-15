@@ -46,6 +46,7 @@ public class HTTPServerConnector extends ServerConnector {
     }
 
     @Override
+    @Deprecated
     public void start(Map<String, String> map) throws ServerConnectorException {
         if (listenerConfiguration.isBindOnStartup()) { // Already bind at the startup, hence skipping
             return;
@@ -56,6 +57,15 @@ public class HTTPServerConnector extends ServerConnector {
             throw new ServerConnectorException("Cannot bind to " + this + " : " + e.getMessage(), e);
         }
     }
+
+    @Override
+    public void start() throws ServerConnectorException {
+        if (listenerConfiguration.isBindOnStartup()) { // Already bind at the startup, hence skipping
+            return;
+        }
+        serverConnectorController.bindInterface(this);
+    }
+
     @Override
     public void stop() {
         serverConnectorController.unBindInterface(this);
