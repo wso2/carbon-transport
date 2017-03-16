@@ -79,7 +79,7 @@ public class WebSocketMessageProcessor implements CarbonMessageProcessor {
                 } catch (ClientConnectorException e) {
                     log.error("MessageProcessor is not supported ", e);
                 } catch (IOException e) {
-                    log.error("IO exception occurred : " + e.getMessage(), e);
+                    log.error("IO exception occurred: " + e.getMessage(), e);
                 }
             }
         });
@@ -94,7 +94,7 @@ public class WebSocketMessageProcessor implements CarbonMessageProcessor {
      * @throws IOException if an error occurred in sending the message back.
      */
     private void handleTextMessage(CarbonMessage carbonMessage) throws IOException {
-        log.info("Text Frame received for URI : " + carbonMessage.getProperty(Constants.TO));
+        log.info("Text Frame received for URI: " + carbonMessage.getProperty(Constants.TO));
         TextCarbonMessage textCarbonMessage = (TextCarbonMessage) carbonMessage;
         Session session = (Session) textCarbonMessage.getProperty(Constants.WEBSOCKET_SESSION);
         session.getBasicRemote().sendText(textCarbonMessage.getText());
@@ -127,7 +127,7 @@ public class WebSocketMessageProcessor implements CarbonMessageProcessor {
                             currentSession.getBasicRemote().
                                     sendText(WebSocketTestConstants.PAYLOAD_NEW_CLIENT_CONNECTED);
                         } catch (IOException e) {
-                            log.error("IO exception when sending data : " + e.getMessage(), e);
+                            log.error("IO exception when sending data: " + e.getMessage(), e);
                         }
                     }
             );
@@ -143,7 +143,7 @@ public class WebSocketMessageProcessor implements CarbonMessageProcessor {
                             currentSession.getBasicRemote().
                                     sendText(WebSocketTestConstants.PAYLOAD_CLIENT_LEFT);
                         } catch (IOException e) {
-                            log.error("IO exception when sending data : " + e.getMessage(), e);
+                            log.error("IO exception when sending data: " + e.getMessage(), e);
                         }
                     }
             );
