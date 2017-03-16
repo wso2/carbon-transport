@@ -61,10 +61,9 @@ public class ConfigurationBuilder {
      * @return TransportsConfiguration defined in the environment
      */
     public TransportsConfiguration getConfiguration() {
-
-        String nettyTransportsConfigFile = System.getProperty(NETTY_TRANSPORT_CONF,
-                                                              "conf" + File.separator + "transports" + File.separator +
-                                                              "netty-transports.yml");
+        String nettyTransportsConfigFile = System.getProperty(
+                NETTY_TRANSPORT_CONF,
+                "conf" + File.separator + "transports" + File.separator + "netty-transports.yml");
         transportsConfiguration = getConfiguration(nettyTransportsConfigFile);
         return transportsConfiguration;
     }

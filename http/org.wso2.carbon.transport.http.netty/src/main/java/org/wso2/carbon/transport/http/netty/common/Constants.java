@@ -129,9 +129,6 @@ public final class Constants {
 
     public static final String PROTOCOL = "PROTOCOL";
 
-    @Deprecated
-    public static final String PROTOCOL_NAME = "http";
-
     public static final String HTTP_PROTOCOL_NAME = "http";
 
     public static final String HTTP_PROTOCOL = "HTTP_PROTOCOL";

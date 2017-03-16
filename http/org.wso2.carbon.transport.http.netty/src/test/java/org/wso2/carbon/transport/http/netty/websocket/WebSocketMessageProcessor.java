@@ -47,7 +47,7 @@ import javax.websocket.Session;
  * A Message Processor class to be used for test pass through scenarios
  */
 public class WebSocketMessageProcessor implements CarbonMessageProcessor {
-    private static final Logger log = LoggerFactory.getLogger(WebSocketMessageProcessor.class);
+    private static final Logger logger = LoggerFactory.getLogger(WebSocketMessageProcessor.class);
     private ExecutorService executor = Executors.newSingleThreadExecutor();
     private ClientConnector clientConnector;
     private List<Session> sessionList = new LinkedList<>();
@@ -77,9 +77,9 @@ public class WebSocketMessageProcessor implements CarbonMessageProcessor {
                         clientConnector.send(carbonMessage, carbonCallback);
                     }
                 } catch (ClientConnectorException e) {
-                    log.error("MessageProcessor is not supported ", e);
+                    logger.error("MessageProcessor is not supported ", e);
                 } catch (IOException e) {
-                    log.error("IO exception occurred : " + e.getMessage(), e);
+                    logger.error("IO exception occurred : " + e.getMessage(), e);
                 }
             }
         });
@@ -87,73 +87,75 @@ public class WebSocketMessageProcessor implements CarbonMessageProcessor {
         return true;
     }
 
-    /*
-    Handle incoming text messages.
-    Extract the text from carbon message and send it back.
+    /**
+     * Handle incoming text messages.
+     * Extract the text from carbon message and send it back.
+     * @param carbonMessage {@link CarbonMessage} to process.
+     * @throws IOException if an error occurred in sending the message back.
      */
     private void handleTextMessage(CarbonMessage carbonMessage) throws IOException {
-        log.info("Text Frame received for URI : " +
-                            carbonMessage.getProperty(Constants.TO));
+        logger.info("Text Frame received for URI : " + carbonMessage.getProperty(Constants.TO));
         TextCarbonMessage textCarbonMessage = (TextCarbonMessage) carbonMessage;
-        Session session = (Session) textCarbonMessage.
-                getProperty(Constants.WEBSOCKET_SESSION);
+        Session session = (Session) textCarbonMessage.getProperty(Constants.WEBSOCKET_SESSION);
         session.getBasicRemote().sendText(textCarbonMessage.getText());
     }
 
-    /*
-    Handle incoming binary messages.
-    Extract the byte buffer from carbon message and send it back.
+    /**
+     * Handle incoming binary messages.
+     * Extract the byte buffer from carbon message and send it back.
+     * @param carbonMessage {@link CarbonMessage} to process.
+     * @throws IOException if an error occurred in sending the message back.
      */
     private void handleBinaryMessage(CarbonMessage carbonMessage) throws IOException {
         BinaryCarbonMessage binaryCarbonMessage = (BinaryCarbonMessage) carbonMessage;
-        Session session = (Session) binaryCarbonMessage.
-                getProperty(Constants.WEBSOCKET_SESSION);
+        Session session = (Session) binaryCarbonMessage.getProperty(Constants.WEBSOCKET_SESSION);
         session.getBasicRemote().sendBinary(binaryCarbonMessage.readBytes());
     }
 
-    /*
-    Handle incoming status messages when opening a connection and closing a connection.
+    /**
+     * Handle incoming status messages when opening a connection and closing a connection.
+     * @param carbonMessage {@link CarbonMessage} to process.
      */
     private void handleStatusMessage(CarbonMessage carbonMessage) {
         StatusCarbonMessage statusCarbonMessage = (StatusCarbonMessage) carbonMessage;
         if (org.wso2.carbon.messaging.Constants.STATUS_OPEN.equals(statusCarbonMessage.getStatus())) {
-            log.info("Status open carbon message received.");
+            logger.info("Status open carbon message received.");
             Session session = (Session) statusCarbonMessage.
                     getProperty(Constants.WEBSOCKET_SESSION);
             sessionList.forEach(
                     currentSession -> {
                         try {
                             currentSession.getBasicRemote().
-                                    sendText(WebSocketTestConstants.PAYLOAD_NEW_CLIENT_CONNECTED);
+                                    sendText(WebSocketTestConstants.NEW_CLIENT_CONNECTED);
                         } catch (IOException e) {
-                            log.error("IO exception when sending data : " + e.getMessage(), e);
+                            logger.error("IO exception when sending data : " + e.getMessage(), e);
                         }
                     }
             );
             sessionList.add(session);
-
         } else if (org.wso2.carbon.messaging.Constants.STATUS_CLOSE.
                 equals(statusCarbonMessage.getStatus())) {
-            log.info("Status closed carbon message received.");
+            logger.info("Status closed carbon message received.");
             Session session = (Session) statusCarbonMessage.
                     getProperty(Constants.WEBSOCKET_SESSION);
             sessionList.forEach(
                     currentSession -> {
                         try {
                             currentSession.getBasicRemote().
-                                    sendText(WebSocketTestConstants.PAYLOAD_CLIENT_LEFT);
+                                    sendText(WebSocketTestConstants.CLIENT_LEFT);
                         } catch (IOException e) {
-                            log.error("IO exception when sending data : " + e.getMessage(), e);
+                            logger.error("IO exception when sending data : " + e.getMessage(), e);
                         }
-
                     }
             );
         }
     }
 
-    /*
-    Handle pong messages.
-    Extract the content of the pong message (byte buffer) and create new one and send it back.
+    /**
+     * Handle pong messages.
+     * Extract the content of the pong message (byte buffer) and create new one and send it back.
+     * @param carbonMessage {@link CarbonMessage} to process.
+     * @throws IOException if an error occurred in sending the message back.
      */
     private void handleControlMessage(CarbonMessage carbonMessage) throws IOException {
         ControlCarbonMessage controlCarbonMessage = (ControlCarbonMessage) carbonMessage;
@@ -161,8 +163,6 @@ public class WebSocketMessageProcessor implements CarbonMessageProcessor {
                 getProperty(Constants.WEBSOCKET_SESSION);
         session.getBasicRemote().sendPong(controlCarbonMessage.readBytes());
     }
-
-
 
     @Override
     public void setTransportSender(TransportSender transportSender) {
@@ -175,6 +175,6 @@ public class WebSocketMessageProcessor implements CarbonMessageProcessor {
 
     @Override
     public String getId() {
-        return "websocket";
+        return "passthrough";
     }
 }

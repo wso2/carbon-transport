@@ -42,7 +42,7 @@ import java.util.Set;
 public class HTTPServerConnectorProvider extends ServerConnectorProvider {
 
     public HTTPServerConnectorProvider() {
-        super(Constants.PROTOCOL_NAME);
+        super(Constants.HTTP_PROTOCOL_NAME);
     }
 
     public List<ServerConnector> initializeConnectors(TransportsConfiguration trpConfig) {
