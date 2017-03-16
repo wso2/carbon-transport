@@ -151,7 +151,7 @@ public class WebSocketTestCases {
     }
 
     @AfterClass
-    public void cleanUp() throws ServerConnectorException, InterruptedException {
+    public void cleaUp() throws ServerConnectorException, InterruptedException {
         serverConnectors.forEach(
                 serverConnector -> {
                     serverConnector.stop();
