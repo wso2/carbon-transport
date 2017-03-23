@@ -206,6 +206,8 @@ public final class Constants {
     public static final String WEBSOCKET_SESSION = "WEBSOCKET_SESSION";
     public static final String WEBSOCKET_PROTOCOL_NAME = "ws";
     public static final String WEBSOCKET_UPGRADE = "websocket";
+    public static final String WEBSOCKET_CLIENT_ID = "WEBSOCKET_CLIENT_ID";
+    public static final String IS_WEBSOCKET_SERVER = "IS_WEBSOCKET_SERVER";
 
 
     // Callback related parameters

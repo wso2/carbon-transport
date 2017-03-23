@@ -182,6 +182,7 @@ public class WebSocketSourceHandler extends SourceHandler {
         cMsg.setProperty(Constants.REMOTE_PORT, ((InetSocketAddress) ctx.channel().remoteAddress()).getPort());
         cMsg.setProperty(Constants.CHANNEL_ID, channelId);
         cMsg.setProperty(Constants.PROTOCOL, Constants.WEBSOCKET_PROTOCOL_NAME);
+        cMsg.setProperty(Constants.IS_WEBSOCKET_SERVER, true);
         cMsg.setProperty(Constants.WEBSOCKET_SESSION, (Session) session);
     }
 }
