@@ -164,41 +164,38 @@ public class WebSocketClient {
         } else {
             sslCtx = null;
         }
-        group = new NioEventLoopGroup();
-        try {
-            HttpHeaders httpHeaders = new DefaultHttpHeaders();
-            headers.entrySet().forEach(
-                    entry -> httpHeaders.add(entry.getKey(), entry.getValue())
-            );
-            handler =
-                    new WebSocketClientHandler(clientId,
-                                               WebSocketClientHandshakerFactory.newHandshaker(
-                                                       uri, WebSocketVersion.V13, subprotocol,
-                                                       allowExtensions, new DefaultHttpHeaders()
-                                               ));
-            Bootstrap b = new Bootstrap();
-            b.group(group)
-                    .channel(NioSocketChannel.class)
-                    .handler(new ChannelInitializer<SocketChannel>() {
-                        @Override
-                        protected void initChannel(SocketChannel ch) {
-                            ChannelPipeline p = ch.pipeline();
-                            if (sslCtx != null) {
-                                p.addLast(sslCtx.newHandler(ch.alloc(), host, port));
-                            }
-                            p.addLast(
-                                    new HttpClientCodec(),
-                                    new HttpObjectAggregator(8192),
-                                    WebSocketClientCompressionHandler.INSTANCE,
-                                    handler);
-                        }
-                    });
 
-            channel = b.connect(uri.getHost(), port).sync().channel();
-            isDone = handler.handshakeFuture().sync().isSuccess();
-        } catch (Exception e) {
-            return false;
-        }
+        group = new NioEventLoopGroup();
+        HttpHeaders httpHeaders = new DefaultHttpHeaders();
+        headers.entrySet().forEach(
+                entry -> httpHeaders.add(entry.getKey(), entry.getValue())
+        );
+        handler =
+                new WebSocketClientHandler(clientId,
+                                           WebSocketClientHandshakerFactory.newHandshaker(
+                                                   uri, WebSocketVersion.V13, subprotocol,
+                                                   allowExtensions, new DefaultHttpHeaders()
+                                           ));
+        Bootstrap b = new Bootstrap();
+        b.group(group)
+                .channel(NioSocketChannel.class)
+                .handler(new ChannelInitializer<SocketChannel>() {
+                    @Override
+                    protected void initChannel(SocketChannel ch) {
+                        ChannelPipeline p = ch.pipeline();
+                        if (sslCtx != null) {
+                            p.addLast(sslCtx.newHandler(ch.alloc(), host, port));
+                        }
+                        p.addLast(
+                                new HttpClientCodec(),
+                                new HttpObjectAggregator(8192),
+                                WebSocketClientCompressionHandler.INSTANCE,
+                                handler);
+                    }
+                });
+
+        channel = b.connect(uri.getHost(), port).sync().channel();
+        isDone = handler.handshakeFuture().sync().isSuccess();
         return isDone;
     }
 

@@ -27,6 +27,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
+import io.netty.handler.codec.http.websocketx.PingWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.PongWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketClientHandshaker;
@@ -44,8 +45,6 @@ import org.wso2.carbon.transport.http.netty.common.Constants;
 import org.wso2.carbon.transport.http.netty.internal.HTTPTransportContextHolder;
 
 import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
-import javax.websocket.Session;
 
 /**
  * WebSocket Client Handler. This class responsible for handling the inbound messages for the WebSocket Client.
@@ -65,6 +64,8 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
     public WebSocketClientHandler(String clientId, WebSocketClientHandshaker handshaker) {
         this.clientId = clientId;
         this.handshaker = handshaker;
+        cMsg = null;
+        handshakeFuture = null;
     }
 
     public ChannelFuture handshakeFuture() {
@@ -112,10 +113,13 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
         } else if (frame instanceof PongWebSocketFrame) {
             PongWebSocketFrame pongFrame = (PongWebSocketFrame) frame;
             cMsg = new ControlCarbonMessage(pongFrame.content().nioBuffer(), true);
+        } else if (frame instanceof PingWebSocketFrame) {
+            PingWebSocketFrame pingFrame = (PingWebSocketFrame) frame;
+            ctx.channel().writeAndFlush(new PongWebSocketFrame(pingFrame.content()));
         } else if (frame instanceof CloseWebSocketFrame) {
             CloseWebSocketFrame closeFrame = (CloseWebSocketFrame) frame;
-            cMsg = new StatusCarbonMessage(org.wso2.carbon.messaging.Constants.STATUS_CLOSE, closeFrame.statusCode(),
-                                                                                                   closeFrame.reasonText());
+            cMsg = new StatusCarbonMessage(org.wso2.carbon.messaging.Constants.STATUS_CLOSE,
+                                           closeFrame.statusCode(), closeFrame.reasonText());
             ch.close();
         }
         setupCarbonMessage(ctx);

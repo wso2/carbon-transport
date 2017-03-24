@@ -23,6 +23,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
+import io.netty.handler.codec.http.websocketx.PingWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.PongWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketFrame;
@@ -123,6 +124,9 @@ public class WebSocketSourceHandler extends SourceHandler {
             ByteBuffer byteBuffer = byteBuf.nioBuffer();
             cMsg = new ControlCarbonMessage(byteBuffer, finalFragment);
             setupCarbonMessage(ctx);
+        } else if (msg instanceof PingWebSocketFrame) {
+            PingWebSocketFrame pingWebSocketFrame = (PingWebSocketFrame) msg;
+            ctx.channel().writeAndFlush(new PongWebSocketFrame(pingWebSocketFrame.content()));
         }
         publishToMessageProcessor(cMsg);
     }
