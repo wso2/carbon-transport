@@ -17,7 +17,7 @@
  *
  */
 
-package org.wso2.carbon.transport.http.netty.websocket;
+package org.wso2.carbon.transport.http.netty.websocket.server;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -47,8 +47,11 @@ import java.nio.ByteBuffer;
 import javax.websocket.Session;
 
 /**
- * This class handles all kinds of WebSocketFrames
- * after connection is upgraded from HTTP to WebSocket.
+ * This class handles all kinds of WebSocketFrames after connection is upgraded from HTTP to WebSocket.
+ *  WebSocket Client Handler. This class responsible for handling the inbound messages for the WebSocket Client.
+ * <i>Note: If the user uses both WebSocket Client and the server it is recommended to check the
+ * <b>{@link Constants}.IS_WEBSOCKET_SERVER</b> property to identify whether the message is coming from the client
+ * or the server in the application level.</i>
  */
 public class WebSocketSourceHandler extends SourceHandler {
 

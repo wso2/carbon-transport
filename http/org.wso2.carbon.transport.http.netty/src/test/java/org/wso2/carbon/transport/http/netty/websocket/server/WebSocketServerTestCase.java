@@ -17,7 +17,7 @@
  *
  */
 
-package org.wso2.carbon.transport.http.netty.websocket;
+package org.wso2.carbon.transport.http.netty.websocket.server;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,9 +44,9 @@ import static org.testng.AssertJUnit.assertTrue;
 /**
  * Test class for WebSocket. This includes the necessary test cases to check WebSocket compatibilities.
  */
-public class WebSocketTestCase {
+public class WebSocketServerTestCase {
 
-    private static final Logger log = LoggerFactory.getLogger(WebSocketTestCase.class);
+    private static final Logger log = LoggerFactory.getLogger(WebSocketServerTestCase.class);
     private List<HTTPServerConnector> serverConnectors;
     private final int threadSleepTime = 100;
     private WebSocketClient primaryClient = new WebSocketClient();

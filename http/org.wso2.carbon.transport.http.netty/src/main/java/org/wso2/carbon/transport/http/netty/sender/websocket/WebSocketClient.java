@@ -55,7 +55,7 @@ import java.util.Map;
 import javax.net.ssl.SSLException;
 
 /**
- * WebSocket client class for test
+ * WebSocket client for sending and receiving messages in WebSocket as a client.
  */
 public class WebSocketClient {
 
