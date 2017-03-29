@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+import org.wso2.carbon.messaging.BinaryCarbonMessage;
 import org.wso2.carbon.messaging.ClientConnector;
 import org.wso2.carbon.messaging.StatusCarbonMessage;
 import org.wso2.carbon.messaging.TextCarbonMessage;
@@ -35,6 +36,7 @@ import org.wso2.carbon.transport.http.netty.listener.HTTPServerConnector;
 import org.wso2.carbon.transport.http.netty.sender.websocket.WebSocketClientConnector;
 import org.wso2.carbon.transport.http.netty.util.TestUtil;
 
+import java.nio.ByteBuffer;
 import java.util.List;
 
 /**
@@ -70,6 +72,18 @@ public class WebSocketClientTestCase {
         clientConnector.send(textCarbonMessage, null);
         Thread.sleep(sleepTime);
         Assert.assertEquals(messageProcessor.getReceivedTextToClient(), text);
+        shutDownClient(clientId1);
+    }
+
+    @Test void testBinaryReceived() throws ClientConnectorException, InterruptedException {
+        handshake(clientId1);
+        byte[] bytes = {1, 2, 3, 4, 5};
+        ByteBuffer buffer = ByteBuffer.wrap(bytes);
+        BinaryCarbonMessage binaryCarbonMessage = new BinaryCarbonMessage(buffer, true);
+        binaryCarbonMessage.setProperty(Constants.WEBSOCKET_CLIENT_ID, clientId1);
+        clientConnector.send(binaryCarbonMessage, null);
+        Thread.sleep(sleepTime);
+        Assert.assertEquals(messageProcessor.getReceivedByteBufferToClient(), buffer);
         shutDownClient(clientId1);
     }
 
