@@ -24,6 +24,7 @@ import org.wso2.carbon.messaging.CarbonCallback;
 import org.wso2.carbon.messaging.CarbonMessage;
 import org.wso2.carbon.messaging.CarbonMessageProcessor;
 import org.wso2.carbon.messaging.ClientConnector;
+import org.wso2.carbon.messaging.ControlCarbonMessage;
 import org.wso2.carbon.messaging.StatusCarbonMessage;
 import org.wso2.carbon.messaging.TextCarbonMessage;
 import org.wso2.carbon.messaging.exceptions.ClientConnectorException;
@@ -60,6 +61,9 @@ public class WebSocketClientConnector implements ClientConnector {
         } else if (msg instanceof TextCarbonMessage) {
             TextCarbonMessage textCarbonMessage = (TextCarbonMessage) msg;
             sendText(textCarbonMessage);
+        } else if (msg instanceof ControlCarbonMessage) {
+            ControlCarbonMessage controlCarbonMessage = (ControlCarbonMessage) msg;
+            sendPing(controlCarbonMessage);
         } else if (msg instanceof BinaryCarbonMessage) {
             BinaryCarbonMessage binaryCarbonMessage = (BinaryCarbonMessage) msg;
             sendBinary(binaryCarbonMessage);
@@ -135,7 +139,8 @@ public class WebSocketClientConnector implements ClientConnector {
         try {
             webSocketClient.sendText(text);
         } catch (IOException e) {
-            throw new ClientConnectorException("Interruption occurred while shutting down the WebSocket Client.", e);
+            throw new ClientConnectorException("Interruption occurred while sending text message to " +
+                                                       "the WebSocket Client.", e);
         }
     }
 
@@ -145,7 +150,19 @@ public class WebSocketClientConnector implements ClientConnector {
         try {
             webSocketClient.sendBinary(byteBuf);
         } catch (IOException e) {
-            throw new ClientConnectorException("Interruption occurred while shutting down the WebSocket Client.", e);
+            throw new ClientConnectorException("Interruption occurred while sending binary message to " +
+                                                       "the WebSocket Client.", e);
+        }
+    }
+
+    private void sendPing(ControlCarbonMessage controlCarbonMessage) throws ClientConnectorException {
+        ByteBuffer buffer = controlCarbonMessage.readBytes();
+        WebSocketClient webSocketClient = getClient(controlCarbonMessage);
+        try {
+            webSocketClient.sendPing(buffer);
+        } catch (IOException e) {
+            throw new ClientConnectorException("Interruption occurred while sending ping message to" +
+                                                       " the WebSocket Client.", e);
         }
     }
 }

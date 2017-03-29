@@ -77,18 +77,16 @@ public class WebSocketMessageProcessor implements CarbonMessageProcessor {
                             handleBinaryMessage(carbonMessage);
                         } else if (carbonMessage instanceof StatusCarbonMessage) {
                             handleStatusMessage(carbonMessage);
-                        } else if (carbonMessage instanceof ControlCarbonMessage) {
-                            handleControlMessage(carbonMessage);
                         }
                     } else {
                         // If the message coming from WebSocket client it is processed here.
                         log.info("WebSocket client message received.");
                         if (carbonMessage instanceof TextCarbonMessage) {
                             receivedTextToClient = ((TextCarbonMessage) carbonMessage).getText();
-                        } else if (carbonMessage instanceof BinaryCarbonMessage) {
-                            receivedByteBufferToClient = ((BinaryCarbonMessage) carbonMessage).readBytes();
                         } else if (carbonMessage instanceof ControlCarbonMessage) {
                             isPongReceivedToClient = true;
+                        } else if (carbonMessage instanceof BinaryCarbonMessage) {
+                            receivedByteBufferToClient = ((BinaryCarbonMessage) carbonMessage).readBytes();
                         }
                     }
                 } catch (IOException e) {
@@ -164,19 +162,6 @@ public class WebSocketMessageProcessor implements CarbonMessageProcessor {
     }
 
     /**
-     * Handle pong messages.
-     * Extract the content of the pong message (byte buffer) and create new one and send it back.
-     * @param carbonMessage {@link CarbonMessage} to process.
-     * @throws IOException if an error occurred in sending the message back.
-     */
-    private void handleControlMessage(CarbonMessage carbonMessage) throws IOException {
-        ControlCarbonMessage controlCarbonMessage = (ControlCarbonMessage) carbonMessage;
-        Session session = (Session) controlCarbonMessage.
-                getProperty(Constants.WEBSOCKET_SESSION);
-        session.getBasicRemote().sendPong(controlCarbonMessage.readBytes());
-    }
-
-    /**
      * Retrieve the latest text received to client.
      * @return the latest text received to the client.
      */
@@ -197,9 +182,7 @@ public class WebSocketMessageProcessor implements CarbonMessageProcessor {
      * @return true if a pong is received to client.
      */
     public boolean isPongReceivedToClient() {
-        boolean tmp = isPongReceivedToClient;
-        isPongReceivedToClient = false;
-        return tmp;
+        return isPongReceivedToClient;
     }
 
     @Override

@@ -22,13 +22,16 @@ package org.wso2.carbon.transport.http.netty.websocket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import org.wso2.carbon.messaging.BinaryCarbonMessage;
 import org.wso2.carbon.messaging.ClientConnector;
+import org.wso2.carbon.messaging.ControlCarbonMessage;
 import org.wso2.carbon.messaging.StatusCarbonMessage;
 import org.wso2.carbon.messaging.TextCarbonMessage;
 import org.wso2.carbon.messaging.exceptions.ClientConnectorException;
+import org.wso2.carbon.messaging.exceptions.ServerConnectorException;
 import org.wso2.carbon.transport.http.netty.common.Constants;
 import org.wso2.carbon.transport.http.netty.config.TransportsConfiguration;
 import org.wso2.carbon.transport.http.netty.config.YAMLTransportConfigurationBuilder;
@@ -63,10 +66,10 @@ public class WebSocketClientTestCase {
         clientConnector.setMessageProcessor(messageProcessor);
     }
 
-    @Test
+    @Test(description = "Test the WebSocket handshake and sending and receiving text messages.")
     public void testTextReceived() throws ClientConnectorException, InterruptedException {
         handshake(clientId1);
-        String text = "textText";
+        String text = "testText";
         TextCarbonMessage textCarbonMessage = new TextCarbonMessage(text);
         textCarbonMessage.setProperty(Constants.WEBSOCKET_CLIENT_ID, clientId1);
         clientConnector.send(textCarbonMessage, null);
@@ -75,7 +78,8 @@ public class WebSocketClientTestCase {
         shutDownClient(clientId1);
     }
 
-    @Test void testBinaryReceived() throws ClientConnectorException, InterruptedException {
+    @Test(description = "Test binary message sending and receiving.")
+    public void testBinaryReceived() throws ClientConnectorException, InterruptedException {
         handshake(clientId1);
         byte[] bytes = {1, 2, 3, 4, 5};
         ByteBuffer buffer = ByteBuffer.wrap(bytes);
@@ -85,6 +89,68 @@ public class WebSocketClientTestCase {
         Thread.sleep(sleepTime);
         Assert.assertEquals(messageProcessor.getReceivedByteBufferToClient(), buffer);
         shutDownClient(clientId1);
+    }
+
+    @Test(description = "Test ping pong messaging. ")
+    public void testPingPong() throws ClientConnectorException, InterruptedException {
+        handshake(clientId1);
+        byte[] bytes = {1, 2, 3, 4, 5};
+        ByteBuffer buffer = ByteBuffer.wrap(bytes);
+        ControlCarbonMessage controlCarbonMessage = new ControlCarbonMessage(buffer, true);
+        controlCarbonMessage.setProperty(Constants.WEBSOCKET_CLIENT_ID, clientId1);
+        clientConnector.send(controlCarbonMessage, null);
+        Thread.sleep(sleepTime);
+        Assert.assertTrue(messageProcessor.isPongReceivedToClient());
+        shutDownClient(clientId1);
+    }
+
+    @Test(description = "Test removal of a client",
+          expectedExceptions = ClientConnectorException.class)
+    public void testRemovedClient() throws ClientConnectorException {
+        handshake(clientId1);
+        shutDownClient(clientId1);
+        String text = "testText";
+        TextCarbonMessage textCarbonMessage = new TextCarbonMessage(text);
+        textCarbonMessage.setProperty(Constants.WEBSOCKET_CLIENT_ID, clientId1);
+        clientConnector.send(textCarbonMessage, null);
+    }
+
+    @Test(description = "Test multiple clients handling, sending and receiving text messages for them.")
+    public void testMultipleClients() throws ClientConnectorException, InterruptedException {
+        handshake(clientId1);
+        handshake(clientId2);
+        String text1 = "testText1";
+        String text2 = "testText2";
+
+        TextCarbonMessage textCarbonMessage = new TextCarbonMessage(text1);
+        textCarbonMessage.setProperty(Constants.WEBSOCKET_CLIENT_ID, clientId1);
+        clientConnector.send(textCarbonMessage, null);
+        Thread.sleep(sleepTime);
+        Assert.assertEquals(messageProcessor.getReceivedTextToClient(), text1);
+
+        textCarbonMessage = new TextCarbonMessage(text2);
+        textCarbonMessage.setProperty(Constants.WEBSOCKET_CLIENT_ID, clientId2);
+        clientConnector.send(textCarbonMessage, null);
+        Thread.sleep(sleepTime);
+        Assert.assertEquals(messageProcessor.getReceivedTextToClient(), text2);
+
+        textCarbonMessage = new TextCarbonMessage(text2);
+        textCarbonMessage.setProperty(Constants.WEBSOCKET_CLIENT_ID, clientId1);
+        clientConnector.send(textCarbonMessage, null);
+        Thread.sleep(sleepTime);
+        Assert.assertEquals(messageProcessor.getReceivedTextToClient(), text2);
+
+        shutDownClient(clientId1);
+        shutDownClient(clientId2);
+    }
+
+    @AfterClass
+    public void cleanUp() throws ServerConnectorException, InterruptedException {
+        serverConnectors.forEach(
+                serverConnector -> {
+                    serverConnector.stop();
+                }
+        );
     }
 
     private void handshake(String clientId) throws ClientConnectorException {

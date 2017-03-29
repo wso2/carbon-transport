@@ -45,7 +45,6 @@ import org.wso2.carbon.transport.http.netty.sender.channel.pool.ConnectionManage
 import java.net.InetSocketAddress;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
-import javax.websocket.Session;
 
 /**
  * This class handles all kinds of WebSocketFrames after connection is upgraded from HTTP to WebSocket.
@@ -124,6 +123,7 @@ public class WebSocketSourceHandler extends SourceHandler {
             ByteBuffer byteBuffer = byteBuf.nioBuffer();
             cMsg = new ControlCarbonMessage(byteBuffer, finalFragment);
             setupCarbonMessage(ctx);
+
         } else if (msg instanceof PingWebSocketFrame) {
             PingWebSocketFrame pingWebSocketFrame = (PingWebSocketFrame) msg;
             ctx.channel().writeAndFlush(new PongWebSocketFrame(pingWebSocketFrame.content()));
@@ -190,6 +190,6 @@ public class WebSocketSourceHandler extends SourceHandler {
         cMsg.setProperty(Constants.CHANNEL_ID, channelId);
         cMsg.setProperty(Constants.PROTOCOL, Constants.WEBSOCKET_PROTOCOL_NAME);
         cMsg.setProperty(Constants.IS_WEBSOCKET_SERVER, true);
-        cMsg.setProperty(Constants.WEBSOCKET_SESSION, (Session) session);
+        cMsg.setProperty(Constants.WEBSOCKET_SESSION, session);
     }
 }

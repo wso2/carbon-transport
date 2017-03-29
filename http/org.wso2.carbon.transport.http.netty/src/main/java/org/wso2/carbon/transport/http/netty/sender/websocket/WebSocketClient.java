@@ -35,7 +35,6 @@ import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.PingWebSocketFrame;
-import io.netty.handler.codec.http.websocketx.PongWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketClientHandshakerFactory;
 import io.netty.handler.codec.http.websocketx.WebSocketVersion;
@@ -132,6 +131,7 @@ public class WebSocketClient {
      * @return true if the handshake is done properly.
      * @throws URISyntaxException throws if there is an error in the URI syntax.
      * @throws InterruptedException throws if the connecting the server is interrupted.
+     * @throws SSLException throws if SSL exception occurred during protocol negotiation.
      */
     public boolean handhshake() throws InterruptedException, URISyntaxException, SSLException {
         boolean isDone;
@@ -201,7 +201,9 @@ public class WebSocketClient {
 
     /**
      * Send text to the server.
+     *
      * @param text text need to be sent.
+     * @throws IOException if I/O exception occurred during the writing data to the channel.
      */
     public void sendText(String text) throws IOException {
         if (channel == null) {
@@ -213,7 +215,9 @@ public class WebSocketClient {
 
     /**
      * Send binary data to server.
+     *
      * @param buf buffer containing the data need to be sent.
+     * @throws IOException if I/O exception occurred during the writing data to the channel.
      */
     public void sendBinary(ByteBuffer buf) throws IOException {
         if (channel == null) {
@@ -224,20 +228,9 @@ public class WebSocketClient {
     }
 
     /**
-     * Send a pong message to the server.
-     * @param buf content of the pong message to be sent.
-     */
-    public void sendPong(ByteBuffer buf) throws IOException {
-        if (channel == null) {
-            log.error("Channel is null. Cannot send text.");
-            throw new IOException("Cannot find the channel to write");
-        }
-        channel.writeAndFlush(new PongWebSocketFrame(Unpooled.wrappedBuffer(buf)));
-    }
-
-    /**
      * Send a ping message to the server.
      * @param buf content of the pong message to be sent.
+     * @throws IOException if I/O exception occurred during the writing data to the channel.
      */
     public void sendPing(ByteBuffer buf) throws IOException {
         if (channel == null) {
@@ -249,6 +242,11 @@ public class WebSocketClient {
 
     /**
      * Shutdown the WebSocket Client.
+     *
+     * @param statusCode code for the reason for closure according to https://tools.ietf.org/html/rfc6455#page-45.
+     * @param reasonText String explaining the reason for closing the connection.
+     * @see <a href="http://google.com">http://google.com</a>
+     * @throws InterruptedException if any interruption occurred during connection closure.
      */
     public void shutDown(int statusCode, String reasonText) throws InterruptedException {
         channel.writeAndFlush(new CloseWebSocketFrame(statusCode, reasonText));
