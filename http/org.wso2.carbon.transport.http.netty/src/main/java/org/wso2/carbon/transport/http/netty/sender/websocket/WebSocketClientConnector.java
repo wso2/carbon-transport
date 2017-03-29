@@ -105,7 +105,7 @@ public class WebSocketClientConnector implements ClientConnector {
     }
 
     private WebSocketClient getClient(CarbonMessage carbonMessage) throws ClientConnectorException {
-        String id = carbonMessage.getHeader(Constants.WEBSOCKET_CLIENT_ID);
+        String id = (String) carbonMessage.getProperty(Constants.WEBSOCKET_CLIENT_ID);
         WebSocketClient webSocketClient = webSocketClientMap.get(id);
         if (webSocketClient == null) {
             throw new ClientConnectorException("Cannot find a WebSocket Client for ID: " + id);
@@ -125,7 +125,7 @@ public class WebSocketClientConnector implements ClientConnector {
     }
 
     private void removeClient(CarbonMessage carbonMessage) {
-        String id = carbonMessage.getHeader(Constants.WEBSOCKET_CLIENT_ID);
+        String id = (String) carbonMessage.getProperty(Constants.WEBSOCKET_CLIENT_ID);
         webSocketClientMap.remove(id);
     }
 

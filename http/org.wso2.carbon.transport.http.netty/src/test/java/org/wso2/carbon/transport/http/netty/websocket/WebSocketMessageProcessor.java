@@ -17,7 +17,7 @@
  *
  */
 
-package org.wso2.carbon.transport.http.netty.websocket.server;
+package org.wso2.carbon.transport.http.netty.websocket;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,13 +30,12 @@ import org.wso2.carbon.messaging.ControlCarbonMessage;
 import org.wso2.carbon.messaging.StatusCarbonMessage;
 import org.wso2.carbon.messaging.TextCarbonMessage;
 import org.wso2.carbon.messaging.TransportSender;
-import org.wso2.carbon.messaging.exceptions.ClientConnectorException;
 import org.wso2.carbon.transport.http.netty.common.Constants;
-import org.wso2.carbon.transport.http.netty.util.TestUtil;
 import org.wso2.carbon.transport.http.netty.util.client.websocket.WebSocketTestConstants;
 
 import java.io.IOException;
 import java.net.ProtocolException;
+import java.nio.ByteBuffer;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -52,6 +51,10 @@ public class WebSocketMessageProcessor implements CarbonMessageProcessor {
     private ClientConnector clientConnector;
     private List<Session> sessionList = new LinkedList<>();
 
+    private String receivedTextToClient;
+    private ByteBuffer receivedByteBufferToClient;
+    private boolean isPongReceivedToClient;
+
     @Override
     public boolean receive(CarbonMessage carbonMessage, CarbonCallback carbonCallback) {
         executor.execute(new Runnable() {
@@ -59,25 +62,35 @@ public class WebSocketMessageProcessor implements CarbonMessageProcessor {
             public void run() {
                 try {
                     String protocol = (String) carbonMessage.getProperty(Constants.PROTOCOL);
+                    boolean isServer = (boolean) carbonMessage.getProperty(Constants.IS_WEBSOCKET_SERVER);
 
                     if (!Constants.WEBSOCKET_PROTOCOL_NAME.equals(protocol)) {
                         throw new ProtocolException("Protocol is not valid :" + protocol);
                     }
-                    if (carbonMessage instanceof TextCarbonMessage) {
-                        handleTextMessage(carbonMessage);
-                    } else if (carbonMessage instanceof BinaryCarbonMessage) {
-                        handleBinaryMessage(carbonMessage);
-                    } else if (carbonMessage instanceof StatusCarbonMessage) {
-                        handleStatusMessage(carbonMessage);
-                    } else if (carbonMessage instanceof ControlCarbonMessage) {
-                        handleControlMessage(carbonMessage);
+
+                    if (isServer) {
+                        // If the message coming from WebSocket server it is processed here.
+                        log.info("WebSocket server message received.");
+                        if (carbonMessage instanceof TextCarbonMessage) {
+                            handleTextMessage(carbonMessage);
+                        } else if (carbonMessage instanceof BinaryCarbonMessage) {
+                            handleBinaryMessage(carbonMessage);
+                        } else if (carbonMessage instanceof StatusCarbonMessage) {
+                            handleStatusMessage(carbonMessage);
+                        } else if (carbonMessage instanceof ControlCarbonMessage) {
+                            handleControlMessage(carbonMessage);
+                        }
                     } else {
-                        carbonMessage.setProperty(Constants.HOST, TestUtil.TEST_HOST);
-                        carbonMessage.setProperty(Constants.PORT, TestUtil.TEST_SERVER_PORT);
-                        clientConnector.send(carbonMessage, carbonCallback);
+                        // If the message coming from WebSocket client it is processed here.
+                        log.info("WebSocket client message received.");
+                        if (carbonMessage instanceof TextCarbonMessage) {
+                            receivedTextToClient = ((TextCarbonMessage) carbonMessage).getText();
+                        } else if (carbonMessage instanceof BinaryCarbonMessage) {
+                            receivedByteBufferToClient = ((BinaryCarbonMessage) carbonMessage).readBytes();
+                        } else if (carbonMessage instanceof ControlCarbonMessage) {
+                            isPongReceivedToClient = true;
+                        }
                     }
-                } catch (ClientConnectorException e) {
-                    log.error("MessageProcessor is not supported ", e);
                 } catch (IOException e) {
                     log.error("IO exception occurred : " + e.getMessage(), e);
                 }
@@ -161,6 +174,32 @@ public class WebSocketMessageProcessor implements CarbonMessageProcessor {
         Session session = (Session) controlCarbonMessage.
                 getProperty(Constants.WEBSOCKET_SESSION);
         session.getBasicRemote().sendPong(controlCarbonMessage.readBytes());
+    }
+
+    /**
+     * Retrieve the latest text received to client.
+     * @return the latest text received to the client.
+     */
+    public String getReceivedTextToClient() {
+        return receivedTextToClient;
+    }
+
+    /**
+     * Retrieve the latest {@link ByteBuffer} received to client.
+     * @return the latest {@link ByteBuffer} received to client.
+     */
+    public ByteBuffer getReceivedByteBufferToClient() {
+        return receivedByteBufferToClient;
+    }
+
+    /**
+     * Retrieve whether a pong is received client.
+     * @return true if a pong is received to client.
+     */
+    public boolean isPongReceivedToClient() {
+        boolean tmp = isPongReceivedToClient;
+        isPongReceivedToClient = false;
+        return tmp;
     }
 
     @Override

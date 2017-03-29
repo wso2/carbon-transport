@@ -17,7 +17,7 @@
  *
  */
 
-package org.wso2.carbon.transport.http.netty.websocket.server;
+package org.wso2.carbon.transport.http.netty.websocket;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,7 +54,7 @@ public class WebSocketServerTestCase {
 
     @BeforeClass
     public void setup() {
-        log.info(System.lineSeparator() + "-------WebSocket Test Cases-------");
+        log.info(System.lineSeparator() + "-------WebSocket Server Connector Test Cases-------");
         TransportsConfiguration configuration = YAMLTransportConfigurationBuilder
                 .build("src/test/resources/simple-test-config/netty-transports.yml");
         serverConnectors = TestUtil.startConnectors(configuration, new WebSocketMessageProcessor());
