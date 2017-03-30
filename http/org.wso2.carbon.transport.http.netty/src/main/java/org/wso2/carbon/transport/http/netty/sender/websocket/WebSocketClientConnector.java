@@ -41,13 +41,13 @@ import javax.net.ssl.SSLException;
 
 /**
  * WebSocket Client connector which connects to a remote WebSocket Endpoint.This store the WebSocket Clients
- * against a unique ID given by the user. So make sure to adda unique ID the carbon message in order to use
+ * against a unique ID given by the user. So make sure to add a unique ID the carbon message in order to use
  * this properly.
  */
 public class WebSocketClientConnector implements ClientConnector {
 
     // Map<uniqueID, webSocketClient>
-    Map<String, WebSocketClient> webSocketClientMap = new ConcurrentHashMap<>();
+    private final Map<String, WebSocketClient> webSocketClientMap = new ConcurrentHashMap<>();
 
     @Override
     public boolean send(CarbonMessage msg, CarbonCallback callback) throws ClientConnectorException {
@@ -92,10 +92,13 @@ public class WebSocketClientConnector implements ClientConnector {
     private boolean handleHandshake(StatusCarbonMessage carbonMessage) throws ClientConnectorException {
         String url = (String) carbonMessage.getProperty(Constants.TO);
         String clientId = (String) carbonMessage.getProperty(Constants.WEBSOCKET_CLIENT_ID);
+        String subprotocols = (String) carbonMessage.getProperty(Constants.WEBSOCKET_SUBPROTOCOLS);
+        Boolean allowExtensions = (Boolean) carbonMessage.getProperty(Constants.WEBSOCKET_ALLOW_EXTENSIONS);
+        if (allowExtensions == null) {
+            allowExtensions = true;
+        }
         Headers headers = carbonMessage.getHeaders();
-
-        // TODO: Add sub-protocol support for the WebSocket Client.
-        WebSocketClient webSocketClient = new WebSocketClient(clientId, url, null, true, headers);
+        WebSocketClient webSocketClient = new WebSocketClient(clientId, url, subprotocols, allowExtensions, headers);
         boolean handshakeDone;
         try {
             handshakeDone = webSocketClient.handhshake();

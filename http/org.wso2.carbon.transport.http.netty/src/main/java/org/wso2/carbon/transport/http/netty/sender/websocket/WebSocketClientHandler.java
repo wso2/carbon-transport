@@ -42,6 +42,7 @@ import org.wso2.carbon.messaging.ControlCarbonMessage;
 import org.wso2.carbon.messaging.StatusCarbonMessage;
 import org.wso2.carbon.messaging.TextCarbonMessage;
 import org.wso2.carbon.transport.http.netty.common.Constants;
+import org.wso2.carbon.transport.http.netty.exception.UnknownWebSocketFrameTypeException;
 import org.wso2.carbon.transport.http.netty.internal.HTTPTransportContextHolder;
 
 import java.net.InetSocketAddress;
@@ -88,7 +89,7 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
     }
 
     @Override
-    public void channelRead0(ChannelHandlerContext ctx, Object msg) throws Exception {
+    public void channelRead0(ChannelHandlerContext ctx, Object msg) throws UnknownWebSocketFrameTypeException {
         Channel ch = ctx.channel();
         if (!handshaker.isHandshakeComplete()) {
             handshaker.finishHandshake(ch, (FullHttpResponse) msg);
@@ -121,6 +122,8 @@ public class WebSocketClientHandler extends SimpleChannelInboundHandler<Object> 
             cMsg = new StatusCarbonMessage(org.wso2.carbon.messaging.Constants.STATUS_CLOSE,
                                            closeFrame.statusCode(), closeFrame.reasonText());
             ch.close();
+        } else {
+            throw new UnknownWebSocketFrameTypeException("Cannot identify the WebSocket frame type");
         }
         setupCarbonMessage(ctx);
         publishToMessageProcessor(cMsg, ctx);
