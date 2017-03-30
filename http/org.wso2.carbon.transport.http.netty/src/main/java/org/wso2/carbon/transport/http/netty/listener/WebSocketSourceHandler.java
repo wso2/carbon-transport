@@ -134,10 +134,10 @@ public class WebSocketSourceHandler extends SourceHandler {
         publishToMessageProcessor(cMsg);
     }
 
-
-    /*
-    Carbon Message is published to registered message processor
-    Message Processor should return transport thread immediately
+    /**
+     * Carbon Message is published to registered message processor. Message Processor should return transport
+     * thread immediately.
+     * @param cMsg {@link CarbonMessage} which should be published.
      */
     @Override
     protected void publishToMessageProcessor(CarbonMessage cMsg) {
@@ -169,12 +169,14 @@ public class WebSocketSourceHandler extends SourceHandler {
         publishToMessageProcessor(cMsg);
     }
 
-    /*
-     Extract all the necessary properties from ChannelHandlerContext
-     Add them into a CarbonMessage
-     Note : This method only add details of ChannelHandlerContext to the CarbonMessage
-     Adding other custom details should be done separately
-     @return basic CarbonMessage with necessary details
+
+    /**
+     * Extract all the necessary properties from ChannelHandlerContext and add them into a CarbonMessage.
+     * Note : This method only add details of ChannelHandlerContext to the CarbonMessage. Adding other custom
+     * details should be done separately.
+     *
+     * @param ctx {@link ChannelHandlerContext} of the channel.
+     * @return basic CarbonMessage with necessary details.
      */
     private void setupCarbonMessage(ChannelHandlerContext ctx) {
         if (HTTPTransportContextHolder.getInstance().getHandlerExecutor() != null) {
