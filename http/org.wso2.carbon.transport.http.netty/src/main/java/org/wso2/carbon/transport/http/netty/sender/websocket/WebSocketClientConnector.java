@@ -25,6 +25,7 @@ import org.wso2.carbon.messaging.CarbonMessage;
 import org.wso2.carbon.messaging.CarbonMessageProcessor;
 import org.wso2.carbon.messaging.ClientConnector;
 import org.wso2.carbon.messaging.ControlCarbonMessage;
+import org.wso2.carbon.messaging.Headers;
 import org.wso2.carbon.messaging.StatusCarbonMessage;
 import org.wso2.carbon.messaging.TextCarbonMessage;
 import org.wso2.carbon.messaging.exceptions.ClientConnectorException;
@@ -91,12 +92,17 @@ public class WebSocketClientConnector implements ClientConnector {
     private boolean handleHandshake(StatusCarbonMessage carbonMessage) throws ClientConnectorException {
         String url = (String) carbonMessage.getProperty(Constants.TO);
         String clientId = (String) carbonMessage.getProperty(Constants.WEBSOCKET_CLIENT_ID);
-        WebSocketClient webSocketClient = new WebSocketClient(clientId, url);
+        Headers headers = carbonMessage.getHeaders();
+
+        // TODO: Add sub-protocol support for the WebSocket Client.
+        WebSocketClient webSocketClient = new WebSocketClient(clientId, url, null, true, headers);
         boolean handshakeDone;
         try {
             handshakeDone = webSocketClient.handhshake();
             if (handshakeDone) {
                 webSocketClientMap.put(clientId, webSocketClient);
+            } else {
+                throw new ClientConnectorException("Handshake is unsuccessful");
             }
         } catch (InterruptedException e) {
             throw new ClientConnectorException("Handshake interrupted", e);

@@ -44,6 +44,7 @@ import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.wso2.carbon.messaging.Headers;
 
 import java.io.IOException;
 import java.net.URI;
@@ -68,7 +69,7 @@ public class WebSocketClient {
     private final String url;
     private final String subprotocol;
     private final boolean allowExtensions;
-    private final Map<String, String> headers;
+    private final Headers headers;
 
     /**
      * @param clientId unique id of the client given by the application.
@@ -79,7 +80,7 @@ public class WebSocketClient {
         this.url = url;
         this.subprotocol = null;
         this.allowExtensions = true;
-        this.headers = new HashMap<>();
+        this.headers = new Headers();
     }
 
     /**
@@ -92,7 +93,7 @@ public class WebSocketClient {
         this.url = url;
         this.subprotocol = subprotocol;
         this.allowExtensions = true;
-        this.headers = new HashMap<>();
+        this.headers = new Headers();
     }
 
     /**
@@ -106,7 +107,7 @@ public class WebSocketClient {
         this.url = url;
         this.subprotocol = subprotocol;
         this.allowExtensions = allowExtensions;
-        this.headers = new HashMap<>();
+        this.headers = new Headers();
     }
 
     /**
@@ -117,7 +118,7 @@ public class WebSocketClient {
      * @param headers any specific headers which need to send to the server.
      */
     public WebSocketClient(String clientId, String url, String subprotocol, boolean allowExtensions,
-                           Map<String, String> headers) {
+                           Headers headers) {
         this.clientId = clientId;
         this.url = url;
         this.subprotocol = subprotocol;
@@ -167,14 +168,16 @@ public class WebSocketClient {
 
         group = new NioEventLoopGroup();
         HttpHeaders httpHeaders = new DefaultHttpHeaders();
-        headers.entrySet().forEach(
-                entry -> httpHeaders.add(entry.getKey(), entry.getValue())
+
+        // Adding custom headers to the handshake request.
+        headers.getAll().forEach(
+                header -> httpHeaders.add(header.getName(), header.getValue())
         );
         handler =
                 new WebSocketClientHandler(clientId,
                                            WebSocketClientHandshakerFactory.newHandshaker(
                                                    uri, WebSocketVersion.V13, subprotocol,
-                                                   allowExtensions, new DefaultHttpHeaders()
+                                                   allowExtensions, httpHeaders
                                            ));
         Bootstrap b = new Bootstrap();
         b.group(group)
