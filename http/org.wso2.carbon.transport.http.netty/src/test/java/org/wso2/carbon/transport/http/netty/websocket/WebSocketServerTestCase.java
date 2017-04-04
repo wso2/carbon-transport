@@ -142,7 +142,7 @@ public class WebSocketServerTestCase {
         primaryClient.handhshake();
         byte[] bytes = {6, 7, 8, 9, 10, 11};
         ByteBuffer bufferSent = ByteBuffer.wrap(bytes);
-        primaryClient.sendPong(bufferSent);
+        primaryClient.sendPing(bufferSent);
         Thread.sleep(threadSleepTime);
         ByteBuffer bufferReceived = primaryClient.getBufferReceived();
         assertEquals("Didn't receive the correct pong.", bufferReceived, bufferSent);
