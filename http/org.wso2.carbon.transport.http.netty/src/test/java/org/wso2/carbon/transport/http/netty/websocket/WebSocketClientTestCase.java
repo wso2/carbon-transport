@@ -28,7 +28,6 @@ import org.testng.annotations.Test;
 import org.wso2.carbon.messaging.BinaryCarbonMessage;
 import org.wso2.carbon.messaging.ClientConnector;
 import org.wso2.carbon.messaging.ControlCarbonMessage;
-import org.wso2.carbon.messaging.StatusCarbonMessage;
 import org.wso2.carbon.messaging.TextCarbonMessage;
 import org.wso2.carbon.messaging.exceptions.ClientConnectorException;
 import org.wso2.carbon.messaging.exceptions.ServerConnectorException;
@@ -96,7 +95,8 @@ public class WebSocketClientTestCase {
         handshake(clientId1);
         byte[] bytes = {1, 2, 3, 4, 5};
         ByteBuffer buffer = ByteBuffer.wrap(bytes);
-        ControlCarbonMessage controlCarbonMessage = new ControlCarbonMessage(buffer, true);
+        ControlCarbonMessage controlCarbonMessage = new ControlCarbonMessage(
+                org.wso2.carbon.messaging.Constants.CONTROL_SIGNAL_HEARTBEAT, buffer, true);
         controlCarbonMessage.setProperty(Constants.WEBSOCKET_CLIENT_ID, clientId1);
         clientConnector.send(controlCarbonMessage, null);
         Thread.sleep(sleepTime);
@@ -154,18 +154,20 @@ public class WebSocketClientTestCase {
     }
 
     private void handshake(String clientId) throws ClientConnectorException {
-        StatusCarbonMessage statusCarbonMessage = new StatusCarbonMessage(
-                org.wso2.carbon.messaging.Constants.STATUS_OPEN, 0, null);
-        statusCarbonMessage.setProperty(Constants.TO, url);
-        statusCarbonMessage.setProperty(Constants.WEBSOCKET_CLIENT_ID, clientId);
-        clientConnector.send(statusCarbonMessage, null);
+        ControlCarbonMessage controlCarbonMessage = new ControlCarbonMessage(
+                org.wso2.carbon.messaging.Constants.CONTROL_SIGNAL_OPEN);
+        controlCarbonMessage.setProperty(Constants.TO, url);
+        controlCarbonMessage.setProperty(Constants.WEBSOCKET_CLIENT_ID, clientId);
+        clientConnector.send(controlCarbonMessage, null);
     }
 
     private void shutDownClient(String clientId) throws ClientConnectorException {
-        StatusCarbonMessage statusCarbonMessage = new StatusCarbonMessage(
-                org.wso2.carbon.messaging.Constants.STATUS_CLOSE, 1001, "Normal Closure");
-        statusCarbonMessage.setProperty(Constants.TO, url);
-        statusCarbonMessage.setProperty(Constants.WEBSOCKET_CLIENT_ID, clientId);
-        clientConnector.send(statusCarbonMessage, null);
+        ControlCarbonMessage controlCarbonMessage = new ControlCarbonMessage(
+                org.wso2.carbon.messaging.Constants.CONTROL_SIGNAL_CLOSE);
+        controlCarbonMessage.setProperty(Constants.WEBSOCKET_CLOSE_CODE, 1000);
+        controlCarbonMessage.setProperty(Constants.WEBSOCKET_CLOSE_REASON, "Normal Closure");
+        controlCarbonMessage.setProperty(Constants.TO, url);
+        controlCarbonMessage.setProperty(Constants.WEBSOCKET_CLIENT_ID, clientId);
+        clientConnector.send(controlCarbonMessage, null);
     }
 }
