@@ -31,6 +31,7 @@ import io.netty.handler.codec.http.websocketx.WebSocketFrame;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wso2.carbon.messaging.BinaryCarbonMessage;
+import org.wso2.carbon.messaging.CarbonCallback;
 import org.wso2.carbon.messaging.CarbonMessage;
 import org.wso2.carbon.messaging.CarbonMessageProcessor;
 import org.wso2.carbon.messaging.ControlCarbonMessage;
@@ -149,7 +150,8 @@ public class WebSocketSourceHandler extends SourceHandler {
                 .getMessageProcessor();
         if (carbonMessageProcessor != null) {
             try {
-                carbonMessageProcessor.receive(cMsg, null);
+                CarbonCallback callback = new WebSocketCallback(session);
+                carbonMessageProcessor.receive(cMsg, callback);
             } catch (Exception e) {
                 logger.error("Error while submitting CarbonMessage to CarbonMessageProcessor.", e);
                 ctx.channel().close();
