@@ -94,7 +94,8 @@ public class WebSocketMessageProcessor implements CarbonMessageProcessor {
      * @throws IOException if an error occurred in sending the message back.
      */
     private void handleTextMessage(CarbonMessage carbonMessage) throws IOException {
-        logger.info("Text Frame received for URI : " + carbonMessage.getProperty(Constants.TO));
+        logger.info("Text Frame received for URI : " +
+                            carbonMessage.getProperty(Constants.TO));
         TextCarbonMessage textCarbonMessage = (TextCarbonMessage) carbonMessage;
         Session session = (Session) textCarbonMessage.getProperty(Constants.WEBSOCKET_SESSION);
         session.getBasicRemote().sendText(textCarbonMessage.getText());
@@ -136,8 +137,6 @@ public class WebSocketMessageProcessor implements CarbonMessageProcessor {
         } else if (org.wso2.carbon.messaging.Constants.STATUS_CLOSE.
                 equals(statusCarbonMessage.getStatus())) {
             logger.info("Status closed carbon message received.");
-            Session session = (Session) statusCarbonMessage.
-                    getProperty(Constants.WEBSOCKET_SESSION);
             sessionList.forEach(
                     currentSession -> {
                         try {
