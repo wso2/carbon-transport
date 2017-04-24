@@ -29,8 +29,8 @@ import org.wso2.carbon.transport.http.netty.config.TransportsConfiguration;
 import org.wso2.carbon.transport.http.netty.config.YAMLTransportConfigurationBuilder;
 import org.wso2.carbon.transport.http.netty.listener.HTTPServerConnector;
 import org.wso2.carbon.transport.http.netty.util.TestUtil;
+import org.wso2.carbon.transport.http.netty.util.WebSocketTestConstants;
 import org.wso2.carbon.transport.http.netty.util.client.websocket.WebSocketClient;
-import org.wso2.carbon.transport.http.netty.util.client.websocket.WebSocketTestConstants;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -45,9 +45,9 @@ import static org.testng.AssertJUnit.assertTrue;
 /**
  * Test class for WebSocket protocol.
  */
-public class WebSocketTestCase {
+public class WebSocketServerTestCase {
 
-    Logger logger = LoggerFactory.getLogger(WebSocketTestCase.class);
+    Logger logger = LoggerFactory.getLogger(WebSocketServerTestCase.class);
     private List<HTTPServerConnector> serverConnectors;
     private final int threadSleepTime = 100;
     private WebSocketClient primaryClient = new WebSocketClient();
@@ -55,7 +55,7 @@ public class WebSocketTestCase {
 
     @BeforeClass
     public void setup() {
-        logger.info(System.lineSeparator() + "-------WebSocket Test Cases-------");
+        logger.info(System.lineSeparator() + "-------WebSocket Server Connector Test Cases-------");
         TransportsConfiguration configuration = YAMLTransportConfigurationBuilder
                 .build("src/test/resources/simple-test-config/netty-transports.yml");
         serverConnectors = TestUtil.startConnectors(configuration, new WebSocketMessageProcessor());
@@ -107,7 +107,7 @@ public class WebSocketTestCase {
         String textReceived = primaryClient.getTextReceived();
         logger.info("Received text : " + textReceived);
         assertEquals("New Client was not connected.",
-                     textReceived, WebSocketTestConstants.NEW_CLIENT_CONNECTED);
+                     textReceived, WebSocketTestConstants.PAYLOAD_NEW_CLIENT_CONNECTED);
         logger.info("New client successfully connected to the server.");
         secondaryClient.shutDown();
         primaryClient.shutDown();
@@ -127,7 +127,7 @@ public class WebSocketTestCase {
         Thread.sleep(threadSleepTime);
         String textReceived = primaryClient.getTextReceived();
         logger.info("Received Text : " + textReceived);
-        assertEquals("Connection close is unsuccessful.", textReceived, WebSocketTestConstants.CLIENT_LEFT);
+        assertEquals("Connection close is unsuccessful.", textReceived, WebSocketTestConstants.PAYLOAD_CLIENT_LEFT);
         logger.info("Client left the server successfully.");
         primaryClient.shutDown();
         secondaryClient.shutDown();

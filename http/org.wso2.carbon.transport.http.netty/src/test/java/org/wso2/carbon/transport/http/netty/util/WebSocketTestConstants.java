@@ -17,12 +17,12 @@
  *
  */
 
-package org.wso2.carbon.transport.http.netty.util.client.websocket;
+package org.wso2.carbon.transport.http.netty.util;
 
 /**
  * WebSocket constants for testing purposes.
  */
 public class WebSocketTestConstants {
-    public static final String NEW_CLIENT_CONNECTED = "NEW_CLIENT_CONNECTED";
-    public static final String CLIENT_LEFT = "CLIENT_LEFT";
+    public static final String PAYLOAD_NEW_CLIENT_CONNECTED = "NEW_CLIENT_CONNECTED";
+    public static final String PAYLOAD_CLIENT_LEFT = "CLIENT_LEFT";
 }
