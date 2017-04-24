@@ -25,8 +25,8 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import org.wso2.carbon.messaging.exceptions.ServerConnectorException;
+import org.wso2.carbon.transport.http.netty.config.ConfigurationBuilder;
 import org.wso2.carbon.transport.http.netty.config.TransportsConfiguration;
-import org.wso2.carbon.transport.http.netty.config.YAMLTransportConfigurationBuilder;
 import org.wso2.carbon.transport.http.netty.listener.HTTPServerConnector;
 import org.wso2.carbon.transport.http.netty.util.TestUtil;
 import org.wso2.carbon.transport.http.netty.util.WebSocketTestConstants;
@@ -59,8 +59,8 @@ public class WebSocketServerTestCase {
     @BeforeClass
     public void setup() {
         logger.info(System.lineSeparator() + "-------WebSocket Server Connector Test Cases-------");
-        TransportsConfiguration configuration = YAMLTransportConfigurationBuilder
-                .build("src/test/resources/simple-test-config/netty-transports.yml");
+        TransportsConfiguration configuration = ConfigurationBuilder.getInstance().getConfiguration(
+                "src/test/resources/simple-test-config/netty-transports.yml");
         serverConnectors = TestUtil.startConnectors(configuration, messageProcessor);
     }
 

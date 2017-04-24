@@ -32,8 +32,8 @@ import org.wso2.carbon.messaging.TextCarbonMessage;
 import org.wso2.carbon.messaging.exceptions.ClientConnectorException;
 import org.wso2.carbon.messaging.exceptions.ServerConnectorException;
 import org.wso2.carbon.transport.http.netty.common.Constants;
+import org.wso2.carbon.transport.http.netty.config.ConfigurationBuilder;
 import org.wso2.carbon.transport.http.netty.config.TransportsConfiguration;
-import org.wso2.carbon.transport.http.netty.config.YAMLTransportConfigurationBuilder;
 import org.wso2.carbon.transport.http.netty.listener.HTTPServerConnector;
 import org.wso2.carbon.transport.http.netty.sender.websocket.WebSocketClientConnector;
 import org.wso2.carbon.transport.http.netty.util.TestUtil;
@@ -59,8 +59,8 @@ public class WebSocketClientTestCase {
     @BeforeClass
     public void setup() {
         log.info(System.lineSeparator() + "-------WebSocket Client Connector Test Cases-------");
-        TransportsConfiguration configuration = YAMLTransportConfigurationBuilder
-                .build("src/test/resources/simple-test-config/netty-transports.yml");
+        TransportsConfiguration configuration = ConfigurationBuilder.getInstance().getConfiguration(
+                "src/test/resources/simple-test-config/netty-transports.yml");
         serverConnectors = TestUtil.startConnectors(configuration, messageProcessor);
         clientConnector.setMessageProcessor(messageProcessor);
     }
