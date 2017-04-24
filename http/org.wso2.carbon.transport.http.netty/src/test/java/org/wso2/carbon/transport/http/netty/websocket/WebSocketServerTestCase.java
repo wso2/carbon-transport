@@ -35,7 +35,9 @@ import org.wso2.carbon.transport.http.netty.util.client.websocket.WebSocketClien
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.net.ssl.SSLException;
 
@@ -52,13 +54,14 @@ public class WebSocketServerTestCase {
     private final int threadSleepTime = 100;
     private WebSocketClient primaryClient = new WebSocketClient();
     private WebSocketClient secondaryClient = new WebSocketClient();
+    private WebSocketMessageProcessor messageProcessor = new WebSocketMessageProcessor();
 
     @BeforeClass
     public void setup() {
         logger.info(System.lineSeparator() + "-------WebSocket Server Connector Test Cases-------");
         TransportsConfiguration configuration = YAMLTransportConfigurationBuilder
                 .build("src/test/resources/simple-test-config/netty-transports.yml");
-        serverConnectors = TestUtil.startConnectors(configuration, new WebSocketMessageProcessor());
+        serverConnectors = TestUtil.startConnectors(configuration, messageProcessor);
     }
 
     @Test
@@ -143,6 +146,19 @@ public class WebSocketServerTestCase {
         ByteBuffer bufferReceived = primaryClient.getBufferReceived();
         assertEquals("Didn't receive the correct pong.", bufferReceived, bufferSent);
         logger.info("Receiving a pong message is completed.");
+    }
+
+
+    @Test
+    public void checkHeaders() throws InterruptedException, SSLException, URISyntaxException {
+        Map<String, String> headers = new HashMap<>();
+        headers.put("header1", "test1");
+        headers.put("header2", "test2");
+        primaryClient = new WebSocketClient(headers);
+        primaryClient.handhshake();
+        assertEquals("Didn't receive expected header value", "test1", messageProcessor.getHeader("header1"));
+        assertEquals("Didn't receive expected header value", "test2", messageProcessor.getHeader("header2"));
+        primaryClient.shutDown();
     }
 
     @AfterClass

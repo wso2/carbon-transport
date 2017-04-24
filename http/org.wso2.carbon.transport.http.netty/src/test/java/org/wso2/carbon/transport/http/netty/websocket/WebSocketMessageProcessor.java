@@ -54,6 +54,7 @@ public class WebSocketMessageProcessor implements CarbonMessageProcessor {
     private String receivedTextToClient;
     private ByteBuffer receivedByteBufferToClient;
     private boolean isPongReceivedToClient;
+    private StatusCarbonMessage lastOnOpenCarbonMessage;
 
     @Override
     public boolean receive(CarbonMessage carbonMessage, CarbonCallback carbonCallback) {
@@ -130,6 +131,7 @@ public class WebSocketMessageProcessor implements CarbonMessageProcessor {
     private void handleStatusMessage(CarbonMessage carbonMessage) {
         StatusCarbonMessage statusCarbonMessage = (StatusCarbonMessage) carbonMessage;
         if (org.wso2.carbon.messaging.Constants.STATUS_OPEN.equals(statusCarbonMessage.getStatus())) {
+            lastOnOpenCarbonMessage = statusCarbonMessage;
             log.info("Status open carbon message received.");
             Session session = (Session) statusCarbonMessage.getProperty(Constants.WEBSOCKET_SESSION);
             sessionList.forEach(
@@ -146,8 +148,6 @@ public class WebSocketMessageProcessor implements CarbonMessageProcessor {
         } else if (org.wso2.carbon.messaging.Constants.STATUS_CLOSE.
                 equals(statusCarbonMessage.getStatus())) {
             log.info("Status closed carbon message received.");
-            Session session = (Session) statusCarbonMessage.
-                    getProperty(Constants.WEBSOCKET_SESSION);
             sessionList.forEach(
                     currentSession -> {
                         try {
@@ -166,7 +166,9 @@ public class WebSocketMessageProcessor implements CarbonMessageProcessor {
      * @return the latest text received to the client.
      */
     public String getReceivedTextToClient() {
-        return receivedTextToClient;
+        String tmp = receivedTextToClient;
+        receivedTextToClient = null;
+        return tmp;
     }
 
     /**
@@ -174,7 +176,9 @@ public class WebSocketMessageProcessor implements CarbonMessageProcessor {
      * @return the latest {@link ByteBuffer} received to client.
      */
     public ByteBuffer getReceivedByteBufferToClient() {
-        return receivedByteBufferToClient;
+        ByteBuffer tmp = receivedByteBufferToClient;
+        receivedByteBufferToClient = null;
+        return tmp;
     }
 
     /**
@@ -182,7 +186,18 @@ public class WebSocketMessageProcessor implements CarbonMessageProcessor {
      * @return true if a pong is received to client.
      */
     public boolean isPongReceivedToClient() {
-        return isPongReceivedToClient;
+        boolean tmp = isPongReceivedToClient;
+        isPongReceivedToClient = false;
+        return tmp;
+    }
+
+    /**
+     * Get value of a header received by carbon message.
+     * @param headerKey key of the header.
+     * @return the value of the header.
+     */
+    public String getHeader(String headerKey) {
+        return lastOnOpenCarbonMessage.getHeader(headerKey);
     }
 
     @Override

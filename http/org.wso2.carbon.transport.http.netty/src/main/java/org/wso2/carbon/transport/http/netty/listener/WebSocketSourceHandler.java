@@ -21,6 +21,7 @@ package org.wso2.carbon.transport.http.netty.listener;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.PingWebSocketFrame;
@@ -36,6 +37,7 @@ import org.wso2.carbon.messaging.ControlCarbonMessage;
 import org.wso2.carbon.messaging.StatusCarbonMessage;
 import org.wso2.carbon.messaging.TextCarbonMessage;
 import org.wso2.carbon.transport.http.netty.common.Constants;
+import org.wso2.carbon.transport.http.netty.common.Util;
 import org.wso2.carbon.transport.http.netty.config.ListenerConfiguration;
 import org.wso2.carbon.transport.http.netty.exception.UnknownWebSocketFrameTypeException;
 import org.wso2.carbon.transport.http.netty.internal.HTTPTransportContextHolder;
@@ -59,6 +61,7 @@ public class WebSocketSourceHandler extends SourceHandler {
     private final boolean isSecured;
     private final WebSocketSessionImpl session;
 
+
     /**
      * @param channelId This works as the session id of the WebSocket connection.
      * @param connectionManager connection manager for WebSocket connection.
@@ -72,13 +75,14 @@ public class WebSocketSourceHandler extends SourceHandler {
                                   ListenerConfiguration listenerConfiguration,
                                   String uri,
                                   boolean isSecured,
-                                  ChannelHandlerContext ctx) throws Exception {
+                                  ChannelHandlerContext ctx,
+                                  HttpRequest httpRequest) throws Exception {
         super(connectionManager, listenerConfiguration);
         this.uri = uri;
         this.channelId = channelId;
         this.isSecured = isSecured;
         this.session = new WebSocketSessionImpl(ctx, isSecured, uri, channelId);
-        sendOnOpenMessage(ctx, isSecured, uri);
+        sendOnOpenMessage(ctx, httpRequest);
     }
 
     @Override
@@ -153,11 +157,12 @@ public class WebSocketSourceHandler extends SourceHandler {
     }
 
 
-    private void sendOnOpenMessage(ChannelHandlerContext ctx, boolean isSecured, String uri) throws URISyntaxException {
+    private void sendOnOpenMessage(ChannelHandlerContext ctx, HttpRequest httpRequest) throws URISyntaxException {
         cMsg = new StatusCarbonMessage(org.wso2.carbon.messaging.Constants.STATUS_OPEN, 0, null);
         setupCarbonMessage(ctx);
         cMsg.setProperty(Constants.CONNECTION, Constants.UPGRADE);
         cMsg.setProperty(Constants.UPGRADE, Constants.WEBSOCKET_UPGRADE);
+        cMsg.setHeaders(Util.getHeaders(httpRequest).getAll());
         publishToMessageProcessor(cMsg);
     }
 

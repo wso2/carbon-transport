@@ -49,6 +49,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
 import javax.net.ssl.SSLException;
 
 /**
@@ -63,7 +65,16 @@ public class WebSocketClient {
 
     private Channel channel = null;
     private WebSocketClientHandler handler;
+    private final Map<String, String> headers;
     EventLoopGroup group;
+
+    public WebSocketClient() {
+        headers = new HashMap<>();
+    }
+
+    public WebSocketClient(Map<String, String> headers) {
+        this.headers = headers;
+    }
 
     /**
      * @return true if the handshake is done properly.
@@ -103,6 +114,12 @@ public class WebSocketClient {
         }
 
         group = new NioEventLoopGroup();
+        DefaultHttpHeaders httpHeaders = new DefaultHttpHeaders();
+        headers.entrySet().forEach(
+                header -> {
+                    httpHeaders.add(header.getKey(), header.getValue());
+                }
+        );
         try {
             // Connect with V13 (RFC 6455 aka HyBi-17). You can change it to V08 or V00.
             // If you change it to V00, ping is not supported and remember to change
@@ -111,7 +128,7 @@ public class WebSocketClient {
                     new WebSocketClientHandler(
                             WebSocketClientHandshakerFactory.newHandshaker(
                                     uri, WebSocketVersion.V13, null,
-                                    true, new DefaultHttpHeaders()));
+                                    true, httpHeaders));
 
             Bootstrap b = new Bootstrap();
             b.group(group)

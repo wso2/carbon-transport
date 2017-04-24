@@ -181,7 +181,7 @@ public class SourceHandler extends ChannelInboundHandlerAdapter {
                                                         this.listenerConfiguration,
                                                         httpRequest.getUri(),
                                                         isSecuredConnection,
-                                                        ctx));
+                                                        ctx, httpRequest));
 
             pipeline.remove(this);
 
