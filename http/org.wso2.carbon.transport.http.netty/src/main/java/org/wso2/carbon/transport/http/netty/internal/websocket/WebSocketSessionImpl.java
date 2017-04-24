@@ -90,10 +90,6 @@ public class WebSocketSessionImpl extends WebSocketSessionAdapter {
         return isOpen;
     }
 
-    /**
-     * Set the value of isOpen.
-     * @param isOpen true if connection is open.
-     */
     public void setIsOpen(boolean isOpen) {
         this.isOpen = isOpen;
     }

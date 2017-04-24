@@ -33,7 +33,7 @@ import io.netty.handler.codec.http.HttpClientCodec;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
-import io.netty.handler.codec.http.websocketx.PongWebSocketFrame;
+import io.netty.handler.codec.http.websocketx.PingWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketClientHandshakerFactory;
 import io.netty.handler.codec.http.websocketx.WebSocketVersion;
@@ -45,6 +45,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wso2.carbon.transport.http.netty.util.TestUtil;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
@@ -55,14 +56,14 @@ import javax.net.ssl.SSLException;
  */
 public class WebSocketClient {
 
-    private static final Logger log = LoggerFactory.getLogger(WebSocketClient.class);
+    private static final Logger logger = LoggerFactory.getLogger(WebSocketClient.class);
 
     private final String url = System.getProperty("url", String.format("ws://%s:%d/%s",
                                                                 TestUtil.TEST_HOST, 8490, "test"));
 
     private Channel channel = null;
     private WebSocketClientHandler handler;
-    private EventLoopGroup group;
+    EventLoopGroup group;
 
     /**
      * @return true if the handshake is done properly.
@@ -88,7 +89,7 @@ public class WebSocketClient {
         }
 
         if (!"ws".equalsIgnoreCase(scheme) && !"wss".equalsIgnoreCase(scheme)) {
-            log.error("Only WS(S) is supported.");
+            logger.error("Only WS(S) is supported.");
             return false;
         }
 
@@ -133,11 +134,11 @@ public class WebSocketClient {
             channel = b.connect(uri.getHost(), port).sync().channel();
             isDone = handler.handshakeFuture().sync().isSuccess();
         } catch (Exception e) {
-            log.error("Handshake unsuccessful : " + e.getMessage(), e);
+            logger.error("Handshake unsuccessful : " + e.getMessage(), e);
             return false;
         }
 
-        log.info("WebSocket Handshake successful : " + isDone);
+        logger.info("WebSocket Handshake successful : " + isDone);
         Thread.sleep(5000);
         return isDone;
     }
@@ -148,8 +149,8 @@ public class WebSocketClient {
      */
     public void sendText(String text) {
         if (channel == null) {
-            log.error("Channel is null. Cannot send text.");
-            throw new NullPointerException("Cannot find the channel to write");
+            logger.error("Channel is null. Cannot send text.");
+            throw new IllegalArgumentException("Cannot find the channel to write");
         }
         channel.writeAndFlush(new TextWebSocketFrame(text));
     }
@@ -158,24 +159,24 @@ public class WebSocketClient {
      * Send binary data to server.
      * @param buf buffer containing the data need to be sent.
      */
-    public void sendBinary(ByteBuffer buf) {
+    public void sendBinary(ByteBuffer buf) throws IOException {
         if (channel == null) {
-            log.error("Channel is null. Cannot send text.");
-            throw new NullPointerException("Cannot find the channel to write");
+            logger.error("Channel is null. Cannot send text.");
+            throw new IllegalArgumentException("Cannot find the channel to write");
         }
         channel.writeAndFlush(new BinaryWebSocketFrame(Unpooled.wrappedBuffer(buf)));
     }
 
     /**
-     * Send a pong message to the server.
-     * @param buf content of the pong message to be sent.
+     * Send a ping message to the server.
+     * @param buf content of the ping message to be sent.
      */
-    public void sendPong(ByteBuffer buf) {
+    public void sendPing(ByteBuffer buf) throws IOException {
         if (channel == null) {
-            log.error("Channel is null. Cannot send text.");
-            throw new NullPointerException("Cannot find the channel to write");
+            logger.error("Channel is null. Cannot send text.");
+            throw new IllegalArgumentException("Cannot find the channel to write");
         }
-        channel.writeAndFlush(new PongWebSocketFrame(Unpooled.wrappedBuffer(buf)));
+        channel.writeAndFlush(new PingWebSocketFrame(Unpooled.wrappedBuffer(buf)));
     }
 
     /**

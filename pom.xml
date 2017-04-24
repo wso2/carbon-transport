@@ -25,7 +25,7 @@
     <packaging>pom</packaging>
     <groupId>org.wso2.carbon.transport</groupId>
     <artifactId>org.wso2.carbon.transport.parent</artifactId>
-    <version>4.3.0-SNAPSHOT</version>
+    <version>4.3.1-SNAPSHOT</version>
     <name>WSO2 Carbon Transport Parent</name>
 
     <modules>
@@ -107,7 +107,7 @@
                 <version>${slf4j.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.yaml</groupId>
+                <groupId>org.wso2.orbit.org.yaml</groupId>
                 <artifactId>snakeyaml</artifactId>
                 <version>${org.snakeyaml.version}</version>
             </dependency>
@@ -198,6 +198,11 @@
                 <version>${activemq.broker.vesion}</version>
                 <scope>test</scope>
             </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-pool2</artifactId>
+                <version>${org.apache.commons.pool2.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -274,7 +279,7 @@
         <maven.wagon.ssh.version>2.1</maven.wagon.ssh.version>
 
         <!-- Dependencies -->
-        <org.wso2.carbon.core.version>5.2.0-m3</org.wso2.carbon.core.version>
+        <org.wso2.carbon.core.version>5.1.0</org.wso2.carbon.core.version>
         <carbon.kernel.package.import.version.range>[5.0.0, 6.0.0)</carbon.kernel.package.import.version.range>
 
         <netty.version>4.1.7.Final</netty.version>
@@ -301,18 +306,19 @@
         <javax.websocket.version.range>[1.1, 1.2)</javax.websocket.version.range>
         <commons-vfs2.wso2.version>2.0-wso2v15</commons-vfs2.wso2.version>
         <commons-vfs2.wso2.version.range>[2.0.0, 3.0.0)</commons-vfs2.wso2.version.range>
+        <org.apache.commons.pool2.version>2.4.2</org.apache.commons.pool2.version>
 
 
 
-        <carbon.messaging.version>2.3.0</carbon.messaging.version>
+        <carbon.messaging.version>2.3.3</carbon.messaging.version>
         <carbon.messaging.package.import.version.range>[2.0.0, 3.0.0)</carbon.messaging.package.import.version.range>
         <slf4j.version>1.7.5</slf4j.version>
         <!--Logging API version range-->
         <slf4j.logging.package.import.version.range>[1.7.1, 2.0.0)</slf4j.logging.package.import.version.range>
 
         <carbon.p2.plugin.version>2.0.1</carbon.p2.plugin.version>
-        <org.snakeyaml.version>1.17</org.snakeyaml.version>
-        <org.snakeyaml.package.import.version.range>[1.17.0, 2.0.0)</org.snakeyaml.package.import.version.range>
+        <org.snakeyaml.version>1.16.0.wso2v1</org.snakeyaml.version>
+        <org.snakeyaml.package.import.version.range>[1.16.0, 2.0.0)</org.snakeyaml.package.import.version.range>
         <javax.jms.import.version.range>[2.0.1, 3.0.0)</javax.jms.import.version.range>
         <file.transport.package.export.version>${project.version}</file.transport.package.export.version>
 
@@ -326,7 +332,7 @@
         <maven.checkstyle.plugin.version>2.17</maven.checkstyle.plugin.version>
         <maven.findbugs.plugin.version>3.0.3</maven.findbugs.plugin.version>
 
-        <carbon.metrics.version>2.0.1</carbon.metrics.version>
+        <carbon.metrics.version>2.0.0</carbon.metrics.version>
         <metrics.version>3.1.2</metrics.version>
 
         <testng.version>6.9.10</testng.version>

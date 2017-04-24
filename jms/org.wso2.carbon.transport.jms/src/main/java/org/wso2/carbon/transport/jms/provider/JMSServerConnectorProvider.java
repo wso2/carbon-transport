@@ -21,7 +21,7 @@ package org.wso2.carbon.transport.jms.provider;
 import org.osgi.service.component.annotations.Component;
 import org.wso2.carbon.messaging.ServerConnector;
 import org.wso2.carbon.messaging.ServerConnectorProvider;
-import org.wso2.carbon.transport.jms.listener.JMSServerConnector;
+import org.wso2.carbon.transport.jms.receiver.JMSServerConnector;
 import org.wso2.carbon.transport.jms.utils.JMSConstants;
 
 import java.util.List;

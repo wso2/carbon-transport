@@ -42,6 +42,8 @@ public final class Constants {
 
     public static final String CLIENT_BOOTSTRAP_SO_TIMEOUT = "client.bootstrap.socket.timeout";
 
+    public static final String CLIENT_BOOTSTRAP_WORKER_GROUP_SIZE = "client.bootstrap.worker.group.size";
+
     //Server side SSL Parameters
     public static final String CLIENT_SUPPORT_CIPHERS = "client.ssl.ciphers";
     public static final String CLIENT_SUPPORT_HTTPS_PROTOCOLS = "client.ssl.http.protocols";
@@ -204,7 +206,7 @@ public final class Constants {
     public static final String CONNECTION = "Connection";
     public static final String UPGRADE = "Upgrade";
     public static final String WEBSOCKET_SESSION = "WEBSOCKET_SESSION";
-    public static final String WEBSOCKET_PROTOCOL_NAME = "ws";
+    public static final String WEBSOCKET_PROTOCOL = "ws";
     public static final String WEBSOCKET_UPGRADE = "websocket";
 
 

@@ -23,6 +23,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
+import io.netty.handler.codec.http.websocketx.PingWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.PongWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketFrame;
@@ -44,7 +45,6 @@ import org.wso2.carbon.transport.http.netty.sender.channel.pool.ConnectionManage
 import java.net.InetSocketAddress;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
-import javax.websocket.Session;
 
 /**
  * This class handles all kinds of WebSocketFrames
@@ -92,7 +92,6 @@ public class WebSocketSourceHandler extends SourceHandler {
             TextWebSocketFrame textWebSocketFrame = (TextWebSocketFrame) msg;
             String text = textWebSocketFrame.text();
             cMsg = new TextCarbonMessage(text);
-            setupCarbonMessage(ctx);
 
         } else if (msg instanceof BinaryWebSocketFrame) {
             BinaryWebSocketFrame binaryWebSocketFrame = (BinaryWebSocketFrame) msg;
@@ -100,7 +99,6 @@ public class WebSocketSourceHandler extends SourceHandler {
             ByteBuf byteBuf = binaryWebSocketFrame.content();
             ByteBuffer byteBuffer = byteBuf.nioBuffer();
             cMsg = new BinaryCarbonMessage(byteBuffer, finalFragment);
-            setupCarbonMessage(ctx);
 
         } else if (msg instanceof CloseWebSocketFrame) {
             CloseWebSocketFrame closeWebSocketFrame = (CloseWebSocketFrame) msg;
@@ -109,8 +107,10 @@ public class WebSocketSourceHandler extends SourceHandler {
             ctx.channel().close();
             session.setIsOpen(false);
             cMsg = new StatusCarbonMessage(org.wso2.carbon.messaging.Constants.STATUS_CLOSE, statusCode, reasonText);
-            setupCarbonMessage(ctx);
-            cMsg.setProperty(Constants.WEBSOCKET_SESSION, session);
+
+        } else if (msg instanceof PingWebSocketFrame) {
+            PingWebSocketFrame pingWebSocketFrame = (PingWebSocketFrame) msg;
+            ctx.channel().writeAndFlush(new PongWebSocketFrame(pingWebSocketFrame.content()));
 
         } else if (msg instanceof PongWebSocketFrame) {
             //Control message for WebSocket is Pong Message
@@ -118,9 +118,11 @@ public class WebSocketSourceHandler extends SourceHandler {
             boolean finalFragment = pongWebSocketFrame.isFinalFragment();
             ByteBuf byteBuf = pongWebSocketFrame.content();
             ByteBuffer byteBuffer = byteBuf.nioBuffer();
-            cMsg = new ControlCarbonMessage(byteBuffer, finalFragment);
+            cMsg = new ControlCarbonMessage(org.wso2.carbon.messaging.Constants.CONTROL_SIGNAL_HEARTBEAT,
+                                            byteBuffer, finalFragment);
             setupCarbonMessage(ctx);
         }
+        setupCarbonMessage(ctx);
         publishToMessageProcessor(cMsg);
     }
 
@@ -149,6 +151,7 @@ public class WebSocketSourceHandler extends SourceHandler {
             ctx.channel().close();
         }
     }
+
 
     private void sendOnOpenMessage(ChannelHandlerContext ctx, boolean isSecured, String uri) throws URISyntaxException {
         cMsg = new StatusCarbonMessage(org.wso2.carbon.messaging.Constants.STATUS_OPEN, 0, null);
@@ -180,9 +183,8 @@ public class WebSocketSourceHandler extends SourceHandler {
         cMsg.setProperty(Constants.REMOTE_ADDRESS, ctx.channel().remoteAddress());
         cMsg.setProperty(Constants.REMOTE_HOST, ((InetSocketAddress) ctx.channel().remoteAddress()).getHostName());
         cMsg.setProperty(Constants.REMOTE_PORT, ((InetSocketAddress) ctx.channel().remoteAddress()).getPort());
-        cMsg.setProperty(Constants.CHANNEL_ID,
-                         ((SourceHandler) ctx.handler()).getListenerConfiguration().getId());
-        cMsg.setProperty(Constants.PROTOCOL, Constants.WEBSOCKET_PROTOCOL_NAME);
-        cMsg.setProperty(Constants.WEBSOCKET_SESSION, (Session) session);
+        cMsg.setProperty(Constants.CHANNEL_ID, channelId);
+        cMsg.setProperty(Constants.PROTOCOL, Constants.WEBSOCKET_PROTOCOL);
+        cMsg.setProperty(Constants.WEBSOCKET_SESSION, session);
     }
 }
