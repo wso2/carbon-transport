@@ -18,6 +18,7 @@
 
 package org.wso2.carbon.transport.jms.provider;
 
+import org.osgi.service.component.annotations.Component;
 import org.wso2.carbon.messaging.ServerConnector;
 import org.wso2.carbon.messaging.ServerConnectorProvider;
 import org.wso2.carbon.transport.jms.receiver.JMSServerConnector;
@@ -29,6 +30,11 @@ import java.util.Map;
 /**
  * Server connector provider for jms.
  */
+@Component(
+        name = "org.wso2.carbon.transport.jms.provider.JMSServerConnectorProvider",
+        immediate = true,
+        service = ServerConnectorProvider.class
+)
 public class JMSServerConnectorProvider extends ServerConnectorProvider {
 
     /**
