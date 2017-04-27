@@ -62,9 +62,8 @@ public class FileConsumer {
     private final byte[] inbuf = new byte[4096];
     private boolean end = true;
     private boolean reOpen = true;
-    private volatile boolean run;
-    long currentTime = 0L;
-    long position = 0L;
+    private long currentTime = 0L;
+    private long position = 0L;
     private RandomAccessContent reader = null;
 
     public FileConsumer(String id, Map<String, String> fileProperties,
@@ -117,7 +116,6 @@ public class FileConsumer {
         }
 
         // If file/folder found proceed to the processing stage
-        try {
             boolean isFileExists;
             try {
                 isFileExists = fileObject.exists();
@@ -157,13 +155,7 @@ public class FileConsumer {
                         + (isFileExists ? (isFileReadable ? "Unknown reason"
                         : "The file can not be read!") : "The file does not exist!"));
             }
-        } finally {
-            try {
-                fileObject.close();
-            } catch (FileSystemException e) {
-                log.warn("Could not close file at URI: " + FileTransportUtils.maskURLPassword(fileURI), e);
-            }
-        }
+
         if (log.isDebugEnabled()) {
             log.debug("End : Scanning directory or file : " + FileTransportUtils.maskURLPassword(fileURI));
         }
@@ -245,11 +237,11 @@ public class FileConsumer {
                 }
 
                 if (this.reOpen) {
+                    FileObject parent = fileObject.getParent();
+                    parent.getType(); // assure that parent folder is attached
+                    parent.refresh();
                     fileObject.refresh();
                     reader.close();
-                }
-
-                if (this.run && this.reOpen) {
                     reader = fileObject.getContent().getRandomAccessContent(RandomAccessMode.READ);
                     reader.seek(position);
                 }
@@ -272,7 +264,7 @@ public class FileConsumer {
 
         int num;
             for (boolean seenCR = false;
-                 this.run && (num = read(reader, inbuf)) != -1; pos = reader.getFilePointer()) {
+                 (num = read(reader, inbuf)) != -1; pos = reader.getFilePointer()) {
                 for (int i = 0; i < num; ++i) {
                     byte ch = this.inbuf[i];
                     switch (ch) {
