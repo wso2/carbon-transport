@@ -31,10 +31,10 @@ import org.apache.commons.vfs2.provider.ftp.FtpFileSystemConfigBuilder;
 import org.apache.commons.vfs2.util.RandomAccessMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.wso2.carbon.messaging.BinaryCarbonMessage;
 import org.wso2.carbon.messaging.CarbonMessage;
 import org.wso2.carbon.messaging.CarbonMessageProcessor;
 import org.wso2.carbon.messaging.FileCarbonMessage;
-import org.wso2.carbon.messaging.TextCarbonMessage;
 import org.wso2.carbon.messaging.exceptions.ServerConnectorException;
 import org.wso2.carbon.transport.file.connector.server.exception.FileServerConnectorException;
 import org.wso2.carbon.transport.file.connector.server.util.Constants;
@@ -42,7 +42,10 @@ import org.wso2.carbon.transport.file.connector.server.util.FileTransportUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -252,40 +255,24 @@ public class FileConsumer {
     }
 
     private long readLines(RandomAccessContent reader) throws IOException, FileServerConnectorException {
-        StringBuilder sb = new StringBuilder();
+
         long pos = reader.getFilePointer();
         long rePos = pos;
 
-
+        List<Byte> list = new ArrayList<Byte>();
         int num;
-            for (boolean seenCR = false;
+            for (;
                  (num = read(reader, inbuf)) != -1; pos = reader.getFilePointer()) {
                 for (int i = 0; i < num; ++i) {
                     byte ch = this.inbuf[i];
-                    switch (ch) {
-                        case 10:
-                            seenCR = false;
-                            EventListener.handle(sb.toString(), messageProcessor, seviceName);
-                            sb.setLength(0);
-                            rePos = pos + (long) i + 1L;
-                            break;
-                        case 13:
-                            if (seenCR) {
-                                sb.append('\r');
-                            }
-
-                            seenCR = true;
-                            break;
-                        default:
-                            if (seenCR) {
-                                seenCR = false;
-                                EventListener.handle(sb.toString(), messageProcessor, seviceName);
-                                sb.setLength(0);
-                                rePos = pos + (long) i + 1L;
-                            }
-
-                            sb.append((char) ch);
+                    if (ch == 10) {
+                        Byte[] line = new Byte[list.size()];
+                        line = list.toArray(line);
+                        EventListener.handle(line, messageProcessor, seviceName);
+                        list.clear();
+                        rePos = pos + (long) i + 1L;
                     }
+                    list.add(ch);
                 }
             }
 
@@ -325,11 +312,11 @@ public class FileConsumer {
             }
         }
 
-        private static void handle(String content, CarbonMessageProcessor messageProcessor, String serviceName)
+        private static void handle(Byte[] content, CarbonMessageProcessor messageProcessor, String serviceName)
                 throws FileServerConnectorException {
 
             try {
-                CarbonMessage cMessage = new TextCarbonMessage(content);
+                CarbonMessage cMessage = new BinaryCarbonMessage(ByteBuffer.wrap(toPrimitives(content)), true);
                 cMessage.setProperty(org.wso2.carbon.messaging.Constants.PROTOCOL, Constants.PROTOCOL_FILE);
                 cMessage.setProperty(Constants.FILE_TRANSPORT_PROPERTY_SERVICE_NAME, serviceName);
                 cMessage.setProperty(Constants.FILE_TRANSPORT_EVENT_NAME, Constants.FILE_UPDATE);
@@ -338,6 +325,17 @@ public class FileConsumer {
             } catch (Exception e) {
                 throw new FileServerConnectorException("Failed to send event message processor. ", e);
             }
+        }
+
+        private static byte[] toPrimitives(Byte[] oBytes) {
+
+            byte[] bytes = new byte[oBytes.length];
+
+            for (int i = 0; i < oBytes.length; i++) {
+                bytes[i] = oBytes[i];
+            }
+
+            return bytes;
         }
 
     }
