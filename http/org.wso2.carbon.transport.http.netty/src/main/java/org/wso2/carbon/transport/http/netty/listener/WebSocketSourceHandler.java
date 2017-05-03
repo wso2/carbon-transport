@@ -83,7 +83,6 @@ public class WebSocketSourceHandler extends SourceHandler {
                     session.addUserProperty(header.getKey(), header.getValue());
                 }
         );
-        sendOnOpenMessage(ctx, isSecured, uri);
         sendOnOpenMessage(ctx, httpRequest);
     }
 
