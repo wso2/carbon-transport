@@ -62,7 +62,31 @@ public class Util {
     public static void setHeaders(HttpMessage message, Headers headers) {
         HttpHeaders httpHeaders = message.headers();
         for (Header header : headers.getAll()) {
-            httpHeaders.add(header.getName(), header.getValue());
+            // According to RFC-7230 [1], HTTP header fields are defined as following:
+            //   field-value    = *( field-content / obs-fold )
+            //   field-content  = field-vchar [ 1*( space / horizontal-tab ) field-vchar ]
+            //   field-vchar    = any-visible-USASCII-character / obs-text
+            //   obs-fold       = CRLF 1*( space / horizontal-tab ); obsolete line folding
+            //
+            // Line folding in HTTP fields is deprecated with RFC-7230 [2].
+            //
+            // Newly defined header fields SHOULD limit their field values to US-ASCII octets.
+            // A recipient SHOULD treat other octets in field content as opaque data [2].
+            //
+            // Due to above reasons, adding header validations to avoid security threats including
+            // HTTP response splitting [2].
+            //
+            // [1] https://tools.ietf.org/html/rfc7230#section-3.2
+            // [2] https://tools.ietf.org/html/rfc7230#section-3.2.4
+            StringBuilder headerValue = new StringBuilder(header.getValue());
+            for (int i = 0; i < headerValue.length(); i++) {
+                char c = headerValue.charAt(i);
+                if (((c <= 31) && (c != 9)) || c == 127 || c > 255) {
+                    c = ' ';
+                }
+                headerValue.setCharAt(i, c);
+            }
+            httpHeaders.add(header.getName(), headerValue.toString());
         }
     }
 
