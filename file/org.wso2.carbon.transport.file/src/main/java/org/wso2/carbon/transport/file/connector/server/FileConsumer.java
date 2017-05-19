@@ -148,16 +148,14 @@ public class FileConsumer {
                 processFile(fileObject);
             } else {
                 throw new FileServerConnectorException(
-                        "Unable to access or read file or directory : " + FileTransportUtils.maskURLPassword(fileURI) +
-                        ". Reason: " +
-                        (isFileExists ? (isFileReadable ? "Unknown reason" : "The file can not be read!") :
-                         "The file does not exist!"));
+                        "Unable to access or read file or directory : " + FileTransportUtils.maskURLPassword(fileURI));
             }
             if (log.isDebugEnabled()) {
                 log.debug("End : Scanning directory or file : " + FileTransportUtils.maskURLPassword(fileURI));
             }
         }
     }
+
 
 
     /**
@@ -173,9 +171,9 @@ public class FileConsumer {
             throw new ServerConnectorException(Constants.TRANSPORT_FILE_FILE_URI + " parameter " +
                     "cannot be empty for " + Constants.PROTOCOL_FILE + " transport.");
         }
-        String strDeleteIfNotAck = fileProperties.get(Constants.READ_FILE_FROM_BEGINNING);
-        if (strDeleteIfNotAck != null) {
-            end = Boolean.parseBoolean(strDeleteIfNotAck);
+        String readFileFromBeginning = fileProperties.get(Constants.READ_FILE_FROM_BEGINNING);
+        if (readFileFromBeginning != null) {
+            end = !(Boolean.parseBoolean(readFileFromBeginning));
         }
     }
 
@@ -217,8 +215,7 @@ public class FileConsumer {
                 EventListener.fileRotated(fileObject, messageProcessor, seviceName);
                 try {
                     reader = fileObject.getContent().getRandomAccessContent(RandomAccessMode.READ);
-                    position = 0L;
-                    reader.close();
+                    position = fileObject.getContent().getSize();
                 } catch (FileNotFoundException e) {
                     throw new FileServerConnectorException("File Not Found: " +
                                                            FileTransportUtils.maskURLPassword(fileURI), e);
@@ -228,7 +225,7 @@ public class FileConsumer {
                     position = this.readLines(reader);
                     currentTime = System.currentTimeMillis();
                 } else if (newer) {
-                    position = 0L;
+                    position = fileObject.getContent().getSize();
                     reader.seek(position);
                     position = this.readLines(reader);
                     currentTime = System.currentTimeMillis();
@@ -254,7 +251,8 @@ public class FileConsumer {
         return file;
     }
 
-    private long readLines(RandomAccessContent reader) throws IOException, FileServerConnectorException {
+    private long readLines(RandomAccessContent reader)
+            throws IOException, FileServerConnectorException {
 
         long pos = reader.getFilePointer();
         long rePos = pos;
@@ -271,8 +269,15 @@ public class FileConsumer {
                         EventListener.handle(line, messageProcessor, seviceName);
                         list.clear();
                         rePos = pos + (long) i + 1L;
+                        try {
+                            Thread.sleep(0, 1);
+                        } catch (InterruptedException e) {
+                            throw new FileServerConnectorException(
+                                    "Error in reading file: " + FileTransportUtils.maskURLPassword(fileURI), e);
+                        }
                     }
                     list.add(ch);
+
                 }
             }
 

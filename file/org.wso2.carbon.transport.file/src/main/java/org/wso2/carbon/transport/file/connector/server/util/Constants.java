@@ -30,7 +30,7 @@ public final class Constants {
 
     //file connector parameters
     public static final String TRANSPORT_FILE_FILE_URI = "fileURI";
-    public static final String READ_FILE_FROM_BEGINNING = "readFileFromBeginning";
+    public static final String READ_FILE_FROM_BEGINNING = "readFromBeginning";
 
     public static final String SCHEME = "VFS_SCHEME";
     public static final String SFTP_PREFIX = "sftp";
