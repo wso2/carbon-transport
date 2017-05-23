@@ -34,6 +34,12 @@ public class HttpResponseSplittingTestCase {
     public static final String TEST_HEADER_ATTACK_VALUE = "TestHeaderValue\r\nInjectedHeader: InjectedValue";
     public static final String TEST_HEADER_ATTACK_SANITIZED_VALUE = "TestHeaderValue  InjectedHeader: InjectedValue";
 
+    public static final String TEST_HEADER_VALID_NAME = "TestHeader";
+    public static final String TEST_HEADER_ATTACK_NAME = "TestHeader: Value\r\nInjectedHeader: InjectedValue\r\nValue";
+    public static final String TEST_HEADER_VALUE = "TestHeaderValue";
+    public static final String TEST_HEADER_ATTACK_SANITIZED_NAME = "TestHeader: Value  InjectedHeader: " +
+            "InjectedValue  Value";
+
     @Test
     public void headerValueValidationWithoutAttackTestCase() {
         // Directly testing utility methods since with test application there is no straight-forward way of
@@ -70,6 +76,44 @@ public class HttpResponseSplittingTestCase {
 
         String testHeaderValue = outgoingResponse.headers().get(TEST_HEADER_NAME);
         assertTrue(testHeaderValue.equals(TEST_HEADER_ATTACK_SANITIZED_VALUE));
+    }
+
+    @Test
+    public void headerNameValidationWithoutAttackTestCase() {
+        // Directly testing utility methods since with test application there is no straight-forward way of
+        // setting response headers based on request characteristics.
+        HttpVersion httpVersion = new HttpVersion(HTTP_1_1.text(), true);
+        int statusCode = 200;
+        String reasonPhrase = HttpResponseStatus.valueOf(statusCode).reasonPhrase();
+        HttpResponseStatus httpResponseStatus = new HttpResponseStatus(statusCode, reasonPhrase);
+
+        DefaultHttpResponse outgoingResponse = new DefaultHttpResponse(httpVersion, httpResponseStatus, false);
+
+        Headers headers = new Headers();
+        headers.set(TEST_HEADER_VALID_NAME, TEST_HEADER_VALUE);
+        Util.setHeaders(outgoingResponse, headers);
+
+        String testHeaderValue = outgoingResponse.headers().get(TEST_HEADER_VALID_NAME);
+        assertTrue(testHeaderValue.equals(TEST_HEADER_VALUE));
+    }
+
+    @Test
+    public void headerNameValidationWithAttackTestCase() {
+        // Directly testing utility methods since with test application there is no straight-forward way of
+        // setting response headers based on request characteristics.
+        HttpVersion httpVersion = new HttpVersion(HTTP_1_1.text(), true);
+        int statusCode = 200;
+        String reasonPhrase = HttpResponseStatus.valueOf(statusCode).reasonPhrase();
+        HttpResponseStatus httpResponseStatus = new HttpResponseStatus(statusCode, reasonPhrase);
+
+        DefaultHttpResponse outgoingResponse = new DefaultHttpResponse(httpVersion, httpResponseStatus, false);
+
+        Headers headers = new Headers();
+        headers.set(TEST_HEADER_ATTACK_NAME, TEST_HEADER_VALUE);
+        Util.setHeaders(outgoingResponse, headers);
+
+        String testHeaderValue = outgoingResponse.headers().get(TEST_HEADER_ATTACK_SANITIZED_NAME);
+        assertTrue(testHeaderValue.equals(TEST_HEADER_VALUE));
     }
 }
 
