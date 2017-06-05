@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
 import org.wso2.carbon.messaging.BinaryCarbonMessage;
 import org.wso2.carbon.messaging.CarbonMessage;
 import org.wso2.carbon.messaging.CarbonMessageProcessor;
-import org.wso2.carbon.messaging.FileCarbonMessage;
+import org.wso2.carbon.messaging.TextCarbonMessage;
 import org.wso2.carbon.messaging.exceptions.ServerConnectorException;
 import org.wso2.carbon.transport.file.connector.server.exception.FileServerConnectorException;
 import org.wso2.carbon.transport.file.connector.server.util.Constants;
@@ -59,7 +59,7 @@ public class FileConsumer {
     private FileSystemManager fsManager = null;
     private CarbonMessageProcessor messageProcessor;
     private String fileURI;
-    private String seviceName;
+    private String serviceName;
     private FileObject fileObject;
     private FileSystemOptions fso;
     private final byte[] inbuf = new byte[4096];
@@ -72,7 +72,7 @@ public class FileConsumer {
     public FileConsumer(String id, Map<String, String> fileProperties,
                         CarbonMessageProcessor messageProcessor)
             throws ServerConnectorException {
-        this.seviceName = id;
+        this.serviceName = id;
         this.fileProperties = fileProperties;
         this.messageProcessor = messageProcessor;
 
@@ -212,7 +212,7 @@ public class FileConsumer {
             long length = this.fileObject.getContent().getSize();
             if (length < position) {
 
-                EventListener.fileRotated(fileObject, messageProcessor, seviceName);
+                EventListener.fileRotated(fileObject, messageProcessor, serviceName);
                 try {
                     reader = fileObject.getContent().getRandomAccessContent(RandomAccessMode.READ);
                     position = fileObject.getContent().getSize();
@@ -259,25 +259,24 @@ public class FileConsumer {
 
         List<Byte> list = new ArrayList<Byte>();
         int num;
+        int lines = 0;
+        boolean throttle = false;
             for (;
-                 (num = read(reader, inbuf)) != -1; pos = reader.getFilePointer()) {
-                for (int i = 0; i < num; ++i) {
+                 ((num = read(reader, inbuf)) != -1) && !throttle; pos = reader.getFilePointer()) {
+                for (int i = 0; (i < num) && !throttle; ++i) {
                     byte ch = this.inbuf[i];
                     if (ch == 10) {
                         Byte[] line = new Byte[list.size()];
                         line = list.toArray(line);
-                        EventListener.handle(line, messageProcessor, seviceName);
+                        EventListener.handle(line, messageProcessor, serviceName);
+                        lines++;
                         list.clear();
                         rePos = pos + (long) i + 1L;
-                        try {
-                            Thread.sleep(0, 1);
-                        } catch (InterruptedException e) {
-                            throw new FileServerConnectorException(
-                                    "Error in reading file: " + FileTransportUtils.maskURLPassword(fileURI), e);
-                        }
                     }
                     list.add(ch);
-
+                    if ((lines > 300) && ch == 10) {
+                        throttle = true;
+                    }
                 }
             }
 
@@ -305,8 +304,7 @@ public class FileConsumer {
 
             try {
 
-                FileCarbonMessage cMessage = new FileCarbonMessage();
-                cMessage.setFilePath(file.getURL().toString());
+                TextCarbonMessage cMessage = new TextCarbonMessage(file.getURL().toString());
                 cMessage.setProperty(org.wso2.carbon.messaging.Constants.PROTOCOL, Constants.PROTOCOL_FILE);
                 cMessage.setProperty(Constants.FILE_TRANSPORT_PROPERTY_SERVICE_NAME, serviceName);
                 cMessage.setProperty(Constants.FILE_TRANSPORT_EVENT_NAME, Constants.FILE_ROTATE);
