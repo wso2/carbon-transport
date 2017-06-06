@@ -204,7 +204,12 @@ public final class Constants {
     public static final String WEBSOCKET_SESSION = "WEBSOCKET_SESSION";
     public static final String WEBSOCKET_PROTOCOL = "ws";
     public static final String WEBSOCKET_UPGRADE = "websocket";
-
+    public static final String WEBSOCKET_CLIENT_ID = "WEBSOCKET_CLIENT_ID";
+    public static final String IS_WEBSOCKET_SERVER = "IS_WEBSOCKET_SERVER";
+    public static final String WEBSOCKET_SUBPROTOCOLS = "WEBSOCKET_SUBPROTOCOLS";
+    public static final String WEBSOCKET_ALLOW_EXTENSIONS = "WEBSOCKET_ALLOW_EXTENSIONS";
+    public static final String WEBSOCKET_CLOSE_CODE = "WEBSOCKET_CLOSE_CODE";
+    public static final String WEBSOCKET_CLOSE_REASON = "WEBSOCKET_CLOSE_REASON";
 
     // Callback related parameters
     public static final String HTTP_CONNECTION_CLOSE = "close";
