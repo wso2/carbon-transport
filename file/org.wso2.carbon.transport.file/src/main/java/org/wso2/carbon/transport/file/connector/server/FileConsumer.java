@@ -63,7 +63,7 @@ public class FileConsumer {
     private FileObject fileObject;
     private FileSystemOptions fso;
     private final byte[] inbuf = new byte[4096];
-    private boolean end = true;
+    private int seek;
     private boolean reOpen = true;
     private long currentTime = 0L;
     private long position = 0L;
@@ -96,7 +96,7 @@ public class FileConsumer {
         try {
             fileObject = fsManager.resolveFile(fileURI, fso);
             reader = fileObject.getContent().getRandomAccessContent(RandomAccessMode.READ);
-            position = this.end ? this.fileObject.getContent().getSize() : 0L;
+            position = this.seek == -1 ? this.fileObject.getContent().getSize() : seek;
             currentTime = System.currentTimeMillis();
             reader.seek(position);
         } catch (FileSystemException e) {
@@ -171,9 +171,11 @@ public class FileConsumer {
             throw new ServerConnectorException(Constants.TRANSPORT_FILE_FILE_URI + " parameter " +
                     "cannot be empty for " + Constants.PROTOCOL_FILE + " transport.");
         }
-        String readFileFromBeginning = fileProperties.get(Constants.READ_FILE_FROM_BEGINNING);
-        if (readFileFromBeginning != null) {
-            end = !(Boolean.parseBoolean(readFileFromBeginning));
+        String seek = fileProperties.get(Constants.SEEK);
+        if (seek != null) {
+            this.seek = Integer.parseInt(seek);
+        } else {
+            this.seek = 0;
         }
     }
 
