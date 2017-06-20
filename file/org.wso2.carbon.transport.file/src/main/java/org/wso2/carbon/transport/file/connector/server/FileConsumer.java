@@ -274,6 +274,8 @@ public class FileConsumer {
                         lines++;
                         list.clear();
                         rePos = pos + (long) i + 1L;
+                    } else {
+                        list.add(ch);
                     }
                     list.add(ch);
                     if ((lines > 300) && ch == 10) {
