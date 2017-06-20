@@ -68,6 +68,7 @@ public class FileConsumer {
     private long currentTime = 0L;
     private long position = 0L;
     private RandomAccessContent reader = null;
+    private int throttle;
 
     public FileConsumer(String id, Map<String, String> fileProperties,
                         CarbonMessageProcessor messageProcessor)
@@ -175,7 +176,13 @@ public class FileConsumer {
         if (seek != null) {
             this.seek = Integer.parseInt(seek);
         } else {
-            this.seek = 0;
+            this.seek = -1;
+        }
+        String throttle = fileProperties.get(Constants.THROTTLE);
+        if (throttle != null) {
+            this.throttle = Integer.parseInt(throttle);
+        } else {
+            this.throttle = -1;
         }
     }
 
@@ -259,13 +266,13 @@ public class FileConsumer {
         long pos = reader.getFilePointer();
         long rePos = pos;
 
-        List<Byte> list = new ArrayList<Byte>();
+        List<Byte> list = new ArrayList<>();
         int num;
         int lines = 0;
-        boolean throttle = false;
+        boolean throttled = false;
             for (;
-                 ((num = read(reader, inbuf)) != -1) && !throttle; pos = reader.getFilePointer()) {
-                for (int i = 0; (i < num) && !throttle; ++i) {
+                 ((num = read(reader, inbuf)) != -1) && !throttled; pos = reader.getFilePointer()) {
+                for (int i = 0; (i < num) && !throttled; ++i) {
                     byte ch = this.inbuf[i];
                     if (ch == 10) {
                         Byte[] line = new Byte[list.size()];
@@ -277,9 +284,8 @@ public class FileConsumer {
                     } else {
                         list.add(ch);
                     }
-                    list.add(ch);
-                    if ((lines > 300) && ch == 10) {
-                        throttle = true;
+                    if (throttle != -1 && (lines > throttle) && ch == 10) {
+                        throttled = true;
                     }
                 }
             }
