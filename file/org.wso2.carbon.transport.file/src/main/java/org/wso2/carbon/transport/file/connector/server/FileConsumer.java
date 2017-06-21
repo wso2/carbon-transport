@@ -62,6 +62,7 @@ public class FileConsumer {
     private String serviceName;
     private FileObject fileObject;
     private FileSystemOptions fso;
+
     private final byte[] inbuf = new byte[4096];
     private int seek;
     private boolean reOpen = true;
@@ -327,12 +328,12 @@ public class FileConsumer {
 
         private static void handle(Byte[] content, CarbonMessageProcessor messageProcessor, String serviceName)
                 throws FileServerConnectorException {
-
             try {
                 CarbonMessage cMessage = new BinaryCarbonMessage(ByteBuffer.wrap(toPrimitives(content)), true);
                 cMessage.setProperty(org.wso2.carbon.messaging.Constants.PROTOCOL, Constants.PROTOCOL_FILE);
                 cMessage.setProperty(Constants.FILE_TRANSPORT_PROPERTY_SERVICE_NAME, serviceName);
                 cMessage.setProperty(Constants.FILE_TRANSPORT_EVENT_NAME, Constants.FILE_UPDATE);
+                cMessage.setProperty(Constants.SINGLE_THREADED_EXECUTION, serviceName);
 
                 messageProcessor.receive(cMessage, null);
             } catch (Exception e) {

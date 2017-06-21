@@ -28,6 +28,8 @@ public final class Constants {
     //transport properties
     public static final String FILE_TRANSPORT_PROPERTY_SERVICE_NAME = "TRANSPORT_FILE_SERVICE_NAME";
 
+    public static final String SINGLE_THREADED_EXECUTION = "SINGLE_THREADED";
+
     //file connector parameters
     public static final String TRANSPORT_FILE_FILE_URI = "fileURI";
     public static final String SEEK = "seek";
