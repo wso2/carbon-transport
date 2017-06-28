@@ -68,7 +68,7 @@ public class FileConsumer {
     private long currentTime = 0L;
     private long position = 0L;
     private RandomAccessContent reader = null;
-    private int throttle;
+    private int maxLinesPerPoll;
 
     public FileConsumer(String id, Map<String, String> fileProperties,
                         CarbonMessageProcessor messageProcessor)
@@ -178,11 +178,11 @@ public class FileConsumer {
         } else {
             this.seek = -1;
         }
-        String throttle = fileProperties.get(Constants.THROTTLE);
-        if (throttle != null) {
-            this.throttle = Integer.parseInt(throttle);
+        String maxLinesPerPoll = fileProperties.get(Constants.MAX_LINES_PER_POLL);
+        if (maxLinesPerPoll != null) {
+            this.maxLinesPerPoll = Integer.parseInt(maxLinesPerPoll);
         } else {
-            this.throttle = -1;
+            this.maxLinesPerPoll = -1;
         }
     }
 
@@ -281,7 +281,7 @@ public class FileConsumer {
                     } else {
                         list.add(ch);
                     }
-                    if (throttle != -1 && (lines > throttle) && ch == 10) {
+                    if (maxLinesPerPoll != -1 && (lines > maxLinesPerPoll) && ch == 10) {
                         throttled = true;
                     }
                 }
