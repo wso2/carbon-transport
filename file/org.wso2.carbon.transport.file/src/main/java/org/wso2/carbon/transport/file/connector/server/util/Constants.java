@@ -31,8 +31,8 @@ public final class Constants {
     public static final String SINGLE_THREADED_EXECUTION = "SINGLE_THREADED";
 
     //file connector parameters
-    public static final String TRANSPORT_FILE_FILE_URI = "fileURI";
-    public static final String SEEK = "seek";
+    public static final String TRANSPORT_FILE_FILE_PATH = "path";
+    public static final String START_POSITION = "startPosition";
     public static final String MAX_LINES_PER_POLL = "maxLinesPerPoll";
 
     public static final String SCHEME = "VFS_SCHEME";

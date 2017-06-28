@@ -58,13 +58,13 @@ public class FileConsumer {
     private Map<String, String> fileProperties;
     private FileSystemManager fsManager = null;
     private CarbonMessageProcessor messageProcessor;
-    private String fileURI;
+    private String path;
     private String serviceName;
     private FileObject fileObject;
     private FileSystemOptions fso;
 
     private final byte[] inbuf = new byte[4096];
-    private int seek;
+    private int startPosition;
     private long currentTime = 0L;
     private long position = 0L;
     private RandomAccessContent reader = null;
@@ -87,7 +87,7 @@ public class FileConsumer {
             throw new ServerConnectorException("Could not initialize File System Manager from " +
                     "the configuration: providers.xml", e);
         }
-        Map<String, String> options = parseSchemeFileOptions(fileURI);
+        Map<String, String> options = parseSchemeFileOptions(path);
         fso = FileTransportUtils.attachFileSystemOptions(options, fsManager);
 
         if (options != null && Constants.SCHEME_FTP.equals(options.get(Constants.SCHEME))) {
@@ -95,17 +95,17 @@ public class FileConsumer {
         }
 
         try {
-            fileObject = fsManager.resolveFile(fileURI, fso);
+            fileObject = fsManager.resolveFile(path, fso);
             reader = fileObject.getContent().getRandomAccessContent(RandomAccessMode.READ);
-            position = this.seek == -1 ? this.fileObject.getContent().getSize() : seek;
+            position = this.startPosition == -1 ? this.fileObject.getContent().getSize() : startPosition;
             currentTime = System.currentTimeMillis();
             reader.seek(position);
         } catch (FileSystemException e) {
-            throw new FileServerConnectorException("Failed to resolve fileURI: "
-                    + FileTransportUtils.maskURLPassword(fileURI), e);
+            throw new FileServerConnectorException("Failed to resolve path: "
+                    + FileTransportUtils.maskURLPassword(path), e);
         } catch (IOException e) {
             throw new FileServerConnectorException("Failed to read File: "
-                                                   + FileTransportUtils.maskURLPassword(fileURI), e);
+                                                   + FileTransportUtils.maskURLPassword(path), e);
         }
     }
 
@@ -115,7 +115,7 @@ public class FileConsumer {
      */
     public void consume() throws FileServerConnectorException {
         if (log.isDebugEnabled()) {
-            log.debug("Polling for file : " + FileTransportUtils.maskURLPassword(fileURI));
+            log.debug("Polling for file : " + FileTransportUtils.maskURLPassword(path));
         }
 
         // If file/folder found proceed to the processing stage
@@ -124,7 +124,7 @@ public class FileConsumer {
             isFileExists = fileObject.exists();
         } catch (FileSystemException e) {
             throw new FileServerConnectorException("Error occurred when determining whether the file at URI : " +
-                                                   FileTransportUtils.maskURLPassword(fileURI) + " exists. " + e);
+                                                   FileTransportUtils.maskURLPassword(path) + " exists. " + e);
         }
 
         boolean isFileReadable;
@@ -132,7 +132,7 @@ public class FileConsumer {
             isFileReadable = fileObject.isReadable();
         } catch (FileSystemException e) {
             throw new FileServerConnectorException("Error occurred when determining whether the file at URI : " +
-                                                   FileTransportUtils.maskURLPassword(fileURI) + " is readable. " + e);
+                                                   FileTransportUtils.maskURLPassword(path) + " is readable. " + e);
         }
 
         if (isFileExists && isFileReadable) {
@@ -141,7 +141,7 @@ public class FileConsumer {
                 fileType = fileObject.getType();
             } catch (FileSystemException e) {
                 throw new FileServerConnectorException(
-                        "Error occurred when determining whether file: " + FileTransportUtils.maskURLPassword(fileURI) +
+                        "Error occurred when determining whether file: " + FileTransportUtils.maskURLPassword(path) +
                         " is a file or a folder", e);
             }
 
@@ -149,10 +149,10 @@ public class FileConsumer {
                 processFile(fileObject);
             } else {
                 throw new FileServerConnectorException(
-                        "Unable to access or read file or directory : " + FileTransportUtils.maskURLPassword(fileURI));
+                        "Unable to access or read file or directory : " + FileTransportUtils.maskURLPassword(path));
             }
             if (log.isDebugEnabled()) {
-                log.debug("End : Scanning directory or file : " + FileTransportUtils.maskURLPassword(fileURI));
+                log.debug("End : Scanning directory or file : " + FileTransportUtils.maskURLPassword(path));
             }
         }
     }
@@ -163,20 +163,20 @@ public class FileConsumer {
      * Setup the required transport parameters.
      */
     private void setupParams() throws ServerConnectorException {
-        fileURI = fileProperties.get(Constants.TRANSPORT_FILE_FILE_URI);
-        if (fileURI == null) {
-            throw new ServerConnectorException(Constants.TRANSPORT_FILE_FILE_URI + " is a " +
+        path = fileProperties.get(Constants.TRANSPORT_FILE_FILE_PATH);
+        if (path == null) {
+            throw new ServerConnectorException(Constants.TRANSPORT_FILE_FILE_PATH + " is a " +
                     "mandatory parameter for " + Constants.PROTOCOL_FILE + " transport.");
         }
-        if (fileURI.trim().equals("")) {
-            throw new ServerConnectorException(Constants.TRANSPORT_FILE_FILE_URI + " parameter " +
+        if (path.trim().equals("")) {
+            throw new ServerConnectorException(Constants.TRANSPORT_FILE_FILE_PATH + " parameter " +
                     "cannot be empty for " + Constants.PROTOCOL_FILE + " transport.");
         }
-        String seek = fileProperties.get(Constants.SEEK);
-        if (seek != null) {
-            this.seek = Integer.parseInt(seek);
+        String startPosition = fileProperties.get(Constants.START_POSITION);
+        if (startPosition != null) {
+            this.startPosition = Integer.parseInt(startPosition);
         } else {
-            this.seek = -1;
+            this.startPosition = -1;
         }
         String maxLinesPerPoll = fileProperties.get(Constants.MAX_LINES_PER_POLL);
         if (maxLinesPerPoll != null) {
@@ -227,7 +227,7 @@ public class FileConsumer {
                     position = fileObject.getContent().getSize();
                 } catch (FileNotFoundException e) {
                     throw new FileServerConnectorException("File Not Found: " +
-                                                           FileTransportUtils.maskURLPassword(fileURI), e);
+                                                           FileTransportUtils.maskURLPassword(path), e);
                 }
             } else {
                 if (length > position) {
@@ -249,10 +249,10 @@ public class FileConsumer {
             }
         } catch (FileSystemException e) {
             throw new FileServerConnectorException(
-                    "Error in reading file: " + FileTransportUtils.maskURLPassword(fileURI), e);
+                    "Error in reading file: " + FileTransportUtils.maskURLPassword(path), e);
         } catch (IOException e) {
             throw new FileServerConnectorException(
-                    "Error in reading file: " + FileTransportUtils.maskURLPassword(fileURI), e);
+                    "Error in reading file: " + FileTransportUtils.maskURLPassword(path), e);
         }
         return file;
     }
