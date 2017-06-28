@@ -65,7 +65,6 @@ public class FileConsumer {
 
     private final byte[] inbuf = new byte[4096];
     private int seek;
-    private boolean reOpen = true;
     private long currentTime = 0L;
     private long position = 0L;
     private RandomAccessContent reader = null;
@@ -240,16 +239,13 @@ public class FileConsumer {
                     position = this.readLines(reader);
                     currentTime = System.currentTimeMillis();
                 }
-
-                if (this.reOpen) {
-                    FileObject parent = fileObject.getParent();
-                    parent.getType(); // assure that parent folder is attached
-                    parent.refresh();
-                    fileObject.refresh();
-                    reader.close();
-                    reader = fileObject.getContent().getRandomAccessContent(RandomAccessMode.READ);
-                    reader.seek(position);
-                }
+                FileObject parent = fileObject.getParent();
+                parent.getType(); // assure that parent folder is attached
+                parent.refresh();
+                fileObject.refresh();
+                reader.close();
+                reader = fileObject.getContent().getRandomAccessContent(RandomAccessMode.READ);
+                reader.seek(position);
             }
         } catch (FileSystemException e) {
             throw new FileServerConnectorException(
@@ -278,7 +274,7 @@ public class FileConsumer {
                     if (ch == 10) {
                         Byte[] line = new Byte[list.size()];
                         line = list.toArray(line);
-                        EventListener.handle(line, messageProcessor, serviceName);
+                        EventListener.fileUpdated(line, messageProcessor, serviceName);
                         lines++;
                         list.clear();
                         rePos = pos + (long) i + 1L;
@@ -326,7 +322,7 @@ public class FileConsumer {
             }
         }
 
-        private static void handle(Byte[] content, CarbonMessageProcessor messageProcessor, String serviceName)
+        private static void fileUpdated(Byte[] content, CarbonMessageProcessor messageProcessor, String serviceName)
                 throws FileServerConnectorException {
             try {
                 CarbonMessage cMessage = new BinaryCarbonMessage(ByteBuffer.wrap(toPrimitives(content)), true);
