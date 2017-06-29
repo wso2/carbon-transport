@@ -203,6 +203,8 @@ public class JMSServerConnector extends ServerConnector {
             String mappedParameter = JMSConstants.MAPPING_PARAMETERS.get(entry.getKey());
             if (mappedParameter != null) {
                 properties.put(mappedParameter, entry.getValue());
+            } else {
+                properties.put(entry.getKey(), entry.getValue());
             }
         }
 
