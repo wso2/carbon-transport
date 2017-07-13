@@ -18,31 +18,41 @@
 
 package org.wso2.carbon.transport.file.test.util;
 
+import org.wso2.carbon.messaging.BinaryCarbonMessage;
 import org.wso2.carbon.messaging.CarbonCallback;
 import org.wso2.carbon.messaging.CarbonMessage;
 import org.wso2.carbon.messaging.CarbonMessageProcessor;
 import org.wso2.carbon.messaging.ClientConnector;
 import org.wso2.carbon.messaging.TransportSender;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Message processor that is used for the testing purposes.
  */
-public class TestMessageProcessor implements CarbonMessageProcessor {
+public class FileMessageProcessor implements CarbonMessageProcessor {
     private CountDownLatch latch = new CountDownLatch(1);
-    private String fileContent;
+    private ExecutorService executor = Executors.newSingleThreadExecutor();
+    private List<String> fileContent = new ArrayList<>();
 
     @Override
     public boolean receive(CarbonMessage carbonMessage, CarbonCallback carbonCallback) throws Exception {
-        fileContent = getStringFromInputStream(carbonMessage.getInputStream());
-        carbonCallback.done(carbonMessage);
-        done();
+        executor.execute(new Runnable() {
+            @Override public void run() {
+                byte[] content = ((BinaryCarbonMessage) carbonMessage).readBytes().array();
+                fileContent.add(new String(content));
+
+            }
+        });
+        latch.await(10, TimeUnit.MICROSECONDS);
+        if (fileContent.size() == 20) {
+            done();
+        }
         return false;
     }
 
@@ -61,6 +71,10 @@ public class TestMessageProcessor implements CarbonMessageProcessor {
         return "test-file-message-processor";
     }
 
+    public String getFileContent(int index) {
+        return fileContent.get(index);
+    }
+
     /**
      * To wait till file reading operation is finished.
      *
@@ -77,48 +91,4 @@ public class TestMessageProcessor implements CarbonMessageProcessor {
         latch.countDown();
     }
 
-    /**
-     * To get the string from the input stream.
-     *
-     * @param in Input stream to be converted to String.
-     * @return the String value of the input stream
-     * @throws IOException IO exception when reading the input stream
-     */
-    private static String getStringFromInputStream(InputStream in) throws IOException {
-        StringBuilder sb = new StringBuilder(4096);
-        InputStreamReader reader = new InputStreamReader(in, StandardCharsets.UTF_8);
-        BufferedReader bufferedReader = new BufferedReader(reader);
-        try {
-            String str;
-            while ((str = bufferedReader.readLine()) != null) {
-                sb.append(str);
-            }
-        } finally {
-            try {
-                in.close();
-            } catch (IOException e) {
-                // Do nothing.
-            }
-            try {
-                reader.close();
-            } catch (IOException e) {
-                // Do nothing.
-            }
-            try {
-                bufferedReader.close();
-            } catch (IOException e) {
-                // Do nothing.
-            }
-        }
-        return sb.toString();
-    }
-
-    /**
-     * To get the file content of the relevant file.
-     *
-     * @return the file content.
-     */
-    public String getFileContent() {
-        return fileContent;
-    }
 }
