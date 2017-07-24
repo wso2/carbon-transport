@@ -133,6 +133,11 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.wso2.carbon.transport</groupId>
+                <artifactId>org.wso2.carbon.transport.email</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.wso2.carbon.messaging</groupId>
                 <artifactId>org.wso2.carbon.messaging</artifactId>
                 <version>${carbon.messaging.version}</version>
@@ -219,6 +224,11 @@
                 <artifactId>greenmail</artifactId>
                 <version>${com.icegreen.version}</version>
                 <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.wso2.carbon.config</groupId>
+                <artifactId>org.wso2.carbon.config</artifactId>
+                <version>${org.wso2.carbon.congig.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -340,6 +350,7 @@
         <javax.mail.import.version.range>[1.5.0, 1.6.0-rc2)</javax.mail.import.version.range>
         <com.sun.mail.version>1.6.0-rc2</com.sun.mail.version>
         <com.icegreen.version>1.5.4</com.icegreen.version>
+        <org.wso2.carbon.congig.version>1.0.0</org.wso2.carbon.congig.version>
 
 
         <email.transport.package.export.version>${project.version}</email.transport.package.export.version>

@@ -8,6 +8,7 @@ import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessageRemovedException;
 import javax.mail.MessagingException;
+import javax.mail.UIDFolder;
 
 /**
  * Created by chathurika on 7/10/17.
@@ -17,12 +18,12 @@ public class ActionForProcessedMail {
     public void carryOutAction(Message message, Folder folder,
             EmailConstants.ActionAfterProcessed action, Folder folderToMove)
             throws MessagingException, EmailServerConnectorException {
-        // folder create at the constructure of the consume;
+        // folder create at the constructor of the consume
         Message[] messages = { message };
         try {
             switch (action) {
             case MOVE:
-                if (!folder.isOpen()) {
+                if (!folderToMove.isOpen()) {
                     folderToMove.open(Folder.READ_WRITE);
                 }
                 folder.copyMessages(messages, folderToMove);
@@ -34,7 +35,9 @@ public class ActionForProcessedMail {
                 break;
             case DELET:
                 message.setFlag(Flags.Flag.DELETED, true);
-                folder.expunge();
+                if (folder instanceof UIDFolder) {
+                    folder.expunge();
+                }
                 break;
             case FLAGGED:
                 message.setFlag(Flags.Flag.FLAGGED, true);

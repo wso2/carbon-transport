@@ -15,7 +15,7 @@ import java.util.concurrent.CountDownLatch;
  */
 public class TestMessageProcessor implements CarbonMessageProcessor {
     private static final Logger log = LoggerFactory.getLogger(TestMessageProcessor.class);
-    private CountDownLatch latch = new CountDownLatch(100);
+    private CountDownLatch latch = new CountDownLatch(1);
     public String subject;
     public int count = 0;
 
@@ -25,7 +25,7 @@ public class TestMessageProcessor implements CarbonMessageProcessor {
         Object obj = carbonMessage.getProperty("subject");
         subject = (String)obj;
         log.info("one recve is called and subject is:"+subject);
-        count =1;
+        count ++;
         done();
 
         return false;

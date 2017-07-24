@@ -32,4 +32,9 @@ public class EmailServerConnectorProvider extends ServerConnectorProvider {
     public ServerConnector createConnector(String id, Map<String, String> emailProperties, SearchTerm emailSearchTerm) {
         return new EmailServerConnector(id, emailProperties, emailSearchTerm);
     }
+
+    public ServerConnector createConnector(String id, Map<String, String> emailProperties,
+            String stringEmailSearchTerm) {
+        return new EmailServerConnector(id, emailProperties, stringEmailSearchTerm);
+    }
 }

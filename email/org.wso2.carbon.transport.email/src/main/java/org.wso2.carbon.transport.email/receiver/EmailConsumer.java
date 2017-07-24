@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wso2.carbon.messaging.CarbonMessage;
 import org.wso2.carbon.messaging.CarbonMessageProcessor;
+import org.wso2.carbon.transport.email.callback.EmailServerConnectorCallback;
 import org.wso2.carbon.transport.email.exception.EmailServerConnectorException;
 import org.wso2.carbon.transport.email.utils.EmailConstants;
 import org.wso2.carbon.transport.email.utils.EmailUtils;
@@ -36,7 +37,7 @@ public class EmailConsumer {
     private Map<String, String> emailProperties;
     private CarbonMessageProcessor emailMessageProcessor;
     private String seviceName;
-    private Properties systemProperties = new Properties();
+    private Properties serverProperties = new Properties();
     private Session session;
     private Folder folder;
     private long startUIDNumber = 1;
@@ -53,6 +54,7 @@ public class EmailConsumer {
     private Folder moveToFolder = null;
     private ActionForProcessedMail actionForProcessedMail;
     private boolean isFirstTimeConnect = true;
+    private boolean autoAcknowledge = true;
 
     protected EmailConsumer(String id, Map<String, String> properties, SearchTerm emailSearchTerm,
             CarbonMessageProcessor emailMessageProcessor) throws EmailServerConnectorException {
@@ -61,10 +63,35 @@ public class EmailConsumer {
         this.emailSearchTerm = emailSearchTerm;
         this.emailMessageProcessor = emailMessageProcessor;
 
-        this.host = emailProperties.get(EmailConstants.HOST_NAME);
-        this.username = emailProperties.get(EmailConstants.USERNAME);
-        this.password = emailProperties.get(EmailConstants.PASSWORD);
-        this.storeType = emailProperties.get(EmailConstants.STORE_TYPE);
+        this.storeType = emailProperties.get(EmailConstants.MAIL_RECEIVER_STORE_TYPE);
+
+        if (emailProperties.get(EmailConstants.MAIL_RECEIVER_USERNAME) != null) {
+            this.username = emailProperties.get(EmailConstants.MAIL_RECEIVER_USERNAME);
+        } else {
+            throw new EmailServerConnectorException("Username (email address) of the email account is"
+                    + " a mandatory parameter." + "It is not given in the email property map");
+        }
+
+        if (emailProperties.get(EmailConstants.MAIL_RECEIVER_PASSWORD) != null) {
+            this.password = emailProperties.get(EmailConstants.MAIL_RECEIVER_PASSWORD);
+        } else {
+            throw new EmailServerConnectorException("Password of the email account is"
+                    + " a mandatory parameter." + "It is not given in the email property map");
+        }
+
+        if (emailProperties.get(EmailConstants.MAIL_RECEIVER_HOST_NAME) != null) {
+            this.host = emailProperties.get(EmailConstants.MAIL_RECEIVER_HOST_NAME);
+        } else {
+            throw new EmailServerConnectorException("HostName of the email account is"
+                    + " a mandatory parameter." + "It is not given in the email property map");
+        }
+
+        if (emailProperties.get(EmailConstants.MAIL_RECEIVER_STORE_TYPE) != null) {
+            this.storeType = emailProperties.get(EmailConstants.MAIL_RECEIVER_STORE_TYPE);
+        } else {
+            throw new EmailServerConnectorException("Store type of the email account is"
+                    + " a mandatory parameter." + "It is not given in the email property map");
+        }
 
         if (emailProperties.get(EmailConstants.MAX_RETRY_COUNT) != null) {
             try {
@@ -76,39 +103,51 @@ public class EmailConsumer {
             }
         }
 
-        if (emailProperties.get(EmailConstants.RETRY_INTERVEL) != null) {
+        if (emailProperties.get(EmailConstants.RETRY_INTERVAL) != null) {
             try {
-                this.retryInterval = Long.parseLong(emailProperties.get(EmailConstants.RETRY_INTERVEL));
+                this.retryInterval = Long.parseLong(emailProperties.get(EmailConstants.RETRY_INTERVAL));
             } catch (NumberFormatException e) {
-                log.error("Could not parse parameter: " + emailProperties.get(EmailConstants.RETRY_INTERVEL)
+                log.error("Could not parse parameter: " + emailProperties.get(EmailConstants.RETRY_INTERVAL)
                         + " to numeric type: Long." + " Get default"
-                        + emailProperties.get(EmailConstants.RETRY_INTERVEL) + ": " + retryInterval);
+                        + emailProperties.get(EmailConstants.RETRY_INTERVAL) + ": " + retryInterval);
             }
         }
 
-        if (emailProperties.get(EmailConstants.CONTENT_TYPE) != null ){
+        if (emailProperties.get(EmailConstants.CONTENT_TYPE) != null) {
         if (emailProperties.get(EmailConstants.CONTENT_TYPE).equalsIgnoreCase("text/html")) {
                 this.contentType = "text/html";
         } else if (emailProperties.get(EmailConstants.CONTENT_TYPE).equalsIgnoreCase("text/plain")) {
                contentType = "text/plain";
         }
         } else {
-               log.warn("Email content type is not defined. Get default content type: text/plain");
+               log.warn("Email content type is not given in the email property map."
+                       + " Get default content type: text/plain");
                this.contentType = "text/plain";
         }
 
-        if (emailProperties.get(EmailConstants.FOLDER_NAME) != null) {
-            this.folderName = emailProperties.get(EmailConstants.FOLDER_NAME);
+        if (emailProperties.get(EmailConstants.MAIL_RECEIVER_FOLDER_NAME) != null) {
+            this.folderName = emailProperties.get(EmailConstants.MAIL_RECEIVER_FOLDER_NAME);
 
         } else {
             this.folderName = "INBOX";
-            log.warn("Folder to fetch mails is not specified." +
+            log.warn("Folder to fetch mails is not given in the email property map." +
                     "Get default folder: " + folderName);
         }
 
-        systemProperties.putAll(emailProperties);
+        if(emailProperties.get(EmailConstants.AUTO_ACKNOWLEDGE) != null) {
+            this.autoAcknowledge =  Boolean.parseBoolean(emailProperties.get(EmailConstants.AUTO_ACKNOWLEDGE));
+        } else {
+            log.warn("Auto Acknowledgement property is not given in the email property list." +
+                    "Get default value 'false' ");
+        }
 
-        session = Session.getDefaultInstance(systemProperties);
+        for (Map.Entry<String, String> entry : emailProperties.entrySet()) {
+            if (entry.getKey().startsWith("mail.")) {
+                serverProperties.put(entry.getKey(), entry.getValue());
+            }
+        }
+
+        session = Session.getDefaultInstance(serverProperties);
 
         if (storeType != null) {
             try {
@@ -122,6 +161,7 @@ public class EmailConsumer {
 
         actionForProcessedMail = new ActionForProcessedMail();
     }
+
 
     protected void emailConsumer() throws EmailServerConnectorException {
         try {
@@ -140,15 +180,22 @@ public class EmailConsumer {
                     CarbonMessage emailCarbonMessage;
                     emailCarbonMessage = EmailUtils
                             .createEmailCarbonMessage(messageList.get(i), folder, content, seviceName);
-                    emailMessageProcessor.receive(emailCarbonMessage, null);
+
+                    if(autoAcknowledge) {
+                        emailMessageProcessor.receive(emailCarbonMessage, null);
+                    } else {
+                        EmailServerConnectorCallback callback = new EmailServerConnectorCallback();
+                        emailMessageProcessor.receive(emailCarbonMessage, callback);
+                    }
                     actionForProcessedMail.carryOutAction(messageList.get(i), folder, action, moveToFolder);
 
                 } catch (MessageRemovedException e) {
                     // check and put message number
-                    log.warn(" Mail has been deleted by another thread." + " Couldn't process the mail further");
+                    log.warn(" Skip the message #: " + messageList.get(i).getMessageNumber() +
+                            " by further processing since it has been deleted by another thread .");
                     continue;
                 } catch (Exception e) {
-                    log.warn("Couldn't process the Mail" + e.toString());
+                    log.warn("Couldn't process the Mail due to: " + e.toString());
                 }
             }
 
@@ -164,8 +211,8 @@ public class EmailConsumer {
                 retryCount++;
 
                 if (log.isDebugEnabled()) {
-                    log.debug("Attempting to connect to POP3/IMAP server for : "
-                            + emailProperties.get(EmailConstants.USERNAME) + " using " + session.getProperties());
+                    log.debug("Attempting to connect to '" + storeType + "' server for : "
+                            + emailProperties.get(EmailConstants.MAIL_RECEIVER_USERNAME) + " using " + session.getProperties());
                 }
 
                 store.connect(host, username, password);
@@ -182,8 +229,8 @@ public class EmailConsumer {
                 if (log.isDebugEnabled()) {
                     log.debug("Connect to the server: " + store);
                 }
-                if (emailProperties.get(EmailConstants.FOLDER_NAME) != null) {
-                    folderName = emailProperties.get(EmailConstants.FOLDER_NAME);
+                if (emailProperties.get(EmailConstants.MAIL_RECEIVER_FOLDER_NAME) != null) {
+                    folderName = emailProperties.get(EmailConstants.MAIL_RECEIVER_FOLDER_NAME);
 
                 } else {
                     folderName = "INBOX";
@@ -236,6 +283,7 @@ public class EmailConsumer {
             }
         }
     }
+
     protected void closeFolder(Folder folder) throws EmailServerConnectorException {
         if (folder.isOpen()) {
             try {
@@ -267,7 +315,7 @@ public class EmailConsumer {
                 log.error("Couldn't open the folder: " + folderName + " in READ_WRITE mode", e);
             }
         }
-        if (folder.isOpen()){
+        if (folder.isOpen()) {
             if (log.isDebugEnabled()) {
                 log.debug("Folder is open: " + folderName);
             }
@@ -295,7 +343,7 @@ public class EmailConsumer {
                     try {
                         Message[] messages = folder.search(emailSearchTerm,
                                 ((UIDFolder) folder).getMessagesByUID(startUIDNumber, UIDFolder.LASTUID));
-                        if (messages != null) {
+                        if (messages.length > 0) {
                             startUIDNumber = ((UIDFolder) folder).getUID(messages[messages.length - 1]) + 1;
                             emailMessages = Arrays.asList(messages);
                         }
@@ -310,7 +358,7 @@ public class EmailConsumer {
                             + folderName + "' will be fetched");
                     try {
                         Message[] messages = ((UIDFolder) folder).getMessagesByUID(startUIDNumber, UIDFolder.LASTUID);
-                        if (messages != null) {
+                        if (messages.length > 0) {
                              startUIDNumber = ((UIDFolder) folder).getUID(messages[messages.length - 1]) + 1;
                              emailMessages = Arrays.asList(messages);
                         }
@@ -332,12 +380,12 @@ public class EmailConsumer {
                 }
             } else {
                 try {
-                    log.warn("Conditions(Search Term) is not specified. All the mails in the folder '"
+                    log.warn("Email Search Term is not given. All the mails in the folder '"
                             + folderName + "' will be fetched");
                     Message[] messages = folder.getMessages();
                     emailMessages = Arrays.asList(messages);
                 } catch (MessagingException e) {
-                    log.error("Error is count while fetching all emails from the folder '"
+                    log.error("Error is encountered while fetching all emails from the folder '"
                             + folderName + "'" , e);
                 }
             }

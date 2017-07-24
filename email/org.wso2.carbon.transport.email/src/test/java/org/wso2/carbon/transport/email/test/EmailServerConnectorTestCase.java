@@ -15,14 +15,14 @@ import java.util.Map;
  */
 public class EmailServerConnectorTestCase {
 
-    @Test(description = "Testing the scenario: reading a file and asserting whether"
+   /* @Test(description = "Testing the scenario: reading a file and asserting whether"
             + " its content " + "is equal to what is expected.")
     public void emailTest() throws ServerConnectorException, InterruptedException {
         EmailTestUtils emailtestutils = new EmailTestUtils();
         Map<String, String> emailProperty = emailtestutils.getEmailReceivedServerParameters
                 ("dck.amarathunga@gmail.com" , "A&Cforever" , "imap.gmail.com" , "imaps" , "INBOX");
-       /* Map<String, String> emailProperty = emailtestutils.getEmailReceivedServerParameters
-                ("pop3testwso2@gmail.com" , "Pop3Test@Wso2" , "pop.gmail.com" , "pop3s" , "INBOX");*/
+       Map<String, String> emailProperty = emailtestutils.getEmailReceivedServerParameters
+                ("pop3testwso2@gmail.com" , "Pop3Test@Wso2" , "pop.gmail.com" , "pop3s" , "INBOX");
         EmailServerConnectorProvider emailServerConnectorProvider = new EmailServerConnectorProvider();
         ServerConnector connector = emailServerConnectorProvider.createConnector("testEmail" , emailProperty);
         TestMessageProcessor testMessageProcessor = new TestMessageProcessor();
@@ -33,9 +33,9 @@ public class EmailServerConnectorTestCase {
         System.out.println(testMessageProcessor.subject);
         Assert.assertEquals(testMessageProcessor.count, 1);
 
-    }
+    } */
 
-    @Test(description = "Testing the scenario: reading a file and asserting whether"
+    /*@Test(description = "Testing the scenario: reading a file and asserting whether"
             + " its content " + "is equal to what is expected.")
     public void emailTest2() throws ServerConnectorException, InterruptedException {
         EmailTestUtils emailtestutils = new EmailTestUtils();
@@ -51,5 +51,5 @@ public class EmailServerConnectorTestCase {
         System.out.println(testMessageProcessor.subject);
         Assert.assertEquals(testMessageProcessor.count, 1);
 
-    }
+    } */
 }

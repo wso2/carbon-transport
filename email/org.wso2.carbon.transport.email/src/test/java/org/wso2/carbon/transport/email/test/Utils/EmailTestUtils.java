@@ -8,7 +8,7 @@ import java.util.Map;
  */
 public class EmailTestUtils {
 
-    public Map<String, String> getEmailReceivedServerParameters(String username,
+  /*  public Map<String, String> getEmailReceivedServerParameters(String username,
             String password, String host, String store, String folder) {
         Map<String, String> emailReceivedServerParameters = new HashMap<String, String>();
         emailReceivedServerParameters.put(EmailTestConstant.USERNAME, username);
@@ -17,7 +17,11 @@ public class EmailTestUtils {
         emailReceivedServerParameters.put(EmailTestConstant.STORE_TYPE, store);
        // emailReceivedServerParameters.put(EmailTestConstant.FOLDER_NAME, folder);
 
+        emailReceivedServerParameters.put("mail.pop3.ssl.socketFactory.class", "com.blogspot.lifeinide.AlwaysTrustSSLContextFactory");
+       // emailReceivedServerParameters.put("mail.pop3.ssl.socketFactory.port", "995");
+        emailReceivedServerParameters.put("mail.pop3.starttls.enable", "true");
+
         return emailReceivedServerParameters;
 
-    }
+    } */
 }
