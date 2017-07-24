@@ -35,6 +35,7 @@ import org.wso2.carbon.transport.http.netty.sender.TargetHandler;
 import org.wso2.carbon.transport.http.netty.sender.channel.ChannelUtils;
 import org.wso2.carbon.transport.http.netty.sender.channel.TargetChannel;
 
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -189,7 +190,7 @@ public class ConnectionManager {
                 }
             }
         } catch (Exception e) {
-            String msg = "Failed to send the request through the default pooling";
+            String msg = "Failed to send the request : " + e.getMessage().toLowerCase(Locale.ENGLISH);
             log.error(msg, e);
             MessagingException messagingException = new MessagingException(msg, e, 101500);
             carbonMessage.setMessagingException(messagingException);
@@ -232,7 +233,10 @@ public class ConnectionManager {
     public void invalidateTargetChannel(TargetChannel targetChannel) throws Exception {
         Map<String, GenericObjectPool> objectPoolMap = targetChannel.getCorrelatedSource().getTargetChannelPool();
         try {
-            objectPoolMap.get(targetChannel.getHttpRoute().toString()).invalidateObject(targetChannel);
+            // Need a null check because SourceHandler side could timeout before TargetHandler side.
+            if (objectPoolMap.get(targetChannel.getHttpRoute().toString()) != null) {
+                objectPoolMap.get(targetChannel.getHttpRoute().toString()).invalidateObject(targetChannel);
+            }
         } catch (Exception e) {
             throw new Exception("Cannot invalidate channel from pool", e);
         }
