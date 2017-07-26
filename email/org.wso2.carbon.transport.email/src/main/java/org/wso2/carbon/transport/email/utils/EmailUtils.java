@@ -50,7 +50,8 @@ public class EmailUtils {
      * @param isImapFolder  Whether folder is Imap folder or not
      * @return ActionAfterProcessed enum
      */
-    public static EmailConstants.ActionAfterProcessed getActionAfterProcessed(String action, Boolean isImapFolder) {
+    public static EmailConstants.ActionAfterProcessed getActionAfterProcessed(String action, Boolean isImapFolder)
+            throws EmailServerConnectorException {
         String actionInUpperCase;
         if (action != null) {
             actionInUpperCase = action.toUpperCase(Locale.ENGLISH);
@@ -73,24 +74,20 @@ public class EmailUtils {
             case "MOVE":
                 return EmailConstants.ActionAfterProcessed.MOVE;
             case "":
-                log.warn(" action after processed mail parameter is not defined" + " Get default action : NONE");
+                log.warn("Action after processed mail parameter is not defined" + " Get default action : NONE");
                 return EmailConstants.ActionAfterProcessed.NONE;
             default:
-                log.warn(" action '" + action + "' is not supported by IMAPFolder." + " Get default action: NONE");
-                return EmailConstants.ActionAfterProcessed.NONE;
-
+                throw new EmailServerConnectorException(" action '" + action + "' is not supported by IMAPFolder.");
             }
         } else {
             switch (actionInUpperCase) {
             case "DELETE":
                 return EmailConstants.ActionAfterProcessed.DELETE;
             case "":
-                log.warn(" action after processed mail parameter is not defined" + " Get default action : DELETE");
+                log.warn("Action after processed mail parameter is not defined" + " Get default action : DELETE");
                 return EmailConstants.ActionAfterProcessed.DELETE;
             default:
-                log.warn(" action '" + action + "' is not supported by POP3Folder." + " Get default action: DELETE");
-                return EmailConstants.ActionAfterProcessed.NONE;
-
+                throw new EmailServerConnectorException("Action '" + action + "' is not supported by IMAPFolder.");
             }
         }
     }

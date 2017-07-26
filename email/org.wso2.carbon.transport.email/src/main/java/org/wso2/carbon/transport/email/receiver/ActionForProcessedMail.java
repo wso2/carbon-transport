@@ -78,11 +78,11 @@ public class ActionForProcessedMail {
                 break;
             }
         } catch (MessageRemovedException e) {
-            throw new MessageRemovedException(e.toString());
-        } catch (NullPointerException e) {
-            throw new MessageRemovedException(e.toString());
+            throw new MessageRemovedException("Error is encountered while carrying out the action '"
+                    + action + "'for processed mail" , e);
         } catch (Exception e) {
-            throw new EmailServerConnectorException(e.toString(), e);
+            throw new EmailServerConnectorException("Error is encountered while carrying out the action '"
+                    + action + "'for processed mail", e);
         }
     }
 }
