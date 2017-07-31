@@ -25,7 +25,7 @@ import org.apache.commons.vfs2.FileSystemManager;
 import org.apache.commons.vfs2.FileSystemOptions;
 import org.apache.commons.vfs2.FileType;
 import org.apache.commons.vfs2.RandomAccessContent;
-import org.apache.commons.vfs2.impl.StandardFileSystemManager;
+import org.apache.commons.vfs2.VFS;
 import org.apache.commons.vfs2.provider.UriParser;
 import org.apache.commons.vfs2.provider.ftp.FtpFileSystemConfigBuilder;
 import org.apache.commons.vfs2.util.RandomAccessMode;
@@ -70,8 +70,7 @@ public class FileConsumer {
     private RandomAccessContent reader = null;
     private int maxLinesPerPoll;
 
-    public FileConsumer(String id, Map<String, String> fileProperties,
-                        CarbonMessageProcessor messageProcessor)
+    public FileConsumer(String id, Map<String, String> fileProperties, CarbonMessageProcessor messageProcessor)
             throws ServerConnectorException {
         this.serviceName = id;
         this.fileProperties = fileProperties;
@@ -79,10 +78,7 @@ public class FileConsumer {
 
         setupParams();
         try {
-            StandardFileSystemManager fsm = new StandardFileSystemManager();
-            fsm.setConfiguration(getClass().getClassLoader().getResource("providers.xml"));
-            fsm.init();
-            fsManager = fsm;
+            fsManager = VFS.getManager();
         } catch (FileSystemException e) {
             throw new ServerConnectorException("Could not initialize File System Manager from " +
                     "the configuration: providers.xml", e);
@@ -90,6 +86,7 @@ public class FileConsumer {
         Map<String, String> options = parseSchemeFileOptions(path);
         fso = FileTransportUtils.attachFileSystemOptions(options, fsManager);
 
+        // TODO: Make this configurable
         if (options != null && Constants.SCHEME_FTP.equals(options.get(Constants.SCHEME))) {
             FtpFileSystemConfigBuilder.getInstance().setPassiveMode(fso, true);
         }
@@ -101,8 +98,8 @@ public class FileConsumer {
             currentTime = System.currentTimeMillis();
             reader.seek(position);
         } catch (FileSystemException e) {
-            throw new FileServerConnectorException("Failed to resolve path: "
-                    + FileTransportUtils.maskURLPassword(path), e);
+            throw new FileServerConnectorException(
+                    "Failed to resolve path: " + FileTransportUtils.maskURLPassword(path), e);
         } catch (IOException e) {
             throw new FileServerConnectorException("Failed to read File: "
                                                    + FileTransportUtils.maskURLPassword(path), e);
@@ -131,7 +128,7 @@ public class FileConsumer {
         try {
             isFileReadable = fileObject.isReadable();
         } catch (FileSystemException e) {
-            throw new FileServerConnectorException("Error occurred when determining whether the file at URI : " +
+            throw new FileServerConnectorException("Error occurred while determining whether the file at URI : " +
                                                    FileTransportUtils.maskURLPassword(path) + " is readable. " + e);
         }
 
@@ -141,15 +138,15 @@ public class FileConsumer {
                 fileType = fileObject.getType();
             } catch (FileSystemException e) {
                 throw new FileServerConnectorException(
-                        "Error occurred when determining whether file: " + FileTransportUtils.maskURLPassword(path) +
-                        " is a file or a folder", e);
+                        "Error occurred while determining whether the file: " +
+                                FileTransportUtils.maskURLPassword(path) + " is a file or a folder", e);
             }
 
             if (fileType == FileType.FILE) {
                 processFile(fileObject);
             } else {
                 throw new FileServerConnectorException(
-                        "Unable to access or read file or directory : " + FileTransportUtils.maskURLPassword(path));
+                        "Unable to access or read file/directory : " + FileTransportUtils.maskURLPassword(path));
             }
             if (log.isDebugEnabled()) {
                 log.debug("End : Scanning directory or file : " + FileTransportUtils.maskURLPassword(path));
@@ -157,20 +154,20 @@ public class FileConsumer {
         }
     }
 
-
-
     /**
      * Setup the required transport parameters.
      */
     private void setupParams() throws ServerConnectorException {
         path = fileProperties.get(Constants.TRANSPORT_FILE_FILE_PATH);
         if (path == null) {
-            throw new ServerConnectorException(Constants.TRANSPORT_FILE_FILE_PATH + " is a " +
-                    "mandatory parameter for " + Constants.PROTOCOL_FILE + " transport.");
+            throw new ServerConnectorException(
+                    Constants.TRANSPORT_FILE_FILE_PATH + " is a mandatory parameter for " + Constants.PROTOCOL_FILE +
+                            " transport.");
         }
         if (path.trim().equals("")) {
-            throw new ServerConnectorException(Constants.TRANSPORT_FILE_FILE_PATH + " parameter " +
-                    "cannot be empty for " + Constants.PROTOCOL_FILE + " transport.");
+            throw new ServerConnectorException(
+                    Constants.TRANSPORT_FILE_FILE_PATH + " parameter cannot be empty for " + Constants.PROTOCOL_FILE +
+                            " transport.");
         }
         String startPosition = fileProperties.get(Constants.START_POSITION);
         if (startPosition != null) {
@@ -219,6 +216,11 @@ public class FileConsumer {
         try {
             boolean newer = isFileNewer(fileObject, currentTime);
             long length = this.fileObject.getContent().getSize();
+
+            // Send the meta data of the file before starting to process the file
+            CarbonMessage metaDataMsg = getMetaDataMessage(file);
+            messageProcessor.receive(metaDataMsg, null);
+
             if (length < position) {
 
                 EventListener.fileRotated(fileObject, messageProcessor, serviceName);
@@ -253,13 +255,15 @@ public class FileConsumer {
         } catch (IOException e) {
             throw new FileServerConnectorException(
                     "Error in reading file: " + FileTransportUtils.maskURLPassword(path), e);
+        } catch (Exception e) {
+            throw new FileServerConnectorException(
+                    "Error in sending the meta-data for the file: " + FileTransportUtils.maskURLPassword(path), e);
         }
         return file;
     }
 
-    private long readLines(RandomAccessContent reader)
-            throws IOException, FileServerConnectorException {
-
+    private long readLines(RandomAccessContent reader) throws IOException, FileServerConnectorException {
+        final byte newLine = (byte) '\n';
         long pos = reader.getFilePointer();
         long rePos = pos;
 
@@ -267,29 +271,29 @@ public class FileConsumer {
         int num;
         int lines = 0;
         boolean throttled = false;
-            for (;
-                 ((num = read(reader, inbuf)) != -1) && !throttled; pos = reader.getFilePointer()) {
-                for (int i = 0; (i < num) && !throttled; ++i) {
-                    byte ch = this.inbuf[i];
-                    if (ch == 10) {
-                        Byte[] line = new Byte[list.size()];
-                        line = list.toArray(line);
-                        EventListener.fileUpdated(line, messageProcessor, serviceName);
-                        lines++;
-                        list.clear();
-                        rePos = pos + (long) i + 1L;
-                    } else {
-                        list.add(ch);
-                    }
-                    if (maxLinesPerPoll != -1 && (lines > maxLinesPerPoll) && ch == 10) {
-                        throttled = true;
-                    }
+        for (; ((num = read(reader, inbuf)) != -1) && !throttled; pos = reader.getFilePointer()) {
+            for (int i = 0; (i < num) && !throttled; ++i) {
+                byte ch = this.inbuf[i];
+                if (ch == newLine) {
+                    Byte[] line = new Byte[list.size()];
+                    line = list.toArray(line);
+                    EventListener.fileUpdated(line, messageProcessor, serviceName);
+                    lines++;
+                    list.clear();
+                    rePos = pos + (long) i + 1L;
+                } else {
+                    list.add(ch);
+                }
+                if (maxLinesPerPoll != -1 && (lines > maxLinesPerPoll) && ch == 10) {
+                    throttled = true;
                 }
             }
+        }
 
         reader.seek(rePos);
         return rePos;
     }
+
     private static boolean isFileNewer(FileObject file, long timeMillis) throws FileSystemException {
         if (file == null) {
             throw new IllegalArgumentException("No specified file");
@@ -304,17 +308,29 @@ public class FileConsumer {
         return count;
     }
 
+    private CarbonMessage getMetaDataMessage(FileObject file) throws FileSystemException {
+        CarbonMessage cMsg = new TextCarbonMessage(file.getURL().toString());
+
+        cMsg.setProperty(org.wso2.carbon.messaging.Constants.PROTOCOL, Constants.PROTOCOL_FILE);
+        cMsg.setProperty(Constants.FILE_TRANSPORT_PROPERTY_SERVICE_NAME, serviceName);
+        cMsg.setProperty(Constants.FILE_META_SIZE, file.getContent().getSize());
+        cMsg.setProperty(Constants.FILE_META_LAST_MODIFIED_TIME, file.getContent().getLastModifiedTime());
+
+        return cMsg;
+    }
+
     private static class EventListener {
 
         private static void fileRotated(FileObject file, CarbonMessageProcessor messageProcessor, String serviceName)
                 throws FileServerConnectorException {
 
             try {
-
                 TextCarbonMessage cMessage = new TextCarbonMessage(file.getURL().toString());
                 cMessage.setProperty(org.wso2.carbon.messaging.Constants.PROTOCOL, Constants.PROTOCOL_FILE);
                 cMessage.setProperty(Constants.FILE_TRANSPORT_PROPERTY_SERVICE_NAME, serviceName);
                 cMessage.setProperty(Constants.FILE_TRANSPORT_EVENT_NAME, Constants.FILE_ROTATE);
+                cMessage.setProperty(Constants.FILE_META_SIZE, file.getContent().getSize());
+                cMessage.setProperty(Constants.FILE_META_LAST_MODIFIED_TIME, file.getContent().getLastModifiedTime());
 
                 messageProcessor.receive(cMessage, null);
             } catch (Exception e) {
@@ -347,7 +363,5 @@ public class FileConsumer {
 
             return bytes;
         }
-
     }
-
 }

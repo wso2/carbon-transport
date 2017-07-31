@@ -49,6 +49,10 @@ public final class Constants {
     public static final String FILE_ROTATE = "FILE_ROTATE";
     public static final String FILE_TRANSPORT_EVENT_NAME = "FILE_TRANSPORT_EVENT_NAME";
 
+    // file meta data
+    public static final String FILE_META_SIZE = "file-size";
+    public static final String FILE_META_LAST_MODIFIED_TIME = "last-modified-time";
+
     private Constants() {
     }
 
