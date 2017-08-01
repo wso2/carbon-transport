@@ -44,4 +44,9 @@ public class EmailServerConnectorCallback implements CarbonCallback {
         latch.countDown();
     }
 
+    public void waitTillDone() throws InterruptedException {
+        latch.await();
+    }
+
+
 }

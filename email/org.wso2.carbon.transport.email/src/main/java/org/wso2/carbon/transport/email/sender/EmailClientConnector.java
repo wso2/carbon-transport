@@ -45,8 +45,6 @@ import javax.mail.internet.MimeMessage;
  */
 public class EmailClientConnector implements ClientConnector {
     private static final Logger logger = LoggerFactory.getLogger(EmailClientConnector.class);
-    private Properties prop;
-    private Authenticator authenticator;
 
     @Override
     public Object init(CarbonMessage carbonMessage, CarbonCallback carbonCallback, Map<String, Object> map)
@@ -70,6 +68,7 @@ public class EmailClientConnector implements ClientConnector {
         String username;
         String password;
         String hostName;
+
         Properties serverProperties = new Properties();
 
         if (emailProperties.get(EmailConstants.MAIL_SENDER_USERNAME) != null) {
@@ -98,17 +97,14 @@ public class EmailClientConnector implements ClientConnector {
             throw new ClientConnectorException("Email client connector is support Text Carbon Message only.");
         }
 
-        Properties properties = new Properties();
 
         for (Map.Entry<String, String> entry : emailProperties.entrySet()) {
             if (entry.getKey().startsWith("mail.")) {
                 serverProperties.put(entry.getKey(), entry.getValue());
             }
         }
-        properties.putAll(serverProperties);
 
-
-        Session session = Session.getInstance(properties, new EmailAuthenticator(username, password));
+        Session session = Session.getInstance(serverProperties, new EmailAuthenticator(username, password));
 
         Message message = createMessage(session, carbonMessage, emailProperties);
 
@@ -119,11 +115,11 @@ public class EmailClientConnector implements ClientConnector {
             transport.close();
 
         } catch (MessagingException e) {
-            throw new ClientConnectorException("Error occurred while sending the message:", e);
+            throw new ClientConnectorException("Error occurred while sending the message.", e);
         }
 
         if (logger.isDebugEnabled()) {
-            logger.info("Message is send successfully" + message.toString());
+            logger.debug("Message is send successfully" + message.toString());
         }
         return false;
     }
@@ -210,7 +206,7 @@ public class EmailClientConnector implements ClientConnector {
             }
 
         } catch (MessagingException e) {
-            throw new ClientConnectorException("Error occurred while setting the message content." + e.toString());
+            throw new ClientConnectorException("Error occurred while setting the message content." , e);
         }
 
         return message;

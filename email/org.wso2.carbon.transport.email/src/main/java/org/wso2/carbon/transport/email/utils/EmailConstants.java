@@ -42,14 +42,25 @@ public class EmailConstants {
     public static final String MAIL_RECEIVER_HOST_NAME = "receiver.hostName";
     public static final String MAIL_RECEIVER_FOLDER_NAME = "receiver.folderName";
 
+    /**
+     * Action that has to carry out after processing the email.
+     */
     public static final String ACTION_AFTER_PROCESSED = "actionAfterProcessed";
+
+    /**
+     * Folder to move the processed email if action after processed if MOVE.
+     */
     public static final String MOVE_TO_FOLDER = "moveToFolder";
 
     /**
-     * property whether to Auto Acknowledge or not
+     * property whether to Auto Acknowledge or not. If false then wait for acknowledge.
      */
     public static final String AUTO_ACKNOWLEDGE = "autoAcknowledge";
 
+    /**
+     * String search term to give the conditions to filter the messages
+     */
+     public static final String SEARCH_TERM = "searchTerm";
 
     /**
      * Properties which are included in carbon message other than headers
@@ -58,11 +69,6 @@ public class EmailConstants {
     public static final String MAIL_PROPERTY_FLAGS = "flags";
     public static final String MAIL_PROPERTY_MESSAGE_NUMBER = "messageNumber";
     public static final String MAIL_PROPERTY_UID = "messageUID";
-    //TODO replyTo check
-    public static final String MAIL_PROPERTY_REPLY_TO = "replyTo";
-
-    //public static final String MAIL_PROPERTY_RECEIVED_DATE = "receivedDate";
-    //public static final String IS_EXPUNGED = "isExpunged";*/
 
 
     /**

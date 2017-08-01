@@ -21,7 +21,7 @@ import org.wso2.carbon.messaging.ServerConnectorProvider;
 import org.wso2.carbon.transport.email.provider.EmailServerConnectorProvider;
 
 /**
- * OSGi BundleActivator of the JMS Server Connector Bundle.
+ * OSGi BundleActivator of the Email Server Connector Bundle.
  */
 public class EmailConnectorBundleActivator implements BundleActivator {
     @Override public void start(BundleContext bundleContext) throws Exception {

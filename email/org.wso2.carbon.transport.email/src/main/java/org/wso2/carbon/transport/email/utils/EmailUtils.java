@@ -47,7 +47,7 @@ public class EmailUtils {
      * Return enum relevant to the user given action for processed mail.
      *
      * @param action User given Action
-     * @param isImapFolder  Whether folder is Imap folder or not
+     * @param isImapFolder  Whether folder is IMAP folder or not
      * @return ActionAfterProcessed enum
      */
     public static EmailConstants.ActionAfterProcessed getActionAfterProcessed(String action, Boolean isImapFolder)
@@ -56,6 +56,8 @@ public class EmailUtils {
         if (action != null) {
             actionInUpperCase = action.toUpperCase(Locale.ENGLISH);
         } else {
+            //TODO check impa or pop3 and pass the default.
+            //TODO debug log
             actionInUpperCase = "";
         }
 
@@ -74,20 +76,24 @@ public class EmailUtils {
             case "MOVE":
                 return EmailConstants.ActionAfterProcessed.MOVE;
             case "":
-                log.warn("Action after processed mail parameter is not defined" + " Get default action : NONE");
+                //TODO remove it
+                log.warn("Action after processed mail parameter is not defined" + " Get default action : NONE.");
                 return EmailConstants.ActionAfterProcessed.NONE;
             default:
-                throw new EmailServerConnectorException(" action '" + action + "' is not supported by IMAPFolder.");
+                throw new EmailServerConnectorException(" action '" + action
+                        + "' is not supported by email server connector.");
             }
+
+            //TODO remove this and simplify
         } else {
             switch (actionInUpperCase) {
             case "DELETE":
                 return EmailConstants.ActionAfterProcessed.DELETE;
             case "":
-                log.warn("Action after processed mail parameter is not defined" + " Get default action : DELETE");
+                log.warn("Action after processed mail parameter is not defined" + " Get default action : DELETE.");
                 return EmailConstants.ActionAfterProcessed.DELETE;
             default:
-                throw new EmailServerConnectorException("Action '" + action + "' is not supported by IMAPFolder.");
+                throw new EmailServerConnectorException("Action '" + action + "' is not supported by POP3Folder.");
             }
         }
     }
@@ -119,14 +125,8 @@ public class EmailUtils {
             carbonMessage.setProperty(EmailConstants.SERVICE_NAME, serviceId);
             carbonMessage.setProperty(EmailConstants.MAIL_PROPERTY_MESSAGE_NUMBER, message.getMessageNumber());
 
-            if (message.getReplyTo() != null) {
-                carbonMessage.setProperty(EmailConstants.MAIL_PROPERTY_REPLY_TO,
-                        InternetAddress.toString(message.getReplyTo()));
-            }
-
             if (folder instanceof IMAPFolder) {
                 carbonMessage.setProperty(EmailConstants.MAIL_PROPERTY_FLAGS, message.getFlags().toString());
-               // carbonMessage.setProperty(EmailConstants.RECEIVED_DATE, message.getReceivedDate().toString());
                 carbonMessage.setProperty(EmailConstants.MAIL_PROPERTY_UID, ((UIDFolder) folder).getUID(message));
             } else {
                 if (folder instanceof POP3Folder) {

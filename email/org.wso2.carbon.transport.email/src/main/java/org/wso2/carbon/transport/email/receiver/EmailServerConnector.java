@@ -24,6 +24,7 @@ import org.wso2.carbon.connector.framework.server.polling.PollingServerConnector
 import org.wso2.carbon.messaging.CarbonMessageProcessor;
 import org.wso2.carbon.messaging.exceptions.ServerConnectorException;
 import org.wso2.carbon.transport.email.exception.EmailServerConnectorException;
+import org.wso2.carbon.transport.email.utils.EmailConstants;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -44,10 +45,6 @@ import javax.mail.search.SubjectTerm;
 
 public class EmailServerConnector extends PollingServerConnector {
     private static final Logger log = LoggerFactory.getLogger(EmailServerConnector.class);
-    /**
-     * The instance of SearchTerm class in javax.mail Api  that used to filter the relevant email from the email folder.
-     */
-    private SearchTerm emailSearchTerm;
 
     /**
      * The {@link CarbonMessageProcessor} instance represents the carbon message processor that handles the out going
@@ -56,30 +53,40 @@ public class EmailServerConnector extends PollingServerConnector {
     private CarbonMessageProcessor emailMessageProcessor;
 
     /**
-     * Default value that used for polling interval if user does't provide it in email property map.
+     * The instance of SearchTerm class in javax.mail Api  that used to filter relevant emails from the email folder.
+     */
+    private SearchTerm emailSearchTerm;
+
+    /**
+     * The String in a formatted way which have to convert to the Search Term object.
+     */
+    private String stringEmailSearchTerm = null;
+
+    /**
+     * UID number to start searching emails.
+     */
+     private Long startUIDNumber = 1L;
+
+    /**
+     * Default value that used for polling interval. The value is override if it is provided in email property map.
      */
     private Long emailConnectorDefaultPollingInterval = 360000L;
 
     /**
-     * The instance of the EmailConsumer class which carry out task related to the email receiver.
+     * The instance of the EmailConsumer class which carryout task related to the email receiver.
      */
     private EmailConsumer emailConsumer = null;
-
-    /**
-     * Emails which have an UID equal or greater than the startUIDNumber are only taken to process.
-     * This is only applicable if and only if, folder is a UIDFolder (IMAP folder).
-     * Default UID is 1.
-     */
-    private Long startUIDNumber = 1L;
 
     /**
      * Creates a email server connector with the id.
      *
      * @param id Unique identifier for the server connector.
-     * @param properties Map which contain data needed to initialize the email server connector
+     * @param properties Map which contains data needed to initialize the email server connector
      */
     public EmailServerConnector(String id, Map<String, String> properties) {
-        this(id, properties, (SearchTerm) null);
+        super(id, properties);
+        this.stringEmailSearchTerm = properties.get(EmailConstants.SEARCH_TERM);
+        interval = emailConnectorDefaultPollingInterval; //this might be overridden in super.start()
     }
 
     /**
@@ -92,11 +99,14 @@ public class EmailServerConnector extends PollingServerConnector {
      *                              with ',' separated key value pairs. Currently, this string search term
      *                              only supported keys: subject, from, to, bcc, and cc.
      *                              As an example: " subject:DAS , from:carbon , bcc:wso2 " string search term create a
-     *                              search term instance which filter emails which contain DAS in the subject,
-     *                              carbon in the from address and wso2 in one of the bcc addresses.
+     *                              search term instance which filter emails contain 'DAS' in the subject,
+     *                              'carbon' in the from address and 'wso2' in one of the bcc addresses.
+     *                              It does sub string matching which is case insensitive.
      */
     public EmailServerConnector(String id, Map<String, String> properties, String stringEmailSearchTerm) {
-        this(id, properties, stringToSearchTermConverter(stringEmailSearchTerm));
+        super(id, properties);
+        this.stringEmailSearchTerm = stringEmailSearchTerm;
+        interval = emailConnectorDefaultPollingInterval; //this might be overridden in super.start()
     }
 
     /**
@@ -109,7 +119,7 @@ public class EmailServerConnector extends PollingServerConnector {
     public EmailServerConnector(String id, Map<String, String> properties, SearchTerm emailSearchTerm) {
         super(id, properties);
         this.emailSearchTerm = emailSearchTerm;
-        interval = emailConnectorDefaultPollingInterval;
+        interval = emailConnectorDefaultPollingInterval; //this might be overridden in super.start()
 
     }
 
@@ -126,8 +136,8 @@ public class EmailServerConnector extends PollingServerConnector {
      */
     @Override
     protected void init() throws ServerConnectorException {
-         /*
-        not needed for email, as this will be called in server start-up. We will not know about
+        /*
+        Not needed for email, as this will be called in server start-up. We will not know about
         the destination at server start-up. We will get to know about that in service deployment.
         */
     }
@@ -137,8 +147,15 @@ public class EmailServerConnector extends PollingServerConnector {
      */
     @Override
     public void start() throws ServerConnectorException {
+
+        if (stringEmailSearchTerm != null) {
+            //convert string search term to SearchTerm instance
+          this.emailSearchTerm = stringToSearchTermConverter(stringEmailSearchTerm);
+        }
         emailConsumer = new EmailConsumer(id, getProperties(), emailSearchTerm, emailMessageProcessor);
-        emailConsumer.setStartUIDNumber(this.startUIDNumber);
+
+        //This is important if email store is 'imap'. By setting the UID, it is start to process mail at the point
+        emailConsumer.setStartUIDNumber(startUIDNumber);
         emailConsumer.connectToEmailStore();
         emailConsumer.setAction();
         super.start();
@@ -147,16 +164,33 @@ public class EmailServerConnector extends PollingServerConnector {
     /**
      * {@inheritDoc}
      */
-    @Override protected void poll() {
+    @Override
+    protected void poll() {
         try {
-            emailConsumer.emailConsumer();
+            emailConsumer.emailConsume();
         } catch (EmailServerConnectorException e) {
             log.error(" Error is encountered while executing the polling cycle of email "
                     + "server connector for service: " + id, e);
         }
     }
 
-    //TODO check regex, if it is not in correct format then throw exception
+    /**
+     * {@inheritDoc}
+     */
+    @Override protected void destroy() throws ServerConnectorException {
+        stop();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override public void stop() throws ServerConnectorException {
+        super.stop();
+        if(emailConsumer != null) {
+            this.startUIDNumber = emailConsumer.getStartUIDNumber();
+        }
+    }
+
 
     /**
      * Convert string search term to SearchTerm class instance.
@@ -164,23 +198,27 @@ public class EmailServerConnector extends PollingServerConnector {
      * @param stringSearchTerm String which includes conditions as a key value pairs to search emails
      * @return SearchTerm instance of string search term.
      */
-    private static SearchTerm stringToSearchTermConverter(String stringSearchTerm) {
+    private SearchTerm stringToSearchTermConverter(String stringSearchTerm) throws EmailServerConnectorException {
 
         SearchTerm searchTerm = null;
         Map<String, String> searchConditionMap = new HashMap<>();
         List<SearchTerm> searchTermsList = new ArrayList<>();
+        String pattern = "(([a-zA-Z]*:[a-zA-Z ]*,)+[a-zA-Z]*:[a-zA-Z ]*$)|^[a-zA-Z]*:[a-zA-Z ]*[ ]*$";
 
-        stringSearchTerm = stringSearchTerm.replaceAll("\\s+", "");
+        if(!(stringSearchTerm.matches(pattern))) {
+            throw new EmailServerConnectorException("String search term '" + stringSearchTerm +
+                    "' is not in correct format.");
+        }
+
         String condition[] = stringSearchTerm.split(",");
 
         for (int i = 0; i < condition.length; i++) {
             String[] nameValuePair = condition[i].split(":");
             if (nameValuePair.length == 2) {
-                searchConditionMap.put(nameValuePair[0].toUpperCase(Locale.ENGLISH), nameValuePair[1]);
+                searchConditionMap.put(nameValuePair[0].trim().toUpperCase(Locale.ENGLISH), nameValuePair[1].trim());
             } else {
-
-                     log.warn("The given key value pair '" + nameValuePair[i]
-                         + "' in String search term is not in the correct format");
+                throw  new EmailServerConnectorException("The given key value pair '" + nameValuePair[i] +
+                        "' in string search term is not in the correct format.");
             }
         }
 
@@ -193,7 +231,8 @@ public class EmailServerConnector extends PollingServerConnector {
                         SearchTerm subjectTerm = new SubjectTerm(entry.getValue());
                         searchTermsList.add(subjectTerm);
                     } catch (Exception e) {
-                        log.error("Error is encountered while searching the message using subject", e);
+                        log.error("Error is encountered while searching the message using subject."
+                                + " in the email server connector with id:" + id , e);
                     }
 
                     break;
@@ -213,7 +252,8 @@ public class EmailServerConnector extends PollingServerConnector {
                                 }
 
                             } catch (MessagingException e) {
-                                log.error("Error is encountered while searching the message using From address", e);
+                                log.error("Error is encountered while searching the message using From address"
+                                        + " in the email server connector with id:" + id, e);
                             }
 
                             return false;
@@ -239,7 +279,8 @@ public class EmailServerConnector extends PollingServerConnector {
                                 }
 
                             } catch (MessagingException e) {
-                                log.error("Error is encountered while searching the message using To address", e);
+                                log.error("Error is encountered while searching the message using To address"
+                                        + " in the email server connector with id:" + id, e);
                             }
 
                             return false;
@@ -265,7 +306,8 @@ public class EmailServerConnector extends PollingServerConnector {
                                 }
 
                             } catch (MessagingException e) {
-                                log.error("Error is encountered while searching the message using from address", e);
+                                log.error("Error is encountered while searching the message using bcc address"
+                                        + " in the email server connector with id:" + id, e);
                             }
 
                             return false;
@@ -292,7 +334,8 @@ public class EmailServerConnector extends PollingServerConnector {
                                 }
 
                             } catch (MessagingException e) {
-                                log.error("Error is encountered while searching the message using Cc address", e);
+                                log.error("Error is encountered while searching the message using Cc address"
+                                        + " in the email server connector with id:" + id, e);
                             }
 
                             return false;
@@ -302,59 +345,20 @@ public class EmailServerConnector extends PollingServerConnector {
                     break;
 
                 default:
-                    log.error("The given key '" + entry.getKey() + "' in the String email search term "
-                            + "is not supported by the email transport ");
+                    throw new EmailServerConnectorException("The given key '" + entry.getKey() +
+                            "' in the String email search term " + "is not supported by"
+                            + " the email transport");
                 }
             }
-        } else {
-            log.error("All Key value pairs in the given String email search term are not in correct format.");
         }
 
-        if (searchTermsList.size() > 0) {
-            SearchTerm[] searchTerms = searchTermsList.toArray(new SearchTerm[searchTermsList.size()]);
-            searchTerm = new AndTerm(searchTerms);
-        } else {
-            log.error("All Key value pairs in the given string email search term are not in correct format."
-                    + " Therefore, return null email search term ");
-        }
+       //TODO put it to one line
+        SearchTerm[] searchTerms = searchTermsList.toArray(new SearchTerm[searchTermsList.size()]);
+        searchTerm = new AndTerm(searchTerms);
 
         return searchTerm;
 
     }
 
-    /**
-     * Set the start UID number
-     *
-     * @param startUIDNumber Value to set as a start UID number.
-     */
-    protected void setStartUIDNumber(Long startUIDNumber) {
-        this.startUIDNumber = startUIDNumber;
-    }
-
-    /**
-     * Get the start UID number
-     *
-     * @return start uid number
-     */
-    protected Long getStartUIDNumber() {
-        if (emailConsumer != null) {
-            this.startUIDNumber = emailConsumer.getStartUIDNumber();
-        }
-        return startUIDNumber;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override protected void destroy() throws ServerConnectorException {
-
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override public void stop() throws ServerConnectorException {
-
-    }
 }
 
