@@ -33,6 +33,7 @@ import io.netty.util.AsciiString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wso2.carbon.messaging.CarbonTransportInitializer;
+import org.wso2.carbon.transport.http.netty.common.Constants;
 import org.wso2.carbon.transport.http.netty.common.ssl.SSLHandlerFactory;
 import org.wso2.carbon.transport.http.netty.config.ListenerConfiguration;
 import org.wso2.carbon.transport.http.netty.config.RequestSizeValidationConfiguration;
@@ -43,9 +44,10 @@ import org.wso2.carbon.transport.http.netty.sender.channel.pool.ConnectionManage
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import javax.net.ssl.SSLEngine;
 
 /**
- * A class that responsible for create server side channels.
+ * A class that responsible for build server side channels.
  */
 public class HTTPServerChannelInitializer extends ChannelInitializer<SocketChannel>
         implements CarbonTransportInitializer {
@@ -111,8 +113,8 @@ public class HTTPServerChannelInitializer extends ChannelInitializer<SocketChann
         } else {
             // Configure Pipeline to handle HTTP/1 requests if HTTP/2 not enabled.
             if (listenerConfiguration.getSslConfig() != null) {
-                SslHandler sslHandler = new SSLHandlerFactory(listenerConfiguration.getSslConfig()).create();
-                ch.pipeline().addLast("ssl", sslHandler);
+                SSLEngine sslEngine = new SSLHandlerFactory(listenerConfiguration.getSslConfig()).build();
+                ch.pipeline().addLast("ssl", new SslHandler(sslEngine));
 
             }
             p.addLast("encoder", new HttpResponseEncoder());
@@ -182,8 +184,8 @@ public class HTTPServerChannelInitializer extends ChannelInitializer<SocketChann
         p.addLast("compressor", new HttpContentCompressor());
         p.addLast("chunkWriter", new ChunkedWriteHandler());
         try {
-            int socketIdleTimeout = listenerConfiguration.getSocketIdleTimeout(60000);
-            p.addLast("idleStateHandler",
+            int socketIdleTimeout = listenerConfiguration.getSocketIdleTimeout(120000);
+            p.addLast(Constants.IDLE_STATE_HANDLER,
                     new IdleStateHandler(socketIdleTimeout, socketIdleTimeout, socketIdleTimeout,
                             TimeUnit.MILLISECONDS));
             p.addLast("handler", new SourceHandler(connectionManager, listenerConfiguration));
