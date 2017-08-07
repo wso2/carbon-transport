@@ -26,7 +26,8 @@ import java.util.concurrent.CountDownLatch;
 
 /**
  * This {@link CarbonCallback} will be called by a message processor to acknowledge that
- * it has finished processing the file input stream, so it may be closed from the transport end.
+ * it has finished processing the mail, so that it can implement given action to
+ * the mail and move to next mail to process.
  */
 public class EmailServerConnectorCallback implements CarbonCallback {
     private static final Logger log = LoggerFactory.getLogger(EmailServerConnectorCallback.class);
@@ -36,14 +37,21 @@ public class EmailServerConnectorCallback implements CarbonCallback {
      */
     private CountDownLatch latch = new CountDownLatch(1);
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void done(CarbonMessage carbonMessage) {
         if (log.isDebugEnabled()) {
-            log.debug("Message processor acknowledgement received.");
+            log.debug("Message processor acknowledgement is received.");
         }
         latch.countDown();
     }
 
+    /**
+     * Waits until latch is count down by one. (It waits until 'done' is call by the message processor)
+     * @throws InterruptedException
+     */
     public void waitTillDone() throws InterruptedException {
         latch.await();
     }

@@ -26,21 +26,21 @@ public class EmailConstants {
     /**
      * Connector property
      */
-    public static final String PROTOCOL_EMAIL = "email";
+    public static final String PROTOCOL_MAIL = "email";
     public static final String POLLING_INTERVAL = "pollingInterval";
     public static final String SERVICE_NAME = "serviceName";
-    public static final String MAX_RETRY_COUNT = "maxRetryCount";
-    public static final String RETRY_INTERVAL = "reconnectInterval";
+    public static final String MAX_RETRY_COUNT = "retryCount";
+    public static final String RETRY_INTERVAL = "retryInterval";
     public static final String CONTENT_TYPE = "contentType";
 
     /**
      * Email Receiver properties
      */
-    public static final String MAIL_RECEIVER_USERNAME = "receiver.username";
-    public static final String MAIL_RECEIVER_PASSWORD = "receiver.password";
-    public static final String MAIL_RECEIVER_STORE_TYPE = "receiver.storeType";
-    public static final String MAIL_RECEIVER_HOST_NAME = "receiver.hostName";
-    public static final String MAIL_RECEIVER_FOLDER_NAME = "receiver.folderName";
+    public static final String MAIL_RECEIVER_USERNAME = "username";
+    public static final String MAIL_RECEIVER_PASSWORD = "password";
+    public static final String MAIL_RECEIVER_STORE_TYPE = "store";
+    public static final String MAIL_RECEIVER_HOST_NAME = "host";
+    public static final String MAIL_RECEIVER_FOLDER_NAME = "folder";
 
     /**
      * Action that has to carry out after processing the email.
@@ -60,7 +60,23 @@ public class EmailConstants {
     /**
      * String search term to give the conditions to filter the messages
      */
+
      public static final String SEARCH_TERM = "searchTerm";
+
+    /**
+     * Defaults value for email transport properties
+     */
+    public static final String DEFAULT_CONTENT_TYPE = "text/plain";
+    public static final Long DEFAULT_RETRY_INTERVAL = 10000L;
+    public static final int DEFAULT_RETRY_COUNT = 1;
+    public static final String DEFAULT_FOLDER_NAME = "INBOX";
+    public static final Boolean DEFAULT_AUTO_ACKNOWLEDGE_VALUE = true;
+
+    /**
+     * Email content types
+     */
+    public static final String CONTENT_TYPE_PLAIN = "text/plain";
+    public static final String CONTENT_TYPE_HTML = "text/html";
 
     /**
      * Properties which are included in carbon message other than headers
@@ -74,9 +90,9 @@ public class EmailConstants {
     /**
      * Email sender properties
      */
-    public static final String MAIL_SENDER_USERNAME = "sender.username";
-    public static final String MAIL_SENDER_PASSWORD = "sender.password";
-    public static final String MAIL_SENDER_HOST_NAME = "sender.hostName";
+    public static final String MAIL_SENDER_USERNAME = "username";
+    public static final String MAIL_SENDER_PASSWORD = "password";
+    public static final String MAIL_SENDER_HOST_NAME = "host";
 
     /**
      * Mail Headers which has to be set in the message to be send at the email

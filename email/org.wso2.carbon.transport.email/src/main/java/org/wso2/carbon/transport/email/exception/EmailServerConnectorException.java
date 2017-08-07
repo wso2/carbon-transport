@@ -20,24 +20,24 @@ package org.wso2.carbon.transport.email.exception;
 import org.wso2.carbon.messaging.exceptions.ServerConnectorException;
 
 /**
- * Exception that happens in JMS transport level.
+ * Exception that happens in Email transport level.
  */
 public class EmailServerConnectorException extends ServerConnectorException {
 
     /**
-     * Creates a JMS Connector Exception.
+     * Creates a Email Connector Exception.
      *
-     * @param message Relevant exception message
+     * @param message Corresponding exception message
      */
     public EmailServerConnectorException(String message) {
         super(message);
     }
 
     /**
-     * Creates a JMS Connector Exception.
+     * Creates a Email Connector Exception.
      *
-     * @param message Relevant exception message
-     * @param cause       Exception object, that has the details of the relevant exception
+     * @param message Corresponding exception message
+     * @param cause   Exception object, that has the details of the relevant exception
      */
     public EmailServerConnectorException(String message, Throwable cause) {
         super(message, cause);

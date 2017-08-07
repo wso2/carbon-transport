@@ -1,4 +1,4 @@
-package org.wso2.carbon.transport.email.test.Utils;
+package org.wso2.carbon.transport.email.test.utils;
 
 /**
  * Created by chathurika on 7/11/17.

@@ -28,6 +28,10 @@ import org.wso2.carbon.transport.email.exception.EmailServerConnectorException;
 import org.wso2.carbon.transport.email.utils.EmailConstants;
 import org.wso2.carbon.transport.email.utils.EmailUtils;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessageRemovedException;
@@ -38,10 +42,6 @@ import javax.mail.Store;
 import javax.mail.UIDFolder;
 import javax.mail.internet.MimeMessage;
 import javax.mail.search.SearchTerm;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
 
 /**
  * Class implemented to search and process emails.
@@ -53,7 +53,6 @@ public class EmailConsumer {
     private Map<String, String> emailProperties;
     private CarbonMessageProcessor emailMessageProcessor;
     private String serviceId;
-    private Properties serverProperties = new Properties();
     private Session session;
     private Folder folder;
     private long startUIDNumberOfNextPollCycle = 1L;
@@ -63,16 +62,15 @@ public class EmailConsumer {
     private String username;
     private String password;
     private String storeType;
-    private int maxRetryCount = 1;
-    private Long retryInterval = 10000L;
+    private int maxRetryCount;
+    private Long retryInterval;
     private String folderName;
-    //TODO put all defaults to constant class
-    private String contentType = "text/plain";
+    private String contentType;
     private EmailConstants.ActionAfterProcessed action;
     private Folder moveToFolder = null;
     private boolean isFirstTimeConnect = true;
     private boolean autoAcknowledge = true;
-    private boolean isImapFolder;
+    private boolean isImapFolder = false;
 
     /**
      * Check the given parameters in the map and initialise the parameters needed for email server connector.
@@ -81,7 +79,8 @@ public class EmailConsumer {
      * @param properties            Map which contains parameters needed to initialize the email server connector
      * @param emailSearchTerm       The search term which is going to use for fetch emails
      * @param emailMessageProcessor The message processor who is going to process messages consumed from this
-     * @throws EmailServerConnectorException
+     * @throws EmailServerConnectorException EmailServerConnectorException when action is failed
+     *                                       due to a email layer error.
      */
     protected EmailConsumer(String id, Map<String, String> properties, SearchTerm emailSearchTerm,
             CarbonMessageProcessor emailMessageProcessor) throws EmailServerConnectorException {
@@ -127,55 +126,84 @@ public class EmailConsumer {
             try {
                 this.maxRetryCount = Integer.parseInt(emailProperties.get(EmailConstants.MAX_RETRY_COUNT));
             } catch (NumberFormatException e) {
-                log.error("Could not parse parameter '" + emailProperties.get(EmailConstants.MAX_RETRY_COUNT)
-                        + "' to numeric type 'Integer'." + " Get default value '" + maxRetryCount
-                        + "' for the email server connector with service id :" + serviceId + ".");
+                throw new EmailServerConnectorException(
+                        "Could not parse parameter '" + emailProperties.get(EmailConstants.MAX_RETRY_COUNT)
+                                + "' to numeric type 'Integer'" + " in the email server connector with service id :"
+                                + serviceId + ".");
             }
+        } else {
+            if (log.isDebugEnabled()) {
+                log.debug("Max retry count is not given in the email property map." + " Get default max retry count '"
+                        + EmailConstants.DEFAULT_RETRY_COUNT + "' by " + "the email server connector with service id:"
+                        + serviceId + ".");
+            }
+            this.maxRetryCount = EmailConstants.DEFAULT_RETRY_COUNT;
         }
 
         if (emailProperties.get(EmailConstants.RETRY_INTERVAL) != null) {
             try {
                 this.retryInterval = Long.parseLong(emailProperties.get(EmailConstants.RETRY_INTERVAL));
             } catch (NumberFormatException e) {
-                log.error("Could not parse parameter '" + emailProperties.get(EmailConstants.RETRY_INTERVAL)
-                        + " to numeric type 'Long'." + " Get default '" + retryInterval
-                        + "' for the email server connector with service id: " + serviceId + ".");
-            }
-        }
-        //TODO if it give wrong, throw exception. Not given don't give warn and ignore. but debug log.
-        if (emailProperties.get(EmailConstants.CONTENT_TYPE) != null) {
-            if (emailProperties.get(EmailConstants.CONTENT_TYPE).equalsIgnoreCase("text/html")) {
-                this.contentType = "text/html";
-            } else if (emailProperties.get(EmailConstants.CONTENT_TYPE).equalsIgnoreCase("text/plain")) {
-                contentType = "text/plain";
+                throw new EmailServerConnectorException(
+                        "Could not parse parameter '" + emailProperties.get(EmailConstants.RETRY_INTERVAL)
+                                + " to numeric type 'Long'" + " in the email server connector with service id: "
+                                + serviceId + ".");
             }
         } else {
-            log.warn("Email content type is not given in the email property map."
-                    + " Get default content type 'text/plain'" + " for the email server connector with service id: "
-                    + serviceId + ".");
+            if (log.isDebugEnabled()) {
+                log.debug("Retry interval is not given in the email property map." + " Get default retry interval '"
+                        + EmailConstants.DEFAULT_RETRY_INTERVAL + "' by "
+                        + "the email server connector with service id:" + serviceId + ".");
+            }
+            retryInterval = EmailConstants.DEFAULT_RETRY_INTERVAL;
         }
 
-        //TODO above
+        if (emailProperties.get(EmailConstants.CONTENT_TYPE) != null) {
+            if (emailProperties.get(EmailConstants.CONTENT_TYPE).equalsIgnoreCase(EmailConstants.CONTENT_TYPE_HTML)) {
+                this.contentType = EmailConstants.CONTENT_TYPE_HTML;
+            } else if (emailProperties.get(EmailConstants.CONTENT_TYPE)
+                    .equalsIgnoreCase(EmailConstants.CONTENT_TYPE_PLAIN)) {
+                contentType = EmailConstants.CONTENT_TYPE_PLAIN;
+            } else {
+                throw new EmailServerConnectorException(
+                        "Content type '" + emailProperties.get(EmailConstants.CONTENT_TYPE) + "' is not supported by"
+                                + " the email server connector with service id: " + serviceId + ".");
+            }
+        } else {
+            if (log.isDebugEnabled()) {
+                log.debug("Retry interval is not given in the email property map. " + "Get default content type '"
+                        + EmailConstants.DEFAULT_CONTENT_TYPE + "' by " + "the email server connector with service id:"
+                        + serviceId + ".");
+            }
+            contentType = EmailConstants.DEFAULT_CONTENT_TYPE;
+        }
+
         if (emailProperties.get(EmailConstants.MAIL_RECEIVER_FOLDER_NAME) != null) {
             this.folderName = emailProperties.get(EmailConstants.MAIL_RECEIVER_FOLDER_NAME);
-
         } else {
-            this.folderName = "INBOX";
-            log.warn("Folder to fetch mails is not given in the email property map." + " Get default folder '"
-                    + folderName + "' for the email server connector with service id: " + serviceId + ".");
+            if (log.isDebugEnabled()) {
+                log.debug("Folder to fetch mails is not given in the email property map." + " Get default folder '"
+                        + EmailConstants.DEFAULT_FOLDER_NAME + "' by the email server connector with service id: "
+                        + serviceId + ".");
+            }
+            this.folderName = EmailConstants.DEFAULT_FOLDER_NAME;
+
         }
 
-        //TODO check default one
         if (emailProperties.get(EmailConstants.AUTO_ACKNOWLEDGE) != null) {
             this.autoAcknowledge = Boolean.parseBoolean(emailProperties.get(EmailConstants.AUTO_ACKNOWLEDGE));
         } else {
-            log.warn("Auto Acknowledgement property is not given in the email property map."
-                    + " Get default value 'true' " + "for the email server connector with service id: " + serviceId
-                    + ".");
+            if (log.isDebugEnabled()) {
+                log.debug("Auto Acknowledgement property is not given in the email property map."
+                        + " Get default value 'true' " + "by the email server connector with service id: " + serviceId
+                        + ".");
+            }
+            this.autoAcknowledge = EmailConstants.DEFAULT_AUTO_ACKNOWLEDGE_VALUE;
         }
 
         // other parameters relate to the email server start with 'mail.'. Check property map contain such parameters
         // and insert them to the serverProperty map.
+        Properties serverProperties = new Properties();
         for (Map.Entry<String, String> entry : emailProperties.entrySet()) {
             if (entry.getKey().startsWith("mail.")) {
                 serverProperties.put(entry.getKey(), entry.getValue());
@@ -197,23 +225,24 @@ public class EmailConsumer {
     /**
      * Method implemented to consume the email
      *
-     * @throws EmailServerConnectorException
+     * @throws EmailServerConnectorException EmailServerConnectorException when action is failed
+     *                                       due to a email layer error.
      */
-    //TODO change name to consume
-    protected void emailConsume() throws EmailServerConnectorException {
+
+    protected void consume() throws EmailServerConnectorException {
 
         openFolder(folder);
         List<Message> messageList = fetchEmails();
 
         if (messageList != null) {
 
-            for (int i = 0; i < messageList.size(); i++) {
+            for (Message message : messageList) {
                 try {
-                    String content = getEmailContent(messageList.get(i));
+                    String content = getEmailContent(message);
 
                     //create carbon message
                     CarbonMessage emailCarbonMessage = EmailUtils
-                            .createEmailCarbonMessage(messageList.get(i), folder, content, serviceId);
+                            .createEmailCarbonMessage(message, folder, content, serviceId);
 
                     if (autoAcknowledge) {
                         emailMessageProcessor.receive(emailCarbonMessage, null);
@@ -221,30 +250,30 @@ public class EmailConsumer {
                         EmailServerConnectorCallback callback = new EmailServerConnectorCallback();
                         emailMessageProcessor.receive(emailCarbonMessage, callback);
                         callback.waitTillDone();
-
-                        //have to update uid after callback is arrived.
-                        if (isImapFolder) {
-                            startUIDNumberOfNextPollCycle = Long.parseLong(
-                                    emailCarbonMessage.getProperty(EmailConstants.MAIL_PROPERTY_UID).toString()) + 1;
-                        }
                     }
 
-                    ActionForProcessedMail.carryOutAction(messageList.get(i), folder, action, moveToFolder);
+                    //have to update uid after callback is arrived.
+                    if (isImapFolder) {
+                        startUIDNumberOfNextPollCycle = Long.parseLong(
+                                emailCarbonMessage.getProperty(EmailConstants.MAIL_PROPERTY_UID).toString()) + 1;
+                    }
 
-                } catch (MessageRemovedException e) {
-                    log.warn("Skip the message #: " + messageList.get(i).getMessageNumber() + " by further processing.",
-                            e);
+                    ActionForProcessedMail.carryOutAction(message, folder, action, moveToFolder);
+
+                } catch (RuntimeException e) {
+                    log.error("hhhhhhhh");
                 } catch (Exception e) {
-                    log.warn("Couldn't process the Message due to: ", e);
+                    log.warn("Skip the message #: " + message.getMessageNumber() + " by further processing.", e);
                 }
             }
 
-            if(isImapFolder && !(autoAcknowledge)) {
-                //since all messages are processed update start UID of the
-                startUIDNumberOfNextPollCycle = uidOfLastMailFetched + 1;
+            if (isImapFolder) {
+                if (!(autoAcknowledge)) {
+                    //since all messages are processed update start UID of the
+                    startUIDNumberOfNextPollCycle = uidOfLastMailFetched + 1;
+                }
             }
         }
-
         closeFolder(folder);
         if (moveToFolder != null) {
             closeFolder(moveToFolder);
@@ -252,10 +281,11 @@ public class EmailConsumer {
     }
 
     /**
-     * Connect to the email server(store). If couldn't connect to the store retry maxRetry counts. If not, throw email
-     * server connector exception.
+     * Connect to the email server(store). If couldn't connect to the store retry number of 'maxRetry counts'.
+     * If not, throw email server connector exception.
      *
-     * @throws EmailServerConnectorException
+     * @throws EmailServerConnectorException EmailServerConnectorException when action is failed
+     *                                       due to a email layer error.
      */
 
     protected void connectToEmailStore() throws EmailServerConnectorException {
@@ -273,11 +303,11 @@ public class EmailConsumer {
 
             } catch (Exception e) {
                 log.error("Error connecting to mail server for address '" + username
-                        + "' in the email server connector with id :" + serviceId + ".", e);
+                        + "' in the email server connector with id : " + serviceId + ".", e);
                 if (maxRetryCount <= retryCount) {
                     throw new EmailServerConnectorException(
                             "Error connecting to mail server for the address '" + username
-                                    + "' in the email server connector with id" + serviceId + "'", e);
+                                    + "' in the email server connector with id: " + serviceId + ".", e);
                 }
             }
 
@@ -285,31 +315,21 @@ public class EmailConsumer {
                 if (log.isDebugEnabled()) {
                     log.debug("Connected to the server: " + store);
                 }
-                //TODO remove this
-                if (emailProperties.get(EmailConstants.MAIL_RECEIVER_FOLDER_NAME) != null) {
-                    folderName = emailProperties.get(EmailConstants.MAIL_RECEIVER_FOLDER_NAME);
 
-                } else {
-                    folderName = "INBOX";
-                    log.warn("Folder to fetch mails is not specified." + "Get default folder '" + folderName
-                            + "' for the email server connector with id '" + serviceId);
-                }
-
-                // To keep the signal instance of the folder
+                // To keep the single instance of the folder
                 if (isFirstTimeConnect) {
+
                     try {
                         folder = store.getFolder(folderName);
                         isFirstTimeConnect = false;
-                        //TODO remove else
                         if (folder instanceof IMAPFolder) {
                             isImapFolder = true;
-                        } else {
-                            isImapFolder = false;
                         }
-                        //TODO Throw exception, not log warn
+
                     } catch (MessagingException e) {
-                        log.warn("Error is encountered, while getting the folder '" + folderName
-                                + "' in email server connector with service id: " + serviceId + ".");
+                        throw new EmailServerConnectorException(
+                                "Error is encountered, while getting the folder '" + folderName
+                                        + "' in email server connector with service id: " + serviceId + ".");
                     }
                 }
             }
@@ -319,8 +339,10 @@ public class EmailConsumer {
                     log.warn("Connection to mail server for account : " + username + " using service '" + serviceId
                             + "' is failed. Retrying in '" + retryInterval / 1000 + "' seconds");
                     Thread.sleep(retryInterval);
-                } catch (InterruptedException ignore) {
-                           //TODO put debug log
+                } catch (InterruptedException e) {
+                    if (log.isDebugEnabled()) {
+                        log.debug("Thread is interrupted. It is ignored by the email server connector.", e);
+                    }
                 }
             }
         }
@@ -335,7 +357,7 @@ public class EmailConsumer {
         action = EmailUtils
                 .getActionAfterProcessed(emailProperties.get(EmailConstants.ACTION_AFTER_PROCESSED), isImapFolder);
 
-        //If action is 'move' then, have to check the folder to move the processed mail is given.
+        //If action is 'move' then, have to check name of the folder to move the processed mail is given.
         // If not exception is thrown
         if (action.equals(EmailConstants.ActionAfterProcessed.MOVE)) {
             if (emailProperties.get(EmailConstants.MOVE_TO_FOLDER) != null) {
@@ -347,12 +369,13 @@ public class EmailConsumer {
                     openFolder(moveToFolder);
                 } catch (MessagingException e) {
                     throw new EmailServerConnectorException(
-                            "Couldn't process the folder '" + moveToFolder + "'which used to move the processed mail",
-                            e);
+                            "Couldn't process the folder '" + moveToFolder + "'which used to move the processed mail"
+                                    + " in the email server connector with id: " + serviceId + ".", e);
                 }
             } else {
                 throw new EmailServerConnectorException(EmailConstants.MOVE_TO_FOLDER + "is a mandatory parameter, "
-                        + "if the action for the processed mail is 'MOVE'.");
+                        + "since the action for the processed mail is 'MOVE' "
+                        + " in the email server connector with id: " + serviceId + ".");
             }
         }
     }
@@ -375,7 +398,7 @@ public class EmailConsumer {
             } catch (MessagingException e) {
                 throw new EmailServerConnectorException(
                         "Couldn't open the folder '" + folderName + " ' in READ_WRITE mode"
-                                + "in the email server connector with id: " + serviceId + ".", e);
+                                + " in the email server connector with id: " + serviceId + ".", e);
             }
         } else {
             try {
@@ -384,7 +407,7 @@ public class EmailConsumer {
             } catch (MessagingException e) {
                 throw new EmailServerConnectorException(
                         "Couldn't open the folder '" + folderName + " ' in READ_WRITE mode"
-                                + "in the email server connector with id: " + serviceId + ".", e);
+                                + " in the email server connector with id: " + serviceId + ".", e);
             }
         }
 
@@ -401,8 +424,8 @@ public class EmailConsumer {
             try {
                 folder.close(true);
             } catch (MessagingException e) {
-                log.warn("Couldn't close the folder '" + folderName + "by the email server connector with service id '"
-                        + serviceId + "'", e);
+                log.warn("Couldn't close the folder '" + folderName + "by the email server connector"
+                        + " with service id: " + serviceId + ".", e);
             }
         }
     }
@@ -424,114 +447,76 @@ public class EmailConsumer {
             log.debug("Start to fetch the emails by email server connector with id: " + serviceId + ".");
         }
 
-        if (isImapFolder) {
-            if (emailSearchTerm != null) {
-                try {
+        try {
+            if (isImapFolder) {
 
-                    Message[] messages = ((UIDFolder) folder).getMessagesByUID(startUIDNumberOfNextPollCycle, UIDFolder.LASTUID);
+                Message[] messages = ((UIDFolder) folder)
+                        .getMessagesByUID(startUIDNumberOfNextPollCycle, UIDFolder.LASTUID);
 
-                    //Even new messages are not in the folder, It gets always last message. Therefore,
-                    // when message length is equal to one, then have to check whether message uid is greater than
-                    //start uid. If not, have to return null.
-                    if (messages.length > 0) {
-                        if (messages.length == 1) {
-                            uid = ((UIDFolder) folder).getUID(messages[messages.length - 1]);
-                            if (startUIDNumberOfNextPollCycle > uid) {
-                                return messageList;
-                            }
+                //Even new messages are not in the folder, It gets always last message. Therefore,
+                // when message length is equal to one, then have to check whether message uid is greater than
+                //start uid. If not, have to return null.
+                if (messages.length > 0) {
+                    if (messages.length == 1) {
+                        uid = ((UIDFolder) folder).getUID(messages[messages.length - 1]);
+                        if (startUIDNumberOfNextPollCycle > uid) {
+                            return messageList;
                         }
-
-                        //TODO put if condition for serchTerm here and do the fetching
+                    }
+                    if (emailSearchTerm != null) {
                         Message[] filterMessages = folder.search(emailSearchTerm, messages);
                         if (filterMessages.length > 0) {
                             messageList = Arrays.asList(filterMessages);
                         }
-
-                        uidOfLastMailFetched = ((UIDFolder) folder).getUID(messages[messages.length - 1]);
-
-                        if (autoAcknowledge) {
-                            //update the startUID number
-                            startUIDNumberOfNextPollCycle = uidOfLastMailFetched+1;
+                    } else {
+                        if (log.isDebugEnabled()) {
+                            log.debug("Conditions(Search Term) is not specified. All the mails in the folder '"
+                                    + folderName + "' will be fetched " + "by the email server connector " + "with id: "
+                                    + serviceId + ".");
                         }
-                    }
-
-                } catch (MessagingException e) {
-                    throw new EmailServerConnectorException(
-                            "Error is encountered while fetching emails using " + "search term from the folder '"
-                                    + folderName + "'" + "by the email server connector with id: " + serviceId + ".",
-                            e);
-                }
-
-            } else {
-
-                //TODO remove
-                log.warn("Conditions(Search Term) is not specified. All the mails in the folder '" + folderName
-                        + "' will be fetched " + "by the email server connector " + "with id: " + serviceId + ".");
-                try {
-                    Message[] messages = ((UIDFolder) folder).getMessagesByUID
-                            (startUIDNumberOfNextPollCycle, UIDFolder.LASTUID);
-
-                    if (messages.length > 0) {
-
-                        if (messages.length == 1) {
-                            uid = ((UIDFolder) folder).getUID(messages[messages.length - 1]);
-                            if (startUIDNumberOfNextPollCycle > uid) {
-                                return messageList;
-                            }
-                        }
-
-                        uidOfLastMailFetched = ((UIDFolder) folder).getUID(messages[messages.length - 1]);
-
-                        if (autoAcknowledge) {
-                            startUIDNumberOfNextPollCycle = uidOfLastMailFetched +1;
-                        }
-
                         messageList = Arrays.asList(messages);
                     }
 
-                } catch (MessagingException e) {
-                    throw new EmailServerConnectorException(
-                            "Error is encountered while fetching emails using " + "search term from the folder '"
-                                    + folderName + "'" + " by the email server connector with id: " + serviceId + ".",
-                            e);
+                    uidOfLastMailFetched = ((UIDFolder) folder).getUID(messages[messages.length - 1]);
+
+                    if (autoAcknowledge) {
+                        //update the startUID number
+                        startUIDNumberOfNextPollCycle = uidOfLastMailFetched + 1;
+                    }
                 }
-            }
-            // when folder is pop3Folder
-        } else {
-            if (emailSearchTerm != null) {
-                try {
+
+                // when folder is pop3Folder
+            } else {
+                if (emailSearchTerm != null) {
+
                     Message[] messages = folder.search(emailSearchTerm);
                     messageList = Arrays.asList(messages);
-                } catch (MessagingException e) {
-                    throw new EmailServerConnectorException(
-                            "Error is encountered while fetching emails using " + "search term from the folder '"
-                                    + folderName + "'" + "by the email server connector with id: " + serviceId + ".",
-                            e);
-                }
-            } else {
-                //TODO remove warn
-                log.warn("Conditions(Search Term) is not specified. All the mails in the folder '" + folderName
-                        + "' will be fetched" + "by the email server connector " + "with id: " + serviceId + ".");
-                try {
+
+                } else {
+                    if (log.isDebugEnabled()) {
+                        log.warn("Conditions(Search Term) is not specified. All the mails in the folder '" + folderName
+                                + "' will be fetched" + "by the email server connector " + "with id: " + serviceId
+                                + ".");
+                    }
+
                     Message[] messages = folder.getMessages();
                     messageList = Arrays.asList(messages);
-                    //TODO combine all error messages
-                } catch (MessagingException e) {
-                    throw new EmailServerConnectorException(
-                            "Error is encountered while fetching emails using " + "search term from the folder '"
-                                    + folderName + "'" + "by the email server connector with id: " + serviceId + ".",
-                            e);
+
                 }
             }
+        } catch (Exception e) {
+            throw new EmailServerConnectorException(
+                    "Error is encountered while fetching emails using " + "search term from the folder '" + folderName
+                            + "'" + "by the email server connector with id: " + serviceId + ".", e);
         }
 
         if (log.isDebugEnabled()) {
             if (messageList != null) {
-                if (isImapFolder) {
-                    log.debug("Number of email '" + messageList.size() + "' are fetched."
-                            + " Last UID of the mail is '" + (uidOfLastMailFetched) + "'");
-                } else {
+                if (!isImapFolder) {
                     log.debug("Number of email '" + messageList.size() + "' are fetched.");
+                } else {
+                    log.debug("Number of email '" + messageList.size() + "' are fetched." + " Last UID of the mail is '"
+                            + (uidOfLastMailFetched) + "'");
                 }
             }
         }
@@ -563,33 +548,31 @@ public class EmailConsumer {
      *
      * @param message Message to read the content
      * @return Message content
-     * @throws EmailServerConnectorException
-     * @throws MessageRemovedException       When message is deleted by another thread.
+     * @throws EmailServerConnectorException EmailServerConnectorException when action is failed
+     *                                       due to a email layer error.
      */
-    private String getEmailContent(Message message) throws EmailServerConnectorException, MessageRemovedException {
+    private String getEmailContent(Message message) throws EmailServerConnectorException {
         String content = "";
-        //TODO replace all content type with constant
+
         try {
             if (message instanceof MimeMessage) {
-                if (message.isMimeType("text/plain")) {
-                    if (contentType.equals("text/plain")) {
+                if (message.isMimeType(EmailConstants.CONTENT_TYPE_PLAIN)) {
+                    if (contentType.equals(EmailConstants.CONTENT_TYPE_PLAIN)) {
                         content = message.getContent().toString();
                     }
-                } else if (message.isMimeType("text/html")) {
-                    if (contentType.equals("text/html")) {
+                } else if (message.isMimeType(EmailConstants.CONTENT_TYPE_HTML)) {
+                    if (contentType.equals(EmailConstants.CONTENT_TYPE_HTML)) {
                         content = message.getContent().toString();
                     }
                 } else {
-                    //TODO put exception, remove skipping message
-                    throw new EmailServerConnectorException(
-                            " Skipping message # :" + message.getMessageNumber() + "since message content type '"
-                                    + contentType + "' is not supported by email server connector with id "
-                                    + serviceId);
+                    throw new EmailServerConnectorException("Content type '" + contentType
+                            + "' of the email is not supported by the email server connector" + " with id: " + serviceId
+                            + ".");
                 }
                 return content;
             } else {
-                throw new EmailServerConnectorException(
-                        "Couldn't read the content of the email" + " since message is not a instance of MimeMessage");
+                throw new EmailServerConnectorException("Couldn't read the content of the email by the "
+                        + " since message is not a instance of MimeMessage");
             }
         } catch (MessageRemovedException e) {
 
@@ -598,9 +581,10 @@ public class EmailConsumer {
                         + " as it has been DELETED by another thread after processing");
             }
 
-            throw new MessageRemovedException("Couldn't read the content of the message #" + message.getMessageNumber()
-                    + "by the email server connector with service id '" + serviceId
-                    + "' since it has been DELETED by another thread.", e);
+            throw new EmailServerConnectorException(
+                    "Couldn't read the content of the message #" + message.getMessageNumber()
+                            + "by the email server connector with service id '" + serviceId
+                            + "' since it has been DELETED by another thread.", e);
 
         } catch (Exception e) {
             throw new EmailServerConnectorException("Error is encountered while reading the content of a message"

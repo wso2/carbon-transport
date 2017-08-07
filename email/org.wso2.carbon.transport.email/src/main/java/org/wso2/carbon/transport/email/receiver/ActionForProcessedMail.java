@@ -40,13 +40,12 @@ public class ActionForProcessedMail {
      * @param folder Folder name which message is contained.
      * @param action Instance which contain the relevant action to carryout
      * @param folderToMove Folder to move the processed mail if action is move.
-     * @throws MessageRemovedException  Exception throw if message is removed by another thread.
      * @throws EmailServerConnectorException EmailServerConnectorException when action is failed
      *                                       due to a email layer error.
      */
     static void carryOutAction(Message message, Folder folder,
             EmailConstants.ActionAfterProcessed action, Folder folderToMove)
-            throws MessageRemovedException, EmailServerConnectorException {
+            throws EmailServerConnectorException {
         // folder create at the constructor of the consume
         Message[] messages = { message };
         try {
@@ -78,11 +77,11 @@ public class ActionForProcessedMail {
                 break;
             }
         } catch (MessageRemovedException e) {
-            throw new MessageRemovedException("Error is encountered while carrying out the action '"
-                    + action + "'for processed mail" , e);
+            throw new EmailServerConnectorException("Error is encountered while carrying out the action '"
+                    + action + "'for processed mail since it has been deleted by another thread." , e);
         } catch (Exception e) {
             throw new EmailServerConnectorException("Error is encountered while carrying out the action '"
-                    + action + "'for processed mail", e);
+                    + action + "'for processed mail.", e);
         }
     }
 }

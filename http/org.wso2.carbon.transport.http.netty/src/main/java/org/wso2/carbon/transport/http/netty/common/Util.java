@@ -429,7 +429,7 @@ public class Util {
         return (Long) propertyVal;
     }
 
-    //TODO Below code segment is directly copied from kernel. Once kernel Utils been moved as a separate dependency
+    //TODO Below code segment is directly copied from kernel. Once kernel utils been moved as a separate dependency
     //Need to remove below part and use that.
     private static final Pattern varPattern = Pattern.compile("\\$\\{([^}]*)}");
 

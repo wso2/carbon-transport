@@ -1,6 +1,5 @@
 package org.wso2.carbon.transport.email.test;
 
-
 import com.icegreen.greenmail.user.GreenMailUser;
 import com.icegreen.greenmail.user.UserException;
 import com.icegreen.greenmail.util.GreenMail;
@@ -14,8 +13,11 @@ import org.testng.annotations.Test;
 import org.wso2.carbon.messaging.ServerConnector;
 import org.wso2.carbon.messaging.exceptions.ServerConnectorException;
 import org.wso2.carbon.transport.email.provider.EmailServerConnectorProvider;
-import org.wso2.carbon.transport.email.test.Utils.EmailTestConstant;
-import org.wso2.carbon.transport.email.test.Utils.TestMessageProcessor;
+import org.wso2.carbon.transport.email.test.utils.EmailTestConstant;
+import org.wso2.carbon.transport.email.test.utils.TestMessageProcessor;
+
+import java.util.HashMap;
+import java.util.Map;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Session;
@@ -23,8 +25,6 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import javax.mail.search.SearchTerm;
 import javax.mail.search.SubjectTerm;
-import java.util.HashMap;
-import java.util.Map;
 
 
 public class IMAPServerTestCase {
@@ -40,17 +40,15 @@ public class IMAPServerTestCase {
     private static final String LOCALHOST = "127.0.0.1";
     private GreenMail mailServer;
     private GreenMailUser user;
-    private Map<String,String> emailProperties = new HashMap<>();
+    private Map<String, String> emailProperties = new HashMap<>();
 
-    @BeforeClass
-    public void setUp() throws MessagingException, UserException {
+    @BeforeClass public void setUp() throws MessagingException, UserException {
 
         mailServer = new GreenMail(ServerSetupTest.IMAP);
         mailServer.start();
-        user = mailServer.setUser(EMAIL_USER_ADDRESS, USER_NAME,
-                USER_PASSWORD);
+        user = mailServer.setUser(EMAIL_USER_ADDRESS, USER_NAME, USER_PASSWORD);
 
-       MimeMessage message = new MimeMessage((Session) null);
+        MimeMessage message = new MimeMessage((Session) null);
         message.setFrom(new InternetAddress(EMAIL_FROM));
         message.addRecipient(Message.RecipientType.TO, new InternetAddress(EMAIL_USER_ADDRESS));
         message.addRecipient(Message.RecipientType.CC, new InternetAddress(EMAIL_CC));
@@ -66,7 +64,6 @@ public class IMAPServerTestCase {
         message.setText(EMAIL_TEXT);
         user.deliver(message);
 
-
         MimeMessage message3 = new MimeMessage((Session) null);
         message.setFrom(new InternetAddress(EMAIL_FROM));
         message.addRecipient(Message.RecipientType.TO, new InternetAddress(EMAIL_USER_ADDRESS));
@@ -75,41 +72,35 @@ public class IMAPServerTestCase {
         message.setText(EMAIL_TEXT);
         user.deliver(message);
 
-
         emailProperties.put(EmailTestConstant.MAIL_RECEIVER_USERNAME, user.getLogin());
         emailProperties.put(EmailTestConstant.MAIL_RECEIVER_PASSWORD, user.getPassword());
         emailProperties.put(EmailTestConstant.MAIL_RECEIVER_HOST_NAME, LOCALHOST);
         emailProperties.put(EmailTestConstant.MAIL_RECEIVER_STORE_TYPE, "imap");
         emailProperties.put(EmailTestConstant.MAIL_RECEIVER_FOLDER_NAME, "INBOX");
-        emailProperties.put("mail.imap.port" , Integer.toString(ServerSetupTest.IMAP.getPort()));
+        emailProperties.put("mail.imap.port", Integer.toString(ServerSetupTest.IMAP.getPort()));
         emailProperties.put(EmailTestConstant.POLLING_INTERVAL, "10000");
         emailProperties.put(EmailTestConstant.AUTO_ACKNOWLEDGE, "true");
 
-
     }
 
-   @AfterClass
-    public void tearDown() {
+    @AfterClass public void tearDown() {
         mailServer.stop();
     }
 
-    @BeforeMethod
-    public void sendTestMail() throws MessagingException, UserException { }
+    @BeforeMethod public void sendTestMail() throws MessagingException, UserException {
+    }
 
-
-    @AfterMethod
-    public void deleteAllMails() {
+    @AfterMethod public void deleteAllMails() {
 
     }
 
-    @Test
-    public void getMails() throws ServerConnectorException, InterruptedException {
+    @Test public void getMails() throws ServerConnectorException, InterruptedException {
 
         SearchTerm subjectTerm = new SubjectTerm("with ToCcBcc recipients");
         String subjectTermS = "subject: with ToCcBcc recipients ";
 
         EmailServerConnectorProvider emailServerConnectorProvider = new EmailServerConnectorProvider();
-        ServerConnector connector = emailServerConnectorProvider.createConnector("testEmail" , emailProperties);
+        ServerConnector connector = emailServerConnectorProvider.createConnector("testEmail", emailProperties);
         TestMessageProcessor testMessageProcessor = new TestMessageProcessor();
         connector.setMessageProcessor(testMessageProcessor);
         connector.start();
@@ -120,11 +111,7 @@ public class IMAPServerTestCase {
         connector.start();
         testMessageProcessor.waitTillDone();
         Thread.sleep(2000);
-        System.out.println("At the end of the class................");
-
 
     }
-
-
 
 }

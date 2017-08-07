@@ -63,7 +63,7 @@ public class EmailClientConnector implements ClientConnector {
 
 
     @Override
-    public boolean send(CarbonMessage carbonMessage, CarbonCallback carbonCallback,
+    public synchronized boolean  send(CarbonMessage carbonMessage, CarbonCallback carbonCallback,
             Map<String, String> emailProperties) throws ClientConnectorException {
         String username;
         String password;
@@ -76,21 +76,21 @@ public class EmailClientConnector implements ClientConnector {
         } else {
             throw new ClientConnectorException(
                     "Username (email address) of the email account is" + " a mandatory parameter."
-                            + "It is not given in the email property map");
+                            + "It is not given in the email property map.");
         }
 
         if (emailProperties.get(EmailConstants.MAIL_SENDER_PASSWORD) != null) {
             password = emailProperties.get(EmailConstants.MAIL_SENDER_PASSWORD);
         } else {
             throw new ClientConnectorException("Password of the email account is" + " a mandatory parameter."
-                    + "It is not given in the email property map");
+                    + "It is not given in the email property map.");
         }
 
         if (emailProperties.get(EmailConstants.MAIL_SENDER_HOST_NAME) != null) {
             hostName = emailProperties.get(EmailConstants.MAIL_SENDER_HOST_NAME);
         } else {
             throw new ClientConnectorException("HostName of the email account is" + " a mandatory parameter."
-                    + "It is not given in the email property map");
+                    + "It is not given in the email property map.");
         }
 
         if (!(carbonMessage instanceof TextCarbonMessage)) {
@@ -139,18 +139,21 @@ public class EmailClientConnector implements ClientConnector {
         String contentType;
 
         if (emailProperties.get(EmailConstants.MAIL_HEADER_CONTENT_TYPE) != null) {
-            if (emailProperties.get(EmailConstants.MAIL_HEADER_CONTENT_TYPE).equalsIgnoreCase("text/plain")) {
-                contentType = "text/plain";
-            } else if (emailProperties.get(EmailConstants.MAIL_HEADER_CONTENT_TYPE).equalsIgnoreCase("text/html")) {
-                contentType = "text/html";
+            if (emailProperties.get(EmailConstants.MAIL_HEADER_CONTENT_TYPE).
+                    equalsIgnoreCase(EmailConstants.CONTENT_TYPE_PLAIN)) {
+                contentType = EmailConstants.CONTENT_TYPE_PLAIN;
+            } else if (emailProperties.get(EmailConstants.MAIL_HEADER_CONTENT_TYPE)
+                    .equalsIgnoreCase(EmailConstants.CONTENT_TYPE_HTML)) {
+                contentType = EmailConstants.CONTENT_TYPE_HTML;
             } else {
                 throw new ClientConnectorException(
-                        "Email content type should be either 'text/plain' or 'text/html'. But found '" + emailProperties
-                                .get(EmailConstants.CONTENT_TYPE) + "'");
+                        "Email content type should be either '" + EmailConstants.CONTENT_TYPE_PLAIN +
+                                "' or '" + EmailConstants.CONTENT_TYPE_HTML + "'. But found '"
+                                + emailProperties.get(EmailConstants.CONTENT_TYPE) + "'");
             }
         } else {
-            logger.warn("Email content type is not given. Default value:'text/plain' is taken as a content type");
-            contentType = "text/plain";
+            logger.warn("Email content type is not given. Default value: is taken as a content type");
+            contentType = EmailConstants.DEFAULT_CONTENT_TYPE;
         }
 
         String textData = ((TextCarbonMessage) carbonMessage).getText();
@@ -167,7 +170,8 @@ public class EmailClientConnector implements ClientConnector {
                 message.setRecipients(Message.RecipientType.TO,
                         InternetAddress.parse(emailProperties.get(EmailConstants.MAIL_HEADER_TO)));
             } else {
-                throw new ClientConnectorException("RecipientType 'to' of the email is not given. It is a mandotory ");
+                throw new ClientConnectorException("RecipientType 'to' of the email is not given."
+                        + " It is a mandotory parameter in email client connector.");
             }
 
             if (emailProperties.get(EmailConstants.MAIL_HEADER_BCC) != null) {
@@ -206,7 +210,8 @@ public class EmailClientConnector implements ClientConnector {
             }
 
         } catch (MessagingException e) {
-            throw new ClientConnectorException("Error occurred while setting the message content." , e);
+            throw new ClientConnectorException("Error occurred while creating the email "
+                    + "using given carbon message." , e);
         }
 
         return message;
@@ -216,7 +221,7 @@ public class EmailClientConnector implements ClientConnector {
 
     @Override
     public String getProtocol() {
-        return null;
+        return EmailConstants.PROTOCOL_MAIL;
     }
 
     @Override

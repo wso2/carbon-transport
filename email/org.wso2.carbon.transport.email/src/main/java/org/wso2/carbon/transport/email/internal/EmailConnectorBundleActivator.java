@@ -24,11 +24,17 @@ import org.wso2.carbon.transport.email.provider.EmailServerConnectorProvider;
  * OSGi BundleActivator of the Email Server Connector Bundle.
  */
 public class EmailConnectorBundleActivator implements BundleActivator {
+    /**
+     * {@inheritDoc}
+     */
     @Override public void start(BundleContext bundleContext) throws Exception {
-        bundleContext
-                .registerService(ServerConnectorProvider.class.toString(), new EmailServerConnectorProvider(), null);
+        bundleContext.registerService(ServerConnectorProvider.class.toString(),
+                new EmailServerConnectorProvider(), null);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override public void stop(BundleContext bundleContext) throws Exception {
 
     }

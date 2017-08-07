@@ -39,8 +39,14 @@ import javax.mail.search.AndTerm;
 import javax.mail.search.SearchTerm;
 import javax.mail.search.SubjectTerm;
 
+
 /**
- * Class implementing email server connector.
+ * This is the class implementing email server connector. The email server connector has ability
+ * to poll the email account and search for the new mails which satisfy the conditions given
+ * in the email searchTerm. Email server connector supports receiving email through 'imap' or 'pop3' server.
+ * If mail receiving server is pop3, then it supports only 'delete' for the processed mails.
+ * For the imap server, it supports different actions for processed mails like setting flags,
+ * deleting or moving to another folder.
  */
 
 public class EmailServerConnector extends PollingServerConnector {
@@ -58,14 +64,14 @@ public class EmailServerConnector extends PollingServerConnector {
     private SearchTerm emailSearchTerm;
 
     /**
-     * The String in a formatted way which have to convert to the Search Term object.
+     * The String in a formatted way which is going to convert to the Search Term object.
      */
     private String stringEmailSearchTerm = null;
 
     /**
      * UID number to start searching emails.
      */
-     private Long startUIDNumber = 1L;
+    private Long startUIDNumber = 1L;
 
     /**
      * Default value that used for polling interval. The value is override if it is provided in email property map.
@@ -80,7 +86,7 @@ public class EmailServerConnector extends PollingServerConnector {
     /**
      * Creates a email server connector with the id.
      *
-     * @param id Unique identifier for the server connector.
+     * @param id         Unique identifier for the server connector.
      * @param properties Map which contains data needed to initialize the email server connector
      */
     public EmailServerConnector(String id, Map<String, String> properties) {
@@ -90,52 +96,16 @@ public class EmailServerConnector extends PollingServerConnector {
     }
 
     /**
-     * Creates a email server connector with the id.
-     *
-     * @param id Unique identifier for the server connector.
-     * @param properties Map which contain data needed to initialize the email server connector
-     * @param stringEmailSearchTerm String which contains the condition to Search the email.
-     *                              String search term should define ':' separated key and value
-     *                              with ',' separated key value pairs. Currently, this string search term
-     *                              only supported keys: subject, from, to, bcc, and cc.
-     *                              As an example: " subject:DAS , from:carbon , bcc:wso2 " string search term create a
-     *                              search term instance which filter emails contain 'DAS' in the subject,
-     *                              'carbon' in the from address and 'wso2' in one of the bcc addresses.
-     *                              It does sub string matching which is case insensitive.
-     */
-    public EmailServerConnector(String id, Map<String, String> properties, String stringEmailSearchTerm) {
-        super(id, properties);
-        this.stringEmailSearchTerm = stringEmailSearchTerm;
-        interval = emailConnectorDefaultPollingInterval; //this might be overridden in super.start()
-    }
-
-    /**
-     *
-     * @param id Unique identifier for the server connector.
-     * @param properties Map which contain data needed to initialize the email server connector
-     * @param emailSearchTerm Instance of the SearchTerm class
-     *                              implemented by javax.mail api to filter the emails.
-     */
-    public EmailServerConnector(String id, Map<String, String> properties, SearchTerm emailSearchTerm) {
-        super(id, properties);
-        this.emailSearchTerm = emailSearchTerm;
-        interval = emailConnectorDefaultPollingInterval; //this might be overridden in super.start()
-
-    }
-
-    /**
      * {@inheritDoc}
      */
-    @Override
-    public void setMessageProcessor(CarbonMessageProcessor carbonMessageProcessor) {
+    @Override public void setMessageProcessor(CarbonMessageProcessor carbonMessageProcessor) {
         this.emailMessageProcessor = carbonMessageProcessor;
     }
 
     /**
      * {@inheritDoc}
      */
-    @Override
-    protected void init() throws ServerConnectorException {
+    @Override protected void init() throws ServerConnectorException {
         /*
         Not needed for email, as this will be called in server start-up. We will not know about
         the destination at server start-up. We will get to know about that in service deployment.
@@ -145,12 +115,11 @@ public class EmailServerConnector extends PollingServerConnector {
     /**
      * {@inheritDoc}
      */
-    @Override
-    public void start() throws ServerConnectorException {
+    @Override public void start() throws ServerConnectorException {
 
         if (stringEmailSearchTerm != null) {
             //convert string search term to SearchTerm instance
-          this.emailSearchTerm = stringToSearchTermConverter(stringEmailSearchTerm);
+            this.emailSearchTerm = stringToSearchTermConverter(stringEmailSearchTerm);
         }
         emailConsumer = new EmailConsumer(id, getProperties(), emailSearchTerm, emailMessageProcessor);
 
@@ -164,10 +133,9 @@ public class EmailServerConnector extends PollingServerConnector {
     /**
      * {@inheritDoc}
      */
-    @Override
-    protected void poll() {
+    @Override protected void poll() {
         try {
-            emailConsumer.emailConsume();
+            emailConsumer.consume();
         } catch (EmailServerConnectorException e) {
             log.error(" Error is encountered while executing the polling cycle of email "
                     + "server connector for service: " + id, e);
@@ -186,16 +154,25 @@ public class EmailServerConnector extends PollingServerConnector {
      */
     @Override public void stop() throws ServerConnectorException {
         super.stop();
-        if(emailConsumer != null) {
+        if (emailConsumer != null) {
             this.startUIDNumber = emailConsumer.getStartUIDNumber();
         }
     }
 
-
     /**
-     * Convert string search term to SearchTerm class instance.
+     * Convert string search term to 'SearchTerm' class instance provided by javax.mail api.
      *
      * @param stringSearchTerm String which includes conditions as a key value pairs to search emails
+     *                         String which contains the condition to Search the email.
+     *                         String search term should define ':' separated key and
+     *                         value with ',' separated key value pairs.
+     *                         Currently, this string search term only supported keys: subject, from, to, bcc, and cc.
+     *                         As an example: " subject:DAS , from:carbon , bcc:wso2 " string search term create
+     *                         a search term instance which filter emails contain 'DAS' in the subject, 'carbon'
+     *                         in the from address and 'wso2' in one of the bcc addresses. It does sub string matching
+     *                         which is case insensitive. But if '@' contains in the given value except for
+     *                         'subject' key, then it check whether address is equal or not. As a example "from: abc@"
+     *                         string search term check whether 'from' address is equal to 'abc' before '@' Sybmol.
      * @return SearchTerm instance of string search term.
      */
     private SearchTerm stringToSearchTermConverter(String stringSearchTerm) throws EmailServerConnectorException {
@@ -203,11 +180,11 @@ public class EmailServerConnector extends PollingServerConnector {
         SearchTerm searchTerm = null;
         Map<String, String> searchConditionMap = new HashMap<>();
         List<SearchTerm> searchTermsList = new ArrayList<>();
-        String pattern = "(([a-zA-Z]*:[a-zA-Z ]*,)+[a-zA-Z]*:[a-zA-Z ]*$)|^[a-zA-Z]*:[a-zA-Z ]*[ ]*$";
+        String pattern = "^(([ ]*[a-zA-Z]*[ ]*:[^:,]*,[ ]*)*[ ]*[a-zA-Z]*[ ]*:[^:,]*$)";
 
-        if(!(stringSearchTerm.matches(pattern))) {
-            throw new EmailServerConnectorException("String search term '" + stringSearchTerm +
-                    "' is not in correct format.");
+        if (!(stringSearchTerm.matches(pattern))) {
+            throw new EmailServerConnectorException(
+                    "String search term '" + stringSearchTerm + "' is not in correct format.");
         }
 
         String condition[] = stringSearchTerm.split(",");
@@ -217,8 +194,8 @@ public class EmailServerConnector extends PollingServerConnector {
             if (nameValuePair.length == 2) {
                 searchConditionMap.put(nameValuePair[0].trim().toUpperCase(Locale.ENGLISH), nameValuePair[1].trim());
             } else {
-                throw  new EmailServerConnectorException("The given key value pair '" + nameValuePair[i] +
-                        "' in string search term is not in the correct format.");
+                throw new EmailServerConnectorException("The given key value pair '" + nameValuePair[i]
+                        + "' in string search term is not in the correct format.");
             }
         }
 
@@ -231,8 +208,8 @@ public class EmailServerConnector extends PollingServerConnector {
                         SearchTerm subjectTerm = new SubjectTerm(entry.getValue());
                         searchTermsList.add(subjectTerm);
                     } catch (Exception e) {
-                        log.error("Error is encountered while searching the message using subject."
-                                + " in the email server connector with id:" + id , e);
+                        log.error("Error is encountered while searching messages using subject."
+                                + " in the email server connector with id:" + id, e);
                     }
 
                     break;
@@ -246,9 +223,17 @@ public class EmailServerConnector extends PollingServerConnector {
                                 Address[] from = message.getFrom();
                                 for (Address ad : from) {
                                     String fromAd = ((InternetAddress) ad).getAddress();
+                                     if (fromAddress.contains("@")) {
+                                        //if given address term consists '@', then should check for equality.
+                                        if (fromAd.startsWith(fromAddress)) {
+                                            return true;
+                                        }
+                                     } else {
+                                        //check whether address contains given substring in address term.
                                         if (fromAd.contains(fromAddress)) {
                                             return true;
                                         }
+                                     }
                                 }
 
                             } catch (MessagingException e) {
@@ -272,8 +257,14 @@ public class EmailServerConnector extends PollingServerConnector {
                                     Address[] to = message.getRecipients(Message.RecipientType.TO);
                                     for (Address ad : to) {
                                         String toAd = ((InternetAddress) ad).getAddress();
+                                        if (toAddress.contains("@")) {
+                                            if (toAd.startsWith(toAddress)) {
+                                                return true;
+                                            }
+                                        } else {
                                             if (toAd.contains(toAddress)) {
                                                 return true;
+                                            }
                                         }
                                     }
                                 }
@@ -299,9 +290,16 @@ public class EmailServerConnector extends PollingServerConnector {
                                     Address[] bcc = message.getRecipients(Message.RecipientType.BCC);
                                     for (Address ad : bcc) {
                                         String bccAd = ((InternetAddress) ad).getAddress();
+                                        if (bccAddress.contains("@")) {
+                                            if (bccAd.startsWith(bccAddress)) {
+                                                return true;
+                                            }
+                                        } else {
                                             if (bccAd.contains(bccAddress)) {
                                                 return true;
+                                            }
                                         }
+
                                     }
                                 }
 
@@ -326,9 +324,14 @@ public class EmailServerConnector extends PollingServerConnector {
                                     Address[] cc = message.getRecipients(Message.RecipientType.CC);
                                     for (Address ad : cc) {
                                         String ccAd = ((InternetAddress) ad).getAddress();
+                                        if (ccAddress.contains("@")) {
+                                            if (ccAd.startsWith(ccAddress)) {
+                                                return true;
+                                            }
+                                        } else {
                                             if (ccAd.contains(ccAddress)) {
                                                 return true;
-
+                                            }
                                         }
                                     }
                                 }
@@ -345,19 +348,15 @@ public class EmailServerConnector extends PollingServerConnector {
                     break;
 
                 default:
-                    throw new EmailServerConnectorException("The given key '" + entry.getKey() +
-                            "' in the String email search term " + "is not supported by"
-                            + " the email transport");
+                    throw new EmailServerConnectorException(
+                            "The given key '" + entry.getKey() + "' in the String email search term "
+                                    + "is not supported by" + " the email transport");
                 }
             }
         }
 
-       //TODO put it to one line
-        SearchTerm[] searchTerms = searchTermsList.toArray(new SearchTerm[searchTermsList.size()]);
-        searchTerm = new AndTerm(searchTerms);
-
+        searchTerm = new AndTerm(searchTermsList.toArray(new SearchTerm[searchTermsList.size()]));
         return searchTerm;
-
     }
 
 }

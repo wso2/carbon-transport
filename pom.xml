@@ -209,11 +209,6 @@
                 <artifactId>commons-pool2</artifactId>
                 <version>${org.apache.commons.pool2.version}</version>
             </dependency>
-            <!--<dependency>-->
-                <!--<groupId>org.quartz-scheduler</groupId>-->
-                <!--<artifactId>quartz</artifactId>-->
-                <!--<version>${quartz.version}</version>-->
-            <!--</dependency>-->
             <dependency>
                 <groupId>org.wso2.orbit.org.quartz-scheduler</groupId>
                 <artifactId>quartz</artifactId>
@@ -240,12 +235,6 @@
                 <version>${com.icegreen.version}</version>
                 <scope>test</scope>
             </dependency>
-           <!-- <dependency>
-                <groupId>com.thoughtworks.icegreen</groupId>
-                <artifactId>greenmail</artifactId>
-                <version>1.3</version>
-                <scope>test</scope>
-            </dependency> -->
             <dependency>
                 <groupId>org.wso2.carbon.config</groupId>
                 <artifactId>org.wso2.carbon.config</artifactId>

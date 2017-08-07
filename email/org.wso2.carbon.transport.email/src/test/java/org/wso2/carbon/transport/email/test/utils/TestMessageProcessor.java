@@ -1,4 +1,4 @@
-package org.wso2.carbon.transport.email.test.Utils;
+package org.wso2.carbon.transport.email.test.utils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
