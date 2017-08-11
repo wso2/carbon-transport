@@ -261,7 +261,7 @@ public class EmailConsumer {
                     ActionForProcessedMail.carryOutAction(message, folder, action, moveToFolder);
 
                 } catch (RuntimeException e) {
-                    log.error("hhhhhhhh");
+                    log.error("Catch a run time exception while processing the message.", e);
                 } catch (Exception e) {
                     log.warn("Skip the message #: " + message.getMessageNumber() + " by further processing.", e);
                 }
@@ -494,7 +494,7 @@ public class EmailConsumer {
 
                 } else {
                     if (log.isDebugEnabled()) {
-                        log.warn("Conditions(Search Term) is not specified. All the mails in the folder '" + folderName
+                        log.debug("Conditions(Search Term) is not specified. All the mails in the folder '" + folderName
                                 + "' will be fetched" + "by the email server connector " + "with id: " + serviceId
                                 + ".");
                     }

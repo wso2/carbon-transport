@@ -24,7 +24,7 @@ package org.wso2.carbon.transport.email.utils;
 public class EmailConstants {
 
     /**
-     * Connector property
+     * Email server Connector property
      */
     public static final String PROTOCOL_MAIL = "email";
     public static final String POLLING_INTERVAL = "pollingInterval";
@@ -38,9 +38,9 @@ public class EmailConstants {
      */
     public static final String MAIL_RECEIVER_USERNAME = "username";
     public static final String MAIL_RECEIVER_PASSWORD = "password";
-    public static final String MAIL_RECEIVER_STORE_TYPE = "store";
-    public static final String MAIL_RECEIVER_HOST_NAME = "host";
-    public static final String MAIL_RECEIVER_FOLDER_NAME = "folder";
+    public static final String MAIL_RECEIVER_STORE_TYPE = "storeType";
+    public static final String MAIL_RECEIVER_HOST_NAME = "hostName";
+    public static final String MAIL_RECEIVER_FOLDER_NAME = "folderName";
 
     /**
      * Action that has to carry out after processing the email.
@@ -64,7 +64,7 @@ public class EmailConstants {
      public static final String SEARCH_TERM = "searchTerm";
 
     /**
-     * Defaults value for email transport properties
+     * Defaults value for email transport properties.
      */
     public static final String DEFAULT_CONTENT_TYPE = "text/plain";
     public static final Long DEFAULT_RETRY_INTERVAL = 10000L;
@@ -80,7 +80,7 @@ public class EmailConstants {
 
     /**
      * Properties which are included in carbon message other than headers
-     * in email receiver side
+     * in email receiver side.
      */
     public static final String MAIL_PROPERTY_FLAGS = "flags";
     public static final String MAIL_PROPERTY_MESSAGE_NUMBER = "messageNumber";
@@ -92,10 +92,10 @@ public class EmailConstants {
      */
     public static final String MAIL_SENDER_USERNAME = "username";
     public static final String MAIL_SENDER_PASSWORD = "password";
-    public static final String MAIL_SENDER_HOST_NAME = "host";
+    public static final String MAIL_SENDER_HOST_NAME = "hostName";
 
     /**
-     * Mail Headers which has to be set in the message to be send at the email
+     * Mail Headers which has to set in the message to be send at the email.
      * client connector
      */
     public static final String MAIL_HEADER_TO = "To";
@@ -110,7 +110,7 @@ public class EmailConstants {
     public static final String MAIL_HEADER_CONTENT_TYPE = "Content-Type";
 
     /**
-     * Enum for action
+     * Enum for the action action which has to carry out for the processed mails.
      */
     public enum ActionAfterProcessed {
         MOVE, SEEN, DELETE, FLAGGED, ANSWERED, NONE

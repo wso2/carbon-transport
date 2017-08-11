@@ -172,7 +172,7 @@ public class EmailServerConnector extends PollingServerConnector {
      *                         in the from address and 'wso2' in one of the bcc addresses. It does sub string matching
      *                         which is case insensitive. But if '@' contains in the given value except for
      *                         'subject' key, then it check whether address is equal or not. As a example "from: abc@"
-     *                         string search term check whether 'from' address is equal to 'abc' before '@' Sybmol.
+     *                         string search term check whether 'from' address is equal to 'abc' before '@' Symbol.
      * @return SearchTerm instance of string search term.
      */
     private SearchTerm stringToSearchTermConverter(String stringSearchTerm) throws EmailServerConnectorException {
