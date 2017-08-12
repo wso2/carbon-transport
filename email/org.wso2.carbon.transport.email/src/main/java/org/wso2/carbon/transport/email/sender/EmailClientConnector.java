@@ -71,7 +71,8 @@ public class EmailClientConnector implements ClientConnector {
 
         Properties serverProperties = new Properties();
 
-        if (emailProperties.get(EmailConstants.MAIL_SENDER_USERNAME) != null) {
+        if (emailProperties.get(EmailConstants.MAIL_SENDER_USERNAME) != null &&
+                !emailProperties.get(EmailConstants.MAIL_SENDER_USERNAME).isEmpty()) {
             username = emailProperties.get(EmailConstants.MAIL_SENDER_USERNAME);
         } else {
             throw new ClientConnectorException(
@@ -79,14 +80,16 @@ public class EmailClientConnector implements ClientConnector {
                             + "It is not given in the email property map.");
         }
 
-        if (emailProperties.get(EmailConstants.MAIL_SENDER_PASSWORD) != null) {
+        if (emailProperties.get(EmailConstants.MAIL_SENDER_PASSWORD) != null &&
+                !emailProperties.get(EmailConstants.MAIL_SENDER_PASSWORD).isEmpty()) {
             password = emailProperties.get(EmailConstants.MAIL_SENDER_PASSWORD);
         } else {
             throw new ClientConnectorException("Password of the email account is" + " a mandatory parameter."
                     + "It is not given in the email property map.");
         }
 
-        if (emailProperties.get(EmailConstants.MAIL_SENDER_HOST_NAME) != null) {
+        if (emailProperties.get(EmailConstants.MAIL_SENDER_HOST_NAME) != null &&
+                !emailProperties.get(EmailConstants.MAIL_SENDER_HOST_NAME).isEmpty() ) {
             hostName = emailProperties.get(EmailConstants.MAIL_SENDER_HOST_NAME);
         } else {
             throw new ClientConnectorException("HostName of the email account is" + " a mandatory parameter."
@@ -104,18 +107,26 @@ public class EmailClientConnector implements ClientConnector {
             }
         }
 
+        //todo try to resuse session
         Session session = Session.getInstance(serverProperties, new EmailAuthenticator(username, password));
 
         Message message = createMessage(session, carbonMessage, emailProperties);
 
+        Transport transport = null;
         try {
-            Transport transport = session.getTransport();
+            transport = session.getTransport();
             transport.connect(hostName, username, password);
             transport.send(message);
-            transport.close();
-
         } catch (MessagingException e) {
             throw new ClientConnectorException("Error occurred while sending the message.", e);
+        } finally {
+            if(transport.isConnected()) {
+                try {
+                    transport.close();
+                } catch (MessagingException e) {
+                    e.printStackTrace();
+                }
+            }
         }
 
         if (logger.isDebugEnabled()) {
@@ -140,19 +151,21 @@ public class EmailClientConnector implements ClientConnector {
 
         if (emailProperties.get(EmailConstants.MAIL_HEADER_CONTENT_TYPE) != null) {
             if (emailProperties.get(EmailConstants.MAIL_HEADER_CONTENT_TYPE).
-                    equalsIgnoreCase(EmailConstants.CONTENT_TYPE_PLAIN)) {
-                contentType = EmailConstants.CONTENT_TYPE_PLAIN;
+                    equalsIgnoreCase(EmailConstants.CONTENT_TYPE_TEXT_PLAIN)) {
+                contentType = EmailConstants.CONTENT_TYPE_TEXT_PLAIN;
             } else if (emailProperties.get(EmailConstants.MAIL_HEADER_CONTENT_TYPE)
-                    .equalsIgnoreCase(EmailConstants.CONTENT_TYPE_HTML)) {
-                contentType = EmailConstants.CONTENT_TYPE_HTML;
+                    .equalsIgnoreCase(EmailConstants.CONTENT_TYPE_TEXT_HTML)) {
+                contentType = EmailConstants.CONTENT_TYPE_TEXT_HTML;
             } else {
                 throw new ClientConnectorException(
-                        "Email content type should be either '" + EmailConstants.CONTENT_TYPE_PLAIN +
-                                "' or '" + EmailConstants.CONTENT_TYPE_HTML + "'. But found '"
+                        "Email content type should be either '" + EmailConstants.CONTENT_TYPE_TEXT_PLAIN +
+                                "' or '" + EmailConstants.CONTENT_TYPE_TEXT_HTML + "'. But found '"
                                 + emailProperties.get(EmailConstants.CONTENT_TYPE) + "'");
             }
         } else {
-            logger.warn("Email content type is not given. Default value: is taken as a content type");
+            if(logger.isDebugEnabled()) {
+                logger.debug("Email content type is not given. Default value: is taken as a content type");
+            }
             contentType = EmailConstants.DEFAULT_CONTENT_TYPE;
         }
 
@@ -171,7 +184,7 @@ public class EmailClientConnector implements ClientConnector {
                         InternetAddress.parse(emailProperties.get(EmailConstants.MAIL_HEADER_TO)));
             } else {
                 throw new ClientConnectorException("RecipientType 'to' of the email is not given."
-                        + " It is a mandotory parameter in email client connector.");
+                        + " It is a mandatory parameter in email client connector.");
             }
 
             if (emailProperties.get(EmailConstants.MAIL_HEADER_BCC) != null) {
@@ -211,7 +224,7 @@ public class EmailClientConnector implements ClientConnector {
 
         } catch (MessagingException e) {
             throw new ClientConnectorException("Error occurred while creating the email "
-                    + "using given carbon message." , e);
+                    + "using given carbon message. " +  e.getMessage() , e);
         }
 
         return message;

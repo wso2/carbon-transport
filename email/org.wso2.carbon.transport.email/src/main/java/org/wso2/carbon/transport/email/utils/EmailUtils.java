@@ -126,6 +126,7 @@ public class EmailUtils {
             //put the email message number as a property
             carbonMessage.setProperty(EmailConstants.MAIL_PROPERTY_MESSAGE_NUMBER, message.getMessageNumber());
 
+            //todo get the flags seperetly
             if (folder instanceof IMAPFolder) {
                 carbonMessage.setProperty(EmailConstants.MAIL_PROPERTY_FLAGS, message.getFlags().toString());
                 //put the uid (Long value) of the message as a property.

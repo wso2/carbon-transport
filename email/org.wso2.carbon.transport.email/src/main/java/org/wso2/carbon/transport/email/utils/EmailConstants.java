@@ -75,8 +75,8 @@ public class EmailConstants {
     /**
      * Email content types
      */
-    public static final String CONTENT_TYPE_PLAIN = "text/plain";
-    public static final String CONTENT_TYPE_HTML = "text/html";
+    public static final String CONTENT_TYPE_TEXT_PLAIN = "text/plain";
+    public static final String CONTENT_TYPE_TEXT_HTML = "text/html";
 
     /**
      * Properties which are included in carbon message other than headers

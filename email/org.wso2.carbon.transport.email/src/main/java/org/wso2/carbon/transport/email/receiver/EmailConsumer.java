@@ -159,11 +159,11 @@ public class EmailConsumer {
         }
 
         if (emailProperties.get(EmailConstants.CONTENT_TYPE) != null) {
-            if (emailProperties.get(EmailConstants.CONTENT_TYPE).equalsIgnoreCase(EmailConstants.CONTENT_TYPE_HTML)) {
-                this.contentType = EmailConstants.CONTENT_TYPE_HTML;
+            if (emailProperties.get(EmailConstants.CONTENT_TYPE).equalsIgnoreCase(EmailConstants.CONTENT_TYPE_TEXT_HTML)) {
+                this.contentType = EmailConstants.CONTENT_TYPE_TEXT_HTML;
             } else if (emailProperties.get(EmailConstants.CONTENT_TYPE)
-                    .equalsIgnoreCase(EmailConstants.CONTENT_TYPE_PLAIN)) {
-                contentType = EmailConstants.CONTENT_TYPE_PLAIN;
+                    .equalsIgnoreCase(EmailConstants.CONTENT_TYPE_TEXT_PLAIN)) {
+                contentType = EmailConstants.CONTENT_TYPE_TEXT_PLAIN;
             } else {
                 throw new EmailServerConnectorException(
                         "Content type '" + emailProperties.get(EmailConstants.CONTENT_TYPE) + "' is not supported by"
@@ -424,7 +424,7 @@ public class EmailConsumer {
             try {
                 folder.close(true);
             } catch (MessagingException e) {
-                log.warn("Couldn't close the folder '" + folderName + "by the email server connector"
+                log.warn("Couldn't close the folder '" + folderName + " by the email server connector"
                         + " with service id: " + serviceId + ".", e);
             }
         }
@@ -556,12 +556,12 @@ public class EmailConsumer {
 
         try {
             if (message instanceof MimeMessage) {
-                if (message.isMimeType(EmailConstants.CONTENT_TYPE_PLAIN)) {
-                    if (contentType.equals(EmailConstants.CONTENT_TYPE_PLAIN)) {
+                if (message.isMimeType(EmailConstants.CONTENT_TYPE_TEXT_PLAIN)) {
+                    if (contentType.equals(EmailConstants.CONTENT_TYPE_TEXT_PLAIN)) {
                         content = message.getContent().toString();
                     }
-                } else if (message.isMimeType(EmailConstants.CONTENT_TYPE_HTML)) {
-                    if (contentType.equals(EmailConstants.CONTENT_TYPE_HTML)) {
+                } else if (message.isMimeType(EmailConstants.CONTENT_TYPE_TEXT_HTML)) {
+                    if (contentType.equals(EmailConstants.CONTENT_TYPE_TEXT_HTML)) {
                         content = message.getContent().toString();
                     }
                 } else {

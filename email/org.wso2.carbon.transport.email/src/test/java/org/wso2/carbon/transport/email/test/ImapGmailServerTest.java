@@ -1,4 +1,4 @@
-package org.wso2.carbon.transport.email.test;
+/*package org.wso2.carbon.transport.email.test;
 
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
@@ -15,9 +15,7 @@ import javax.mail.Message;
 import javax.mail.search.RecipientStringTerm;
 import javax.mail.search.SearchTerm;
 
-/**
- * Created by chathurika on 7/26/17.
- */
+
 public class ImapGmailServerTest {
 
     private static final String USER_PASSWORD = "A&Cforever";
@@ -64,4 +62,4 @@ public class ImapGmailServerTest {
 
     }
 
-}
+} */
