@@ -159,7 +159,8 @@ public class EmailConsumer {
         }
 
         if (emailProperties.get(EmailConstants.CONTENT_TYPE) != null) {
-            if (emailProperties.get(EmailConstants.CONTENT_TYPE).equalsIgnoreCase(EmailConstants.CONTENT_TYPE_TEXT_HTML)) {
+            if (emailProperties.get(EmailConstants.CONTENT_TYPE)
+                    .equalsIgnoreCase(EmailConstants.CONTENT_TYPE_TEXT_HTML)) {
                 this.contentType = EmailConstants.CONTENT_TYPE_TEXT_HTML;
             } else if (emailProperties.get(EmailConstants.CONTENT_TYPE)
                     .equalsIgnoreCase(EmailConstants.CONTENT_TYPE_TEXT_PLAIN)) {
@@ -171,7 +172,7 @@ public class EmailConsumer {
             }
         } else {
             if (log.isDebugEnabled()) {
-                log.debug("Retry interval is not given in the email property map. " + "Get default content type '"
+                log.debug("Content type is not given in the email property map. " + "Get default content type '"
                         + EmailConstants.DEFAULT_CONTENT_TYPE + "' by " + "the email server connector with service id:"
                         + serviceId + ".");
             }
@@ -210,14 +211,14 @@ public class EmailConsumer {
             }
         }
 
-        session = Session.getDefaultInstance(serverProperties);
+        session = Session.getInstance(serverProperties);
 
         try {
             store = session.getStore(storeType);
         } catch (NoSuchProviderException e) {
             throw new EmailServerConnectorException(
                     "Couldn't initialize the store '" + storeType + "' in the email server connector with service id: "
-                            + serviceId + ".", e);
+                            + serviceId + "." + e.getMessage(), e);
         }
 
     }
@@ -329,7 +330,8 @@ public class EmailConsumer {
                     } catch (MessagingException e) {
                         throw new EmailServerConnectorException(
                                 "Error is encountered, while getting the folder '" + folderName
-                                        + "' in email server connector with service id: " + serviceId + ".");
+                                        + "' in email server connector with service id: "
+                                        + serviceId + "." + e.getMessage());
                     }
                 }
             }
@@ -370,11 +372,12 @@ public class EmailConsumer {
                 } catch (MessagingException e) {
                     throw new EmailServerConnectorException(
                             "Couldn't process the folder '" + moveToFolder + "'which used to move the processed mail"
-                                    + " in the email server connector with id: " + serviceId + ".", e);
+                                    + " in the email server connector with id: " + serviceId + "."
+                                    + e.getMessage(), e);
                 }
             } else {
-                throw new EmailServerConnectorException(EmailConstants.MOVE_TO_FOLDER + "is a mandatory parameter, "
-                        + "since the action for the processed mail is 'MOVE' "
+                throw new EmailServerConnectorException(EmailConstants.MOVE_TO_FOLDER + " is a mandatory parameter, "
+                        + "since the action for the processed mail is 'MOVE'"
                         + " in the email server connector with id: " + serviceId + ".");
             }
         }
@@ -398,7 +401,7 @@ public class EmailConsumer {
             } catch (MessagingException e) {
                 throw new EmailServerConnectorException(
                         "Couldn't open the folder '" + folderName + " ' in READ_WRITE mode"
-                                + " in the email server connector with id: " + serviceId + ".", e);
+                                + " in the email server connector with id: " + serviceId + "." + e.getMessage(), e);
             }
         } else {
             try {
@@ -407,7 +410,7 @@ public class EmailConsumer {
             } catch (MessagingException e) {
                 throw new EmailServerConnectorException(
                         "Couldn't open the folder '" + folderName + " ' in READ_WRITE mode"
-                                + " in the email server connector with id: " + serviceId + ".", e);
+                                + " in the email server connector with id: " + serviceId + "." + e.getMessage(), e);
             }
         }
 
@@ -424,8 +427,8 @@ public class EmailConsumer {
             try {
                 folder.close(true);
             } catch (MessagingException e) {
-                log.warn("Couldn't close the folder '" + folderName + " by the email server connector"
-                        + " with service id: " + serviceId + ".", e);
+                log.warn("Couldn't close the folder '" + folderName + "' by the email server connector"
+                        + " with service id: " + serviceId + "." + e.getMessage(), e);
             }
         }
     }
@@ -494,9 +497,9 @@ public class EmailConsumer {
 
                 } else {
                     if (log.isDebugEnabled()) {
-                        log.debug("Conditions(Search Term) is not specified. All the mails in the folder '" + folderName
-                                + "' will be fetched" + "by the email server connector " + "with id: " + serviceId
-                                + ".");
+                        log.debug("Conditions(Search Term) is not specified. All the mails in the folder '"
+                                + folderName + "' will be fetched" + "by the email server connector "
+                                + "with id: " + serviceId + ".");
                     }
 
                     Message[] messages = folder.getMessages();
@@ -507,7 +510,7 @@ public class EmailConsumer {
         } catch (Exception e) {
             throw new EmailServerConnectorException(
                     "Error is encountered while fetching emails using " + "search term from the folder '" + folderName
-                            + "'" + "by the email server connector with id: " + serviceId + ".", e);
+                            + "'" + "by the email server connector with id: " + serviceId + "." + e.getMessage(), e);
         }
 
         if (log.isDebugEnabled()) {
@@ -565,9 +568,12 @@ public class EmailConsumer {
                         content = message.getContent().toString();
                     }
                 } else {
-                    throw new EmailServerConnectorException("Content type '" + contentType
-                            + "' of the email is not supported by the email server connector" + " with id: " + serviceId
-                            + ".");
+                    if (log.isDebugEnabled()) {
+                        log.debug("Message with subject: " + message.getSubject() + ", is skipped from further"
+                                + " processing, since content type '" + message.getContentType()
+                                + "' of the email is not supported by the email server connector"
+                                + " with id: " + serviceId + ".");
+                    }
                 }
                 return content;
             } else {
@@ -584,11 +590,11 @@ public class EmailConsumer {
             throw new EmailServerConnectorException(
                     "Couldn't read the content of the message #" + message.getMessageNumber()
                             + "by the email server connector with service id '" + serviceId
-                            + "' since it has been DELETED by another thread.", e);
+                            + "' since it has been DELETED by another thread." + e.getMessage(), e);
 
         } catch (Exception e) {
             throw new EmailServerConnectorException("Error is encountered while reading the content of a message"
-                    + "by the email server connector with service id '" + serviceId + "'", e);
+                    + " by the email server connector with service id '" + serviceId + "'" + e.getMessage(), e);
         }
     }
 

@@ -26,8 +26,11 @@ import org.wso2.carbon.messaging.CarbonMessage;
 import org.wso2.carbon.messaging.TextCarbonMessage;
 import org.wso2.carbon.transport.email.exception.EmailServerConnectorException;
 
+import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Locale;
+import javax.mail.Flags;
 import javax.mail.Folder;
 import javax.mail.Header;
 import javax.mail.Message;
@@ -65,8 +68,6 @@ public class EmailUtils {
                     return EmailConstants.ActionAfterProcessed.ANSWERED;
                 case "DELETE":
                     return EmailConstants.ActionAfterProcessed.DELETE;
-                case "NONE":
-                    return EmailConstants.ActionAfterProcessed.NONE;
                 case "MOVE":
                     return EmailConstants.ActionAfterProcessed.MOVE;
                 default:
@@ -84,13 +85,13 @@ public class EmailUtils {
         } else {
             if (isImapFolder) {
                 if (log.isDebugEnabled()) {
-                    log.warn("Action after processed mail parameter is not defined" + " Get default action : NONE.");
+                    log.warn("Action after processed mail parameter is not defined." + " Get default action : SEEN.");
                 }
-                return EmailConstants.ActionAfterProcessed.NONE;
+                return EmailConstants.ActionAfterProcessed.SEEN;
 
             } else {
                 if (log.isDebugEnabled()) {
-                    log.warn("Action after processed mail parameter is not defined" + " Get default action : NONE.");
+                    log.warn("Action after processed mail parameter is not defined" + " Get default action : DELETE.");
                 }
                 return EmailConstants.ActionAfterProcessed.DELETE;
             }
@@ -126,9 +127,25 @@ public class EmailUtils {
             //put the email message number as a property
             carbonMessage.setProperty(EmailConstants.MAIL_PROPERTY_MESSAGE_NUMBER, message.getMessageNumber());
 
-            //todo get the flags seperetly
             if (folder instanceof IMAPFolder) {
-                carbonMessage.setProperty(EmailConstants.MAIL_PROPERTY_FLAGS, message.getFlags().toString());
+                List<String> flagList = new ArrayList<>();
+                //due to the reading the content of the message, flag "SEEN" is already set in every message.
+                if (message.isSet(Flags.Flag.SEEN)) {
+                    flagList.add("SEEN");
+                }
+                if (message.isSet(Flags.Flag.ANSWERED)) {
+                    flagList.add("ANSWERED");
+                }
+                if (message.isSet(Flags.Flag.FLAGGED)) {
+                    flagList.add("FLAGGED");
+                }
+                if (message.isSet(Flags.Flag.DELETED)) {
+                    flagList.add("DELETED");
+                }
+
+                String flags = String.join(",", flagList);
+
+                carbonMessage.setProperty(EmailConstants.MAIL_PROPERTY_FLAGS, flags);
                 //put the uid (Long value) of the message as a property.
                 carbonMessage.setProperty(EmailConstants.MAIL_PROPERTY_UID, ((UIDFolder) folder).getUID(message));
             } else {
@@ -142,9 +159,10 @@ public class EmailUtils {
 
         } catch (MessageRemovedException e) {
             throw new EmailServerConnectorException("Error is encountered while creating the carbon message since it"
-                    + " has been deleted by another thread.", e);
+                    + " has been deleted by another thread." + e.getMessage(), e);
         } catch (Exception e) {
-            throw new EmailServerConnectorException("Error is encountered while creating a carbon message.", e);
+            throw new EmailServerConnectorException("Error is encountered while creating a carbon message." +
+                     e.getMessage(), e);
         }
 
     }

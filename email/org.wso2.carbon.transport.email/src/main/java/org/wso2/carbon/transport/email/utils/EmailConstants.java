@@ -92,7 +92,6 @@ public class EmailConstants {
      */
     public static final String MAIL_SENDER_USERNAME = "username";
     public static final String MAIL_SENDER_PASSWORD = "password";
-    public static final String MAIL_SENDER_HOST_NAME = "hostName";
 
     /**
      * Mail Headers which has to set in the message to be send at the email.
@@ -113,7 +112,7 @@ public class EmailConstants {
      * Enum for the action action which has to carry out for the processed mails.
      */
     public enum ActionAfterProcessed {
-        MOVE, SEEN, DELETE, FLAGGED, ANSWERED, NONE
+        MOVE, SEEN, DELETE, FLAGGED, ANSWERED
     }
 
 }

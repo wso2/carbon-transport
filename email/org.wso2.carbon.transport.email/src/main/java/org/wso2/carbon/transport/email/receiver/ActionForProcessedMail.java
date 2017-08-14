@@ -73,15 +73,14 @@ public class ActionForProcessedMail {
             case ANSWERED:
                 message.setFlag(Flags.Flag.ANSWERED, true);
                 break;
-            case NONE:
-                break;
             }
         } catch (MessageRemovedException e) {
             throw new EmailServerConnectorException("Error is encountered while carrying out the action '"
-                    + action + "'for processed mail since it has been deleted by another thread." , e);
+                    + action + "'for processed mail since it has been deleted by another thread."
+                    + e.getMessage() , e);
         } catch (Exception e) {
             throw new EmailServerConnectorException("Error is encountered while carrying out the action '"
-                    + action + "'for processed mail.", e);
+                    + action + "'for processed mail." + e.getMessage(), e);
         }
     }
 }

@@ -67,7 +67,6 @@ public class EmailClientConnector implements ClientConnector {
             Map<String, String> emailProperties) throws ClientConnectorException {
         String username;
         String password;
-        String hostName;
 
         Properties serverProperties = new Properties();
 
@@ -88,13 +87,6 @@ public class EmailClientConnector implements ClientConnector {
                     + "It is not given in the email property map.");
         }
 
-        if (emailProperties.get(EmailConstants.MAIL_SENDER_HOST_NAME) != null &&
-                !emailProperties.get(EmailConstants.MAIL_SENDER_HOST_NAME).isEmpty() ) {
-            hostName = emailProperties.get(EmailConstants.MAIL_SENDER_HOST_NAME);
-        } else {
-            throw new ClientConnectorException("HostName of the email account is" + " a mandatory parameter."
-                    + "It is not given in the email property map.");
-        }
 
         if (!(carbonMessage instanceof TextCarbonMessage)) {
             throw new ClientConnectorException("Email client connector is support Text Carbon Message only.");
@@ -107,26 +99,14 @@ public class EmailClientConnector implements ClientConnector {
             }
         }
 
-        //todo try to resuse session
         Session session = Session.getInstance(serverProperties, new EmailAuthenticator(username, password));
 
         Message message = createMessage(session, carbonMessage, emailProperties);
 
-        Transport transport = null;
         try {
-            transport = session.getTransport();
-            transport.connect(hostName, username, password);
-            transport.send(message);
+            Transport.send(message);
         } catch (MessagingException e) {
             throw new ClientConnectorException("Error occurred while sending the message.", e);
-        } finally {
-            if(transport.isConnected()) {
-                try {
-                    transport.close();
-                } catch (MessagingException e) {
-                    e.printStackTrace();
-                }
-            }
         }
 
         if (logger.isDebugEnabled()) {
@@ -163,7 +143,7 @@ public class EmailClientConnector implements ClientConnector {
                                 + emailProperties.get(EmailConstants.CONTENT_TYPE) + "'");
             }
         } else {
-            if(logger.isDebugEnabled()) {
+            if (logger.isDebugEnabled()) {
                 logger.debug("Email content type is not given. Default value: is taken as a content type");
             }
             contentType = EmailConstants.DEFAULT_CONTENT_TYPE;
