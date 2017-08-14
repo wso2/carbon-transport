@@ -51,7 +51,7 @@ public class EmailUtils {
      *
      * @param action       User given Action
      * @param isImapFolder Whether folder is IMAP folder or not
-     * @return ActionAfterProcessed enum
+     * @return ActionAfterProcessed enum of ActionAfterProcessed
      */
     public static EmailConstants.ActionAfterProcessed getActionAfterProcessed(String action, Boolean isImapFolder)
             throws EmailServerConnectorException {
@@ -107,7 +107,8 @@ public class EmailUtils {
      * @param emailMessageContent Message content
      * @param serviceId           Unique id of the service
      * @return Carbon message created
-     * @throws EmailServerConnectorException
+     * @throws EmailServerConnectorException EmailServerConnectorException when action is fail
+     *                                       due to a email layer error.
      */
     public static CarbonMessage createEmailCarbonMessage(Message message, Folder folder, String emailMessageContent,
             String serviceId) throws EmailServerConnectorException {

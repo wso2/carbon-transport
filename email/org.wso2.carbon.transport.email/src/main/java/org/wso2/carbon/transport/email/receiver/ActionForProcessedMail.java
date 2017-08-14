@@ -25,7 +25,6 @@ import javax.mail.Flags;
 import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessageRemovedException;
-//import javax.mail.MessagingException;
 import javax.mail.UIDFolder;
 
 /**

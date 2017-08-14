@@ -19,7 +19,7 @@
 package org.wso2.carbon.transport.email.utils;
 
 /**
- * This class contains the constants related to File transport.
+ * This class contains the constants related to email transport.
  */
 public class EmailConstants {
 
@@ -94,7 +94,7 @@ public class EmailConstants {
     public static final String MAIL_SENDER_PASSWORD = "password";
 
     /**
-     * Mail Headers which has to set in the message to be send at the email.
+     * Mail Headers which has to set in the message to be send at the email
      * client connector
      */
     public static final String MAIL_HEADER_TO = "To";
@@ -109,7 +109,7 @@ public class EmailConstants {
     public static final String MAIL_HEADER_CONTENT_TYPE = "Content-Type";
 
     /**
-     * Enum for the action action which has to carry out for the processed mails.
+     * Enum for the action which has to carry out for the processed mails.
      */
     public enum ActionAfterProcessed {
         MOVE, SEEN, DELETE, FLAGGED, ANSWERED

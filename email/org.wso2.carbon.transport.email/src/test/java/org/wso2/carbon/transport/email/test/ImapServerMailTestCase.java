@@ -215,7 +215,7 @@ public class ImapServerMailTestCase {
     /**
      * Create a email message to deliver to the mail server.
      * @return Instance of message created.
-     * @throws MessagingException
+     * @throws MessagingException MessagingException when fail to create a message.
      */
     private Message createMessage() throws MessagingException {
         MimeMessage message = new MimeMessage((Session) null);
@@ -230,7 +230,7 @@ public class ImapServerMailTestCase {
      * Method implementing to get the messages in the given folder.
      * @param folderName Name of the folder to get mails.
      * @return Array of messages which contains inside the given folder.
-     * @throws MessagingException
+     * @throws MessagingException MessagingException when fail to read the message from given folder.
      */
     private Message[] getMessagesFromGreenMailFolder(String folderName) throws MessagingException {
         Properties properties = new Properties();

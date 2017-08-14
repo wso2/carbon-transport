@@ -353,7 +353,8 @@ public class EmailConsumer {
     /**
      * Set the action according to the action after processed parameter in the given property map.
      *
-     * @throws EmailServerConnectorException
+     * @throws EmailServerConnectorException EmailServerConnectorException when action is failed
+     *                                        due to a email layer error.
      */
     protected void setAction() throws EmailServerConnectorException {
         action = EmailUtils
@@ -386,8 +387,9 @@ public class EmailConsumer {
     /**
      * Open the email folder if the folder is not open.
      *
-     * @param folder Instance of the folder which used to fetch the email
-     * @throws EmailServerConnectorException
+     * @param folder Instance of the folder which used to fetch the email.
+     * @throws EmailServerConnectorException EmailServerConnectorException when action is failed
+     *                                        due to a email layer error.
      */
     protected void openFolder(Folder folder) throws EmailServerConnectorException {
         if (store.isConnected()) {
@@ -419,8 +421,9 @@ public class EmailConsumer {
     /**
      * Close the folder if it is open.
      *
-     * @param folder Instance of the folder which used to fetch the email
-     * @throws EmailServerConnectorException
+     * @param folder Instance of the folder which is used to fetch emails
+     * @throws EmailServerConnectorException EmailServerConnectorException
+     *                                        due to a email layer error.
      */
     protected void closeFolder(Folder folder) throws EmailServerConnectorException {
         if (folder.isOpen()) {
@@ -434,12 +437,13 @@ public class EmailConsumer {
     }
 
     /**
-     * Fetch emails which satisfy the conditions in the search term. If search term is 'null',
+     * Fetch emails which satisfy the conditions given in the search term. If search term is 'null',
      * then fetch all the emails. If folder is IMAP folder, then fetch emails from the new emails.
      * If the folder is pop3, then fetch all the emails in the folder which satisfy the given conditions.
      *
      * @return List of messages which satisfy the search conditions.
-     * @throws EmailServerConnectorException
+     * @throws EmailServerConnectorException EmailServerConnectorException when action is failed
+     *                                        due to a email layer error.
      */
     private List<Message> fetchEmails() throws EmailServerConnectorException {
 

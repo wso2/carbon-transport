@@ -123,7 +123,8 @@ public class EmailServerConnector extends PollingServerConnector {
         }
         emailConsumer = new EmailConsumer(id, getProperties(), emailSearchTerm, emailMessageProcessor);
 
-        //This is important if email store is 'imap'. By setting the UID, it is start to process mail at the point
+        //This is important if email store is 'imap'. By setting the UID, it start to process mail at the point
+        //it stop in the previous polling cycle. Initial startUID is 1.
         emailConsumer.setStartUIDNumber(startUIDNumber);
         emailConsumer.connectToEmailStore();
         emailConsumer.setAction();
@@ -163,7 +164,6 @@ public class EmailServerConnector extends PollingServerConnector {
      * Convert string search term to 'SearchTerm' class instance provided by javax.mail api.
      *
      * @param stringSearchTerm String which includes conditions as a key value pairs to search emails
-     *                         String which contains the condition to Search the email.
      *                         String search term should define ':' separated key and
      *                         value with ',' separated key value pairs.
      *                         Currently, this string search term only supported keys: subject, from, to, bcc, and cc.
@@ -173,7 +173,7 @@ public class EmailServerConnector extends PollingServerConnector {
      *                         which is case insensitive. But if '@' contains in the given value except for
      *                         'subject' key, then it check whether address is equal or not. As a example "from: abc@"
      *                         string search term check whether 'from' address is equal to 'abc' before '@' Symbol.
-     * @return SearchTerm instance of string search term.
+     * @return SearchTerm instance created by converting string search term.
      */
     private SearchTerm stringToSearchTermConverter(String stringSearchTerm) throws EmailServerConnectorException {
 

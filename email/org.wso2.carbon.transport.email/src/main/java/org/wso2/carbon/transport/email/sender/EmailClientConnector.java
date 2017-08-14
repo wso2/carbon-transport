@@ -124,7 +124,8 @@ public class EmailClientConnector implements ClientConnector {
      * @param carbonMessage Carbon message which have o convert the email message
      * @param emailProperties Properties of the email client connector
      * @return Message is to be send to the given recipients
-     * @throws ClientConnectorException
+     * @throws ClientConnectorException ClientConnectorException when action is failed
+     *                                 due to a email layer error.
      */
     private Message createMessage(Session session, CarbonMessage carbonMessage, Map<String, String> emailProperties)
             throws ClientConnectorException {
