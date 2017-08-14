@@ -61,7 +61,9 @@ public class EmailClientConnector implements ClientConnector {
         return false;
     }
 
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public synchronized boolean  send(CarbonMessage carbonMessage, CarbonCallback carbonCallback,
             Map<String, String> emailProperties) throws ClientConnectorException {
@@ -212,11 +214,17 @@ public class EmailClientConnector implements ClientConnector {
     }
 
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getProtocol() {
         return EmailConstants.PROTOCOL_MAIL;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void setMessageProcessor(CarbonMessageProcessor carbonMessageProcessor) {
 
