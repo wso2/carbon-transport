@@ -198,9 +198,7 @@ public class Util {
             cMsg.getHeaders().remove(Constants.HTTP_CONTENT_LENGTH);  // remove Content-Length if present
         } else if (cMsg.isAlreadyRead() || (cMsg.getHeader(Constants.HTTP_CONTENT_LENGTH) == null && !cMsg.isEmpty())) {
             int contentLength = cMsg.getFullMessageLength();
-            if (contentLength > 0) {
-                cMsg.setHeader(Constants.HTTP_CONTENT_LENGTH, String.valueOf(contentLength));
-            }
+            cMsg.setHeader(Constants.HTTP_CONTENT_LENGTH, String.valueOf(contentLength));
         }
 
     }
@@ -429,7 +427,7 @@ public class Util {
         return (Long) propertyVal;
     }
 
-    //TODO Below code segment is directly copied from kernel. Once kernel Utils been moved as a separate dependency
+    //TODO Below code segment is directly copied from kernel. Once kernel utils been moved as a separate dependency
     //Need to remove below part and use that.
     private static final Pattern varPattern = Pattern.compile("\\$\\{([^}]*)}");
 
