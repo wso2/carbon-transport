@@ -59,7 +59,10 @@ public class ImapServerMailTestCase {
     private static final String LOCALHOST = "127.0.0.1";
     private static final String STORE_TYPE = "imap";
     private static Map<String, String> emailProperties = new HashMap<>();
-    GreenMail mailServer;
+    /**
+     * Server provided by Green mail to create local mail server.
+     */
+    private GreenMail mailServer;
 
     @BeforeClass
     public void setEmailSeverConnectorProperties() {
@@ -86,7 +89,7 @@ public class ImapServerMailTestCase {
 
 
 
-    @Test(groups = "emailReceiver", description = "Test the scenario: receiving messages via "
+    @Test(description = "Test the scenario: receiving messages via "
             + "imap server when action after process is 'SEEN' and"
             + " check whether flag of the processed mail is set as 'SEEN'.")
     public void imapServerWithActionAfterProcessedIsSeenTestCase()
@@ -104,14 +107,14 @@ public class ImapServerMailTestCase {
         testMessageProcessor.waitTillDone();
         Assert.assertEquals(testMessageProcessor.subject, EMAIL_SUBJECT);
         connector.stop();
-        Thread.sleep(2000);
+        Thread.sleep(1000);
         MimeMessage[] messages = mailServer.getReceivedMessages();
         Assert.assertTrue(messages[0].isSet(Flags.Flag.SEEN), "Flag of the message with subject: " +
                 EMAIL_SUBJECT + ", has been set to 'SEEN'.");
 
     }
 
-    @Test(groups = "emailReceiver", description = "Test the scenario: receiving messages via "
+    @Test(description = "Test the scenario: receiving messages via "
             + "imap server when action after process is 'FLAGGED' and"
             + " check whether flag of the processed mail is set as 'FLAGGED'.")
     public void imapServerWithActionAfterProcessedIsFlaggedTestCase()
@@ -129,13 +132,13 @@ public class ImapServerMailTestCase {
         testMessageProcessor.waitTillDone();
         Assert.assertEquals(testMessageProcessor.subject, EMAIL_SUBJECT);
         connector.stop();
-        Thread.sleep(2000);
+        Thread.sleep(1000);
         MimeMessage[] messages = mailServer.getReceivedMessages();
         Assert.assertTrue(messages[0].isSet(Flags.Flag.FLAGGED), "Flag of the message with subject: " +
         EMAIL_SUBJECT + ", has been set to 'FLAGGED'.");
     }
 
-    @Test(groups = "emailReceiver", description = "Test the scenario: receiving messages via "
+    @Test(description = "Test the scenario: receiving messages via "
             + "imap server when action after process is 'ANSWERED' and"
             + " check whether flag of the processed message is set as 'ANSWERED'")
     public void imapServerWithActionAfterProcessedIsAnsweredTestCase()
@@ -153,14 +156,14 @@ public class ImapServerMailTestCase {
         testMessageProcessor.waitTillDone();
         Assert.assertEquals(testMessageProcessor.subject, EMAIL_SUBJECT);
         connector.stop();
-        Thread.sleep(2000);
+        Thread.sleep(1000);
         MimeMessage[] messages = mailServer.getReceivedMessages();
         Assert.assertTrue(messages[0].isSet(Flags.Flag.ANSWERED), "Flag of the message with subject: " +
                 EMAIL_SUBJECT + ", has been set to 'ANSWERED'.");
 
     }
 
-    @Test(groups = "emailReceiver", description = "Test the scenario: receiving messages via "
+    @Test(description = "Test the scenario: receiving messages via "
             + "imap server when action after process is 'MOVE' and folder to move is 'ProcessedMailFolder'"
             + " and check whether processed mail has been moved to the given folder.")
     public void imapServerWithActionAfterProcessedIsMoveTestCase()
@@ -179,14 +182,14 @@ public class ImapServerMailTestCase {
         testMessageProcessor.waitTillDone();
         Assert.assertEquals(testMessageProcessor.subject, EMAIL_SUBJECT);
         connector.stop();
-        Thread.sleep(2000);
+        Thread.sleep(1000);
 
         Message[] messages = getMessagesFromGreenMailFolder("ProcessedMailFolder");
         Assert.assertEquals(messages.length, 1, "Message count in the 'INBOX' is zero,"
                 + " since message in the folder is moved to 'ProcessedMailFolder'.");
     }
 
-    @Test(groups = "emailReceiver", description = "Test the scenario: receiving messages via "
+    @Test(description = "Test the scenario: receiving messages via "
             + "imap server when action after process is 'DELETE'"
             + " and check whether processed mail has been deleted.")
     public void imapServerWithActionAfterProcessedIsDeleteTestCase()
@@ -204,7 +207,7 @@ public class ImapServerMailTestCase {
         testMessageProcessor.waitTillDone();
         Assert.assertEquals(testMessageProcessor.subject, EMAIL_SUBJECT);
         connector.stop();
-        Thread.sleep(2000);
+        Thread.sleep(1000);
         MimeMessage[] messages = mailServer.getReceivedMessages();
         Assert.assertEquals(messages.length, 0, "Message count in the 'INBOX' is zero,"
                 + " since messages in the folder have been deleted by the email server connector"

@@ -35,13 +35,12 @@ import java.util.concurrent.CountDownLatch;
 public class TestMessageProcessor implements CarbonMessageProcessor {
     private static final Logger log = LoggerFactory.getLogger(TestMessageProcessor.class);
     private CountDownLatch latch = new CountDownLatch(1);
-    public static String subject;
-    public static String content;
+    public String subject;
 
     @Override
     public boolean receive(CarbonMessage carbonMessage, CarbonCallback carbonCallback) throws Exception {
 
-        content = ((TextCarbonMessage) carbonMessage).getText();
+        String content = ((TextCarbonMessage) carbonMessage).getText();
         subject = carbonMessage.getHeader(EmailTestConstant.MAIL_HEADER_SUBJECT);
 
         if (log.isDebugEnabled()) {

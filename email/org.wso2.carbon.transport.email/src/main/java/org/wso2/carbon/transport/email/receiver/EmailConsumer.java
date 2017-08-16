@@ -301,7 +301,6 @@ public class EmailConsumer {
                 }
 
                 store.connect(host, username, password);
-
             } catch (Exception e) {
                 log.error("Error connecting to mail server for address '" + username
                         + "' in the email server connector with id : " + serviceId + ".", e);
@@ -536,9 +535,25 @@ public class EmailConsumer {
      *
      * @return startUIDNumber
      */
-
     protected Long getStartUIDNumber() {
         return startUIDNumberOfNextPollCycle;
+    }
+
+    /**
+     * Close folder if it is open and close the store if it is connected.
+     */
+    protected void closeAll() throws EmailServerConnectorException {
+        try {
+            if (store != null && store.isConnected()) {
+                if (folder != null && folder.isOpen()) {
+                    folder.close(true);
+                }
+                store.close();
+            }
+        } catch (Exception e) {
+             throw new EmailServerConnectorException("Error is encountered while closing the connection for"
+                     + " the email server connector with id: " + serviceId + "." + e.getMessage(), e);
+        }
     }
 
     /**

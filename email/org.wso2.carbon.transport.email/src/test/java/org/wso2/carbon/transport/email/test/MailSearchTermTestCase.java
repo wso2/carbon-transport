@@ -51,7 +51,10 @@ public class MailSearchTermTestCase {
     private static final String LOCALHOST = "127.0.0.1";
     private static final String STORE_TYPE = "imap";
     private static Map<String, String> emailProperties = new HashMap<>();
-    GreenMail mailServer;
+    /**
+     * Server provided by Green mail to create local mail server.
+     */
+    private GreenMail mailServer;
 
     @BeforeClass
     public void setEmailSeverConnectorProperties() {
@@ -108,7 +111,7 @@ public class MailSearchTermTestCase {
 
     }
 
-    @Test(groups = "emailReceiver", description = "Test the scenario: receiving messages via "
+    @Test(description = "Test the scenario: receiving messages via "
             + "imap server when search term is 'subject:Test messge two'.")
     public void searchBySubjectTestCase()
             throws MessagingException, ServerConnectorException, InterruptedException {
@@ -126,10 +129,10 @@ public class MailSearchTermTestCase {
         Assert.assertEquals(testMessageProcessor.subject, "Test message two", "Only the message2 is"
                 + " received since the it contain 'Test message two' in the subject.");
         connector.stop();
-        Thread.sleep(2000);
+        Thread.sleep(1000);
     }
 
-    @Test(groups = "emailReceiver", description = "Test the scenario: receiving messages via "
+    @Test(description = "Test the scenario: receiving messages via "
             + "imap server when search term is 'from:from'.")
     public void searchByFromAddressTestCase()
             throws MessagingException, ServerConnectorException, InterruptedException {
@@ -148,11 +151,11 @@ public class MailSearchTermTestCase {
                 "The message1 is received first, since the"
                 + " message contains 'from' in the 'from address'.");
         connector.stop();
-        Thread.sleep(2000);
+        Thread.sleep(1000);
     }
 
 
-    @Test(groups = "emailReceiver", description = "Test the scenario: receiving messages via "
+    @Test(description = "Test the scenario: receiving messages via "
             + "imap server when search term is 'from:from2@'.")
     public void searchByFromAddressWithAtSymbolTestCase()
             throws MessagingException, ServerConnectorException, InterruptedException {
@@ -170,7 +173,7 @@ public class MailSearchTermTestCase {
         Assert.assertEquals(testMessageProcessor.subject, "Test message two",
                 "Only the message2 is received since the messages' from address is start with 'from2@'.");
         connector.stop();
-        Thread.sleep(2000);
+        Thread.sleep(1000);
     }
 
 

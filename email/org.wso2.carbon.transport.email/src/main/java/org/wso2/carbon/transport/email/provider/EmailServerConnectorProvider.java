@@ -61,4 +61,7 @@ public class EmailServerConnectorProvider extends ServerConnectorProvider {
         return new EmailServerConnector(id, emailProperties);
     }
 
+    @Override public int getCount() {
+        return 0;
+    }
 }

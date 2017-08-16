@@ -55,7 +55,10 @@ public class Pop3ServerMailTestCase {
     private static final String LOCALHOST = "127.0.0.1";
     private static final String STORE_TYPE = "pop3";
     private static Map<String, String> emailProperties = new HashMap<>();
-    GreenMail mailServer;
+    /**
+     * Server provided by Green mail to create local mail server.
+     */
+    private GreenMail mailServer;
 
     @BeforeClass
     public void setEmailSeverConnectorProperties() {
@@ -79,7 +82,7 @@ public class Pop3ServerMailTestCase {
         mailServer.stop();
     }
 
-    @Test(groups = "emailReceiver", description = "Test the scenario: receiving messages via "
+    @Test(description = "Test the scenario: receiving messages via "
             + "pop3 server")
     public void receiveMailViaPop3Server()
             throws IOException, MessagingException, InterruptedException, ServerConnectorException {
@@ -105,7 +108,7 @@ public class Pop3ServerMailTestCase {
         testMessageProcessor.waitTillDone();
         Assert.assertEquals(testMessageProcessor.subject, EMAIL_SUBJECT);
         connector.stop();
-        Thread.sleep(3000);
+        Thread.sleep(1000);
         Message[] messages = mailServer.getReceivedMessages();
         Assert.assertEquals(messages.length, 0, "Since the message is deleted by"
                 + " the pop3 server after reading the message content, Number of messages in the"

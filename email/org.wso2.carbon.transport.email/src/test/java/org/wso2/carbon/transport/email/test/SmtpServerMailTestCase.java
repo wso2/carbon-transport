@@ -54,7 +54,7 @@ public class SmtpServerMailTestCase {
     private static Map<String, String> properties = new HashMap<>();
     private GreenMail mailServer;
 
-    @BeforeClass(groups = "emailSender", description = "setup parameters need to create a smtp server.")
+    @BeforeClass(description = "setup parameters need to create a smtp server.")
     public void setMailSenderParameters() {
         properties.put(EmailTestConstant.MAIL_SENDER_HOST_NAME, HOST);
         properties.put(EmailTestConstant.MAIL_SENDER_USERNAME, USERNAME);
@@ -69,18 +69,18 @@ public class SmtpServerMailTestCase {
         properties.put("mail.smtp.auth", "true");
     }
 
-    @BeforeMethod(groups = "emailSender", description = "start the green mail server")
+    @BeforeMethod(description = "start the green mail server")
     public void setUp() {
         mailServer = new GreenMail(ServerSetupTest.SMTP);
         mailServer.start();
     }
 
-    @AfterMethod(groups = "emailSender", description = "stop the green mail server")
+    @AfterMethod(description = "stop the green mail server")
     public void tearDown() {
         mailServer.stop();
     }
 
-    @Test(groups = "emailSender", description = "Test case to send emails via smtp server.")
+    @Test(description = "Test case to send emails via smtp server.")
     public void sendingEmailViaSmtpServerTestCase1() throws IOException, MessagingException, ClientConnectorException {
         // create user on mail server
         mailServer.setUser(ADDRESS, USERNAME, PASSWORD);

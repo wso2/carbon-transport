@@ -147,6 +147,15 @@ public class EmailServerConnector extends PollingServerConnector {
      * {@inheritDoc}
      */
     @Override protected void destroy() throws ServerConnectorException {
+        try {
+            if (emailConsumer != null) {
+                emailConsumer.closeAll();
+
+            }
+        } finally {
+            emailConsumer = null;
+            startUIDNumber = 1L;
+        }
         stop();
     }
 
