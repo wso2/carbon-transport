@@ -28,7 +28,6 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 
-
 /**
  * JAXB representation of a transport listener.
  */
@@ -37,10 +36,17 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 public class ListenerConfiguration {
 
     public static final String DEFAULT_KEY = "default";
-
+    public static final String DEFAULT_SCHEME = "https";
+    public static final String DEFAULT_HTTP_STRICT_TRANSPORT_SECURITY_HEADER_VALUE = "max-age=15768000;" +
+            " includeSubDomains";
+    public static final String DEFAULT_PUBLIC_KEY_PINS_HEADER_VALUE =
+            "pin-sha256='2pCcYrG90hDFxwOCsVya7wpbQjqhBy3OPsFyyT+7108='; max-age=15766000; includeSubDomains";
+    /*The key used here is the public key of the default wso2carbon certificate. It is imported as a default value
+    when running TransportSecurityHeadersTestCase*/
     public static ListenerConfiguration getDefault() {
         ListenerConfiguration defaultConfig;
-        defaultConfig = new ListenerConfiguration(DEFAULT_KEY, "0.0.0.0", 8080);
+        defaultConfig = new ListenerConfiguration(DEFAULT_KEY, "0.0.0.0", 8080, DEFAULT_SCHEME,
+                DEFAULT_HTTP_STRICT_TRANSPORT_SECURITY_HEADER_VALUE, DEFAULT_PUBLIC_KEY_PINS_HEADER_VALUE);
         return defaultConfig;
     }
 
@@ -83,6 +89,12 @@ public class ListenerConfiguration {
     @XmlAttribute
     private String messageProcessorId;
 
+    @XmlAttribute
+    private String strictTransportSecurityHeader;
+
+    @XmlAttribute
+    private String publicKeyPinsHeader;
+
     @XmlElementWrapper(name = "parameters")
     @XmlElement(name = "parameter")
     private List<Parameter> parameters = getDefaultParameters();
@@ -94,6 +106,16 @@ public class ListenerConfiguration {
         this.id = id;
         this.host = host;
         this.port = port;
+    }
+
+    public ListenerConfiguration(String id, String host, int port, String scheme, String hstsHeader,
+                                 String hpkpHeader) {
+        this.id = id;
+        this.host = host;
+        this.port = port;
+        this.scheme = scheme;
+        this.strictTransportSecurityHeader = hstsHeader;
+        this.publicKeyPinsHeader = hpkpHeader;
     }
 
     public String getCertPass() {
@@ -166,6 +188,22 @@ public class ListenerConfiguration {
 
     public void setHttp2(boolean http2) {
         this.http2 = http2;
+    }
+
+    public String getStrictTransportSecurityHeader() {
+        return strictTransportSecurityHeader;
+    }
+
+    public void setStrictTransportSecurityHeader(String strictTransportSecurityHeader) {
+        this.strictTransportSecurityHeader = strictTransportSecurityHeader;
+    }
+
+    public String getPublicKeyPinsHeader() {
+        return publicKeyPinsHeader;
+    }
+
+    public void setPublicKeyPinsHeader(String publicKeyPinsHeader) {
+        this.publicKeyPinsHeader = publicKeyPinsHeader;
     }
 
     public List<Parameter> getParameters() {

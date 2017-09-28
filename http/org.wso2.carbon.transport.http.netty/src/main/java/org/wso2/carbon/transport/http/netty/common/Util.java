@@ -24,11 +24,15 @@ import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.wso2.carbon.messaging.CarbonMessage;
 import org.wso2.carbon.messaging.Header;
 import org.wso2.carbon.messaging.Headers;
 import org.wso2.carbon.messaging.MessageDataSource;
 import org.wso2.carbon.transport.http.netty.common.ssl.SSLConfig;
+import org.wso2.carbon.transport.http.netty.config.ConfigurationBuilder;
+import org.wso2.carbon.transport.http.netty.config.ListenerConfiguration;
 import org.wso2.carbon.transport.http.netty.config.Parameter;
 import org.wso2.carbon.transport.http.netty.listener.RequestDataHolder;
 
@@ -36,15 +40,22 @@ import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
+import static org.wso2.carbon.transport.http.netty.common.Constants.HTTPS;
+import static org.wso2.carbon.transport.http.netty.common.Constants.HTTP_PUBLIC_KEY_PINS_HEADER;
+import static org.wso2.carbon.transport.http.netty.common.Constants.HTTP_STRICT_TRANSPORT_SECURITY_HEADER;
+
 /**
  * Includes utility methods for creating http requests and responses and their related properties.
  */
 public class Util {
+
+    private static final Logger log = LoggerFactory.getLogger(Util.class);
 
     private static final String DEFAULT_HTTP_METHOD_POST = "POST";
     private static final String DEFAULT_VERSION_HTTP_1_1 = "HTTP/1.1";
@@ -106,6 +117,28 @@ public class Util {
         if (connectionCloseAfterResponse) {
             headers.set(Constants.HTTP_CONNECTION, Constants.CONNECTION_CLOSE);
         }
+
+        Set<ListenerConfiguration> listenerConfigurations =
+                ConfigurationBuilder.getInstance().getConfiguration().getListenerConfigurations();
+
+        listenerConfigurations.forEach(listenerConfiguration -> {
+            if (HTTPS.equalsIgnoreCase(listenerConfiguration.getScheme())) {
+                if (listenerConfiguration.getStrictTransportSecurityHeader() != null) {
+                    headers.set(HTTP_STRICT_TRANSPORT_SECURITY_HEADER, listenerConfiguration
+                            .getStrictTransportSecurityHeader());
+                }
+                if (listenerConfiguration.getPublicKeyPinsHeader() != null) {
+                    headers.set(HTTP_PUBLIC_KEY_PINS_HEADER, listenerConfiguration.getPublicKeyPinsHeader());
+                }
+            } else {
+                if (listenerConfiguration.getStrictTransportSecurityHeader() != null) {
+                    log.warn("HTTP Strict Transport Security header must be used with https scheme");
+                }
+                if (listenerConfiguration.getPublicKeyPinsHeader() != null) {
+                    log.warn("HTTP Public Key Pins header must be used with https scheme");
+                }
+            }
+        });
 
         Util.setHeaders(outgoingResponse, headers);
 

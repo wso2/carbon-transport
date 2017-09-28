@@ -21,6 +21,7 @@
 <suite name="Transport test Suite">
     <test name="Transport test">
         <classes>
+            <class name="org.wso2.carbon.transport.http.netty.security.TransportSecurityHeadersTestCase" />
             <class name="org.wso2.carbon.transport.http.netty.passthrough.PassThroughHttpTestCase" />
             <class name="org.wso2.carbon.transport.http.netty.contentaware.ContentAwareMessageProcessorTestCase" />
             <class name="org.wso2.carbon.transport.http.netty.http2.HTTP2RequestResponseTestCase" />

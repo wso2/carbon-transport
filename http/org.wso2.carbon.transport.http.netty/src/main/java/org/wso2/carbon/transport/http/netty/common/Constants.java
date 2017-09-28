@@ -121,6 +121,12 @@ public final class Constants {
 
     public static final String RESPONSE_CALLBACK = "RESPONSE_CALLBACK";
 
+    public static final String HTTP_STRICT_TRANSPORT_SECURITY_HEADER = "Strict-Transport-Security";
+
+    public static final String HTTP_PUBLIC_KEY_PINS_HEADER = "Public-Key-Pins";
+
+    public static final String HTTPS = "https";
+
     public static final String HOST = "HOST";
 
     public static final String PORT = "PORT";
