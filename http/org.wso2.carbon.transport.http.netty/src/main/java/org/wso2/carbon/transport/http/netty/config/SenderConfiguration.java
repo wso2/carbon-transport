@@ -18,6 +18,8 @@
  */
 package org.wso2.carbon.transport.http.netty.config;
 
+import org.wso2.carbon.config.annotation.Configuration;
+import org.wso2.carbon.config.annotation.Element;
 import org.wso2.carbon.transport.http.netty.common.Util;
 import org.wso2.carbon.transport.http.netty.common.ssl.SSLConfig;
 import java.util.List;
@@ -33,6 +35,7 @@ import javax.xml.bind.annotation.XmlElementWrapper;
  */
 @SuppressWarnings("unused")
 @XmlAccessorType(XmlAccessType.FIELD)
+@Configuration(description = "HTTP Sender configuration")
 public class SenderConfiguration {
 
     public static final String DEFAULT_KEY = "netty";
@@ -45,34 +48,44 @@ public class SenderConfiguration {
     }
 
     @XmlAttribute(required = true)
+    @Element(description = "Id", required = true)
     private String id;
 
     @XmlAttribute
+    @Element(description = "Scheme")
     private String scheme = "http";
 
     @XmlAttribute
+    @Element(description = "Keystore file path")
     private String keyStoreFile;
 
     @XmlAttribute
+    @Element(description = "Keystore password")
     private String keyStorePass;
 
     @XmlAttribute
+    @Element(description = "Truststore file path")
     private String trustStoreFile;
 
     @XmlAttribute
+    @Element(description = "Truststore password")
     private String trustStorePass;
 
     @XmlAttribute
+    @Element(description = "Certificate password")
     private String certPass;
 
     @XmlAttribute
+    @Element(description = "Socket idle timeout")
     private int socketIdleTimeout;
 
     @XmlAttribute
+    @Element(description = "is HTTP trace logs enable")
     private boolean httpTraceLogEnabled;
 
     @XmlElementWrapper(name = "parameters")
     @XmlElement(name = "parameter")
+    @Element(description = "Additional parameters")
     private List<Parameter> parameters;
 
     private boolean followRedirect;

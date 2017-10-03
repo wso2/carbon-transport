@@ -21,9 +21,9 @@ import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.wso2.carbon.config.provider.ConfigProvider;
 import org.wso2.carbon.kernel.CarbonRuntime;
 import org.wso2.carbon.kernel.startupresolver.RequiredCapabilityListener;
+import org.wso2.carbon.kernel.startupresolver.StartupServiceUtils;
 import org.wso2.carbon.transport.http.netty.contract.HttpConnectorListener;
 import org.wso2.carbon.transport.http.netty.contract.ServerConnector;
 import org.wso2.carbon.transport.http.netty.contract.websocket.WebSocketConnectorListener;
@@ -53,6 +53,7 @@ public class HttpTransportSC implements RequiredCapabilityListener {
     )
     protected void registerServerConnector(ServerConnector serverConnector) {
         httpTransportManager.addServerConnector(serverConnector);
+        StartupServiceUtils.updateServiceCache("wso2-server-connector-sc", ServerConnector.class);
     }
 
     protected void unregisterServerConnector(ServerConnector serverConnector) {
@@ -68,23 +69,10 @@ public class HttpTransportSC implements RequiredCapabilityListener {
     )
     protected void registerCarbonRuntime(CarbonRuntime carbonRuntime, Map properties) {
         // No use of the CarbonRuntime reference. We just need this for OSGi startup order resolving.
+        StartupServiceUtils.updateServiceCache("wso2-server-connector-sc", CarbonRuntime.class);
     }
 
     protected void unregisterCarbonRuntime(CarbonRuntime carbonRuntime, Map properties) {
-    }
-
-    @Reference(
-            name = "configProvider",
-            service = ConfigProvider.class,
-            cardinality = ReferenceCardinality.AT_LEAST_ONE,
-            policy = ReferencePolicy.DYNAMIC,
-            unbind = "unregisterConfigProvider"
-    )
-    protected void registerConfigProvider(ConfigProvider configProvider) {
-        // Need to load transport config
-    }
-
-    protected void unregisterConfigProvider(ConfigProvider configProvider) {
     }
 
     @Reference(
@@ -96,6 +84,7 @@ public class HttpTransportSC implements RequiredCapabilityListener {
     )
     protected void registerHttpConnectorListener(HttpConnectorListener httpConnectorListener) {
         httpTransportManager.addHttpConnectorListener(httpConnectorListener);
+        StartupServiceUtils.updateServiceCache("wso2-server-connector-sc", HttpConnectorListener.class);
     }
 
     protected void unregisterHttpConnectorListener(HttpConnectorListener httpConnectorListener) {
@@ -111,6 +100,7 @@ public class HttpTransportSC implements RequiredCapabilityListener {
     )
     protected void registerWebSocketConnectorListener(WebSocketConnectorListener webSocketConnectorListener) {
         httpTransportManager.addWebSocketConnectorListener(webSocketConnectorListener);
+        StartupServiceUtils.updateServiceCache("wso2-server-connector-sc", WebSocketConnectorListener.class);
     }
 
     protected void unregisterWebSocketConnectorListener(WebSocketConnectorListener webSocketConnectorListener) {

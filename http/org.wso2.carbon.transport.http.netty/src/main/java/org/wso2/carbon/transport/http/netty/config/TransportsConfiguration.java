@@ -19,6 +19,9 @@
 package org.wso2.carbon.transport.http.netty.config;
 
 
+import org.wso2.carbon.config.annotation.Configuration;
+import org.wso2.carbon.config.annotation.Element;
+
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -35,6 +38,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @SuppressWarnings("unused")
 @XmlRootElement(name = "transports")
 @XmlAccessorType(XmlAccessType.FIELD)
+@Configuration(namespace = "wso2.http.transport.configuration", description = "HTTP Transport configuration")
 public class TransportsConfiguration {
 
     public static TransportsConfiguration getDefault() {
@@ -54,15 +58,18 @@ public class TransportsConfiguration {
 
     @XmlElementWrapper(name = "properties")
     @XmlElement(name = "property")
+    @Element(description = "Transport properties")
     private Set<TransportProperty> transportProperties = Collections.EMPTY_SET;
 
 
     @XmlElementWrapper(name = "listeners")
     @XmlElement(name = "listener")
+    @Element(description = "Listener Configurations")
     private Set<ListenerConfiguration> listenerConfigurations;
 
     @XmlElementWrapper(name = "senders")
     @XmlElement(name = "sender")
+    @Element(description = "Sender Configurations")
     private Set<SenderConfiguration> senderConfigurations;
 
     public Set<ListenerConfiguration> getListenerConfigurations() {

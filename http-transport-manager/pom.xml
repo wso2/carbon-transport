@@ -54,10 +54,10 @@
             org.wso2.carbon.config.*;version="${org.wso2.carbon.config.import.version.range}",
         </import.package>
         <carbon.component>
-            startup.listener;componentName="wso2-server-connector-sc";requiredService="org.wso2.carbon.transport.http.netty.contract.ServerConnector,org.wso2.carbon.kernel.CarbonRuntime,org.wso2.carbon.config.provider.ConfigProvider,org.wso2.carbon.transport.http.netty.contract.HttpConnectorListener,org.wso2.carbon.transport.http.netty.contract.websocket.WebSocketConnectorListener"
+            startup.listener;componentName="wso2-server-connector-sc";requiredService="org.wso2.carbon.transport.http.netty.contract.ServerConnector,org.wso2.carbon.kernel.CarbonRuntime,org.wso2.carbon.transport.http.netty.contract.HttpConnectorListener,org.wso2.carbon.transport.http.netty.contract.websocket.WebSocketConnectorListener",
+            startup.listener;componentName="wso2-http-transport-config-sc";requiredService="org.wso2.carbon.config.provider.ConfigProvider",
+            osgi.Service;objectClass="org.wso2.carbon.transport.http.netty.contract.ServerConnector"
         </carbon.component>
-        <bundle.activator>org.wso2.carbon.transport.manager.http.internal.HttpTransportBundleActivator
-        </bundle.activator>
     </properties>
 
 </project>

@@ -90,7 +90,10 @@
             <groupId>org.wso2.orbit.org.yaml</groupId>
             <artifactId>snakeyaml</artifactId>
         </dependency>
-
+        <dependency>
+            <groupId>org.wso2.carbon.config</groupId>
+            <artifactId>org.wso2.carbon.config</artifactId>
+        </dependency>
         <dependency>
             <groupId>javax.websocket</groupId>
             <artifactId>javax.websocket-api</artifactId>
@@ -164,6 +167,10 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.wso2.carbon.config</groupId>
+                <artifactId>org.wso2.carbon.config.maven.plugin</artifactId>
+            </plugin>
         </plugins>
     </build>
 
@@ -190,6 +197,7 @@
             javax.websocket.*;version="${javax.websocket.version.range}",
             org.yaml.snakeyaml.*;version="${org.snakeyaml.package.import.version.range}",
             org.apache.commons.pool.*;version="${commons.pool.package.import.version.range}",
+            org.wso2.carbon.config.*;version="${org.wso2.carbon.config.import.version.range}"
         </import.package>
     </properties>
 </project>
