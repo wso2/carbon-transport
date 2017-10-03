@@ -20,7 +20,6 @@ package org.wso2.carbon.transport.http.netty.internal;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
 import org.osgi.service.component.annotations.ReferencePolicy;
@@ -34,13 +33,8 @@ import org.wso2.carbon.messaging.TransportListenerManager;
  * Declarative service component for the Netty transport. This handles registration &amp; unregistration of relevant
  * OSGi services.
  */
-@Component(
-        name = "org.wso2.carbon.transport.http.netty.internal.HTTPTransportServiceComponent",
-        immediate = true,
-        property = {
-                "componentName=netty-transports-mgt"
-        })
 @SuppressWarnings("unused")
+@Deprecated
 public class HTTPTransportServiceComponent implements RequiredCapabilityListener {
 
     private static final Logger log = LoggerFactory.getLogger(HTTPTransportServiceComponent.class);

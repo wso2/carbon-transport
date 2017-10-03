@@ -1,5 +1,8 @@
 package org.wso2.carbon.transport.http.netty.config;
 
+import org.wso2.carbon.config.annotation.Configuration;
+import org.wso2.carbon.config.annotation.Element;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -10,12 +13,15 @@ import javax.xml.bind.annotation.XmlValue;
  */
 @SuppressWarnings("unused")
 @XmlAccessorType(XmlAccessType.FIELD)
+@Configuration(description = "Transport Property")
 public class TransportProperty {
 
     @XmlAttribute
+    @Element(description = "Property name")
     protected String name;
 
     @XmlValue
+    @Element(description = "Property value")
     protected Object value;
 
     public static TransportProperty getDefault() {

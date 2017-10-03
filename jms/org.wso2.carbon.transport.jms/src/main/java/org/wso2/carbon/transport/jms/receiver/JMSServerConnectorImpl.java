@@ -20,7 +20,6 @@ package org.wso2.carbon.transport.jms.receiver;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.wso2.carbon.kernel.utils.StringUtils;
 import org.wso2.carbon.transport.jms.contract.JMSServerConnector;
 import org.wso2.carbon.transport.jms.contract.JMSServerConnectorFuture;
 import org.wso2.carbon.transport.jms.exception.JMSConnectorException;
@@ -28,6 +27,7 @@ import org.wso2.carbon.transport.jms.factory.CachedJMSConnectionFactory;
 import org.wso2.carbon.transport.jms.factory.JMSConnectionFactory;
 import org.wso2.carbon.transport.jms.factory.PooledJMSConnectionFactory;
 import org.wso2.carbon.transport.jms.utils.JMSConstants;
+import org.wso2.carbon.utils.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
