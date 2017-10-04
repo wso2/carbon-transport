@@ -29,10 +29,11 @@
     <name>WSO2 Carbon Transport Parent</name>
 
     <modules>
-        <module>connector-framework</module>
+        <!--<module>connector-framework</module>-->
         <module>http</module>
         <module>jms</module>
         <module>file</module>
+        <module>http-transport-manager</module>
         <module>features</module>
     </modules>
 
@@ -102,6 +103,16 @@
                 <version>${org.wso2.carbon.core.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.wso2.carbon.config</groupId>
+                <artifactId>org.wso2.carbon.config</artifactId>
+                <version>${org.wso2.carbon.config.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.wso2.carbon.transport</groupId>
+                <artifactId>org.wso2.carbon.transport.manager.http</artifactId>
+                <version>${org.wso2.carbon.transport.manager.http.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
                 <version>${slf4j.version}</version>
@@ -169,13 +180,17 @@
                 <scope>test</scope>
             </dependency>
 
-            <!-- Carbon Metrics Dependency -->
             <dependency>
                 <groupId>org.wso2.carbon.transport</groupId>
                 <artifactId>org.wso2.carbon.transport.http.netty.statistics</artifactId>
                 <version>${project.version}</version>
             </dependency>
-
+            <dependency>
+                <groupId>org.wso2.carbon.utils</groupId>
+                <artifactId>org.wso2.carbon.utils</artifactId>
+                <version>${org.wso2.carbon.utils.version}</version>
+            </dependency>
+            <!-- Carbon Metrics Dependency -->
             <dependency>
                 <groupId>org.wso2.carbon.metrics</groupId>
                 <artifactId>org.wso2.carbon.metrics.core</artifactId>
@@ -287,6 +302,23 @@
                 </executions>
             </plugin>
         </plugins>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.wso2.carbon.config</groupId>
+                    <artifactId>org.wso2.carbon.config.maven.plugin</artifactId>
+                    <version>${org.wso2.carbon.config.version}</version>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>create-doc</goal>
+                            </goals>
+                            <phase>compile</phase>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
     </build>
 
     <properties>
@@ -294,8 +326,12 @@
         <maven.wagon.ssh.version>2.1</maven.wagon.ssh.version>
 
         <!-- Dependencies -->
-        <org.wso2.carbon.core.version>5.1.0</org.wso2.carbon.core.version>
+        <org.wso2.carbon.core.version>5.2.0</org.wso2.carbon.core.version>
+        <org.wso2.carbon.config.version>2.1.2</org.wso2.carbon.config.version>
+        <org.wso2.carbon.utils.version>2.0.4</org.wso2.carbon.utils.version>
         <carbon.kernel.package.import.version.range>[5.0.0, 6.0.0)</carbon.kernel.package.import.version.range>
+        <org.wso2.carbon.transport.import.version.range>(6.0.0,7.0.0]</org.wso2.carbon.transport.import.version.range>
+        <org.wso2.carbon.config.import.version.range>(2.0.0, 3.0.0]</org.wso2.carbon.config.import.version.range>
 
         <netty.version>4.1.7.Final</netty.version>
         <netty.package.import.version.range>[4.0.30, 5.0.0)</netty.package.import.version.range>
@@ -342,6 +378,8 @@
         <netty.transport.package.export.version>${project.version}</netty.transport.package.export.version>
         <connector.framework.package.export.version>${project.version}
         </connector.framework.package.export.version>
+        <org.wso2.carbon.transport.manager.http.version>${project.version}
+        </org.wso2.carbon.transport.manager.http.version>
         <jms.transport.package.export.version>${project.version}</jms.transport.package.export.version>
 
         <!-- Following two properties should be removed once the versions are added the wso2 parent pom CARBON-15729 -->
