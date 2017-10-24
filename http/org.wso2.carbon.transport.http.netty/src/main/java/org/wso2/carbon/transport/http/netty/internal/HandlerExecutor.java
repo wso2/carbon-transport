@@ -20,7 +20,6 @@ package org.wso2.carbon.transport.http.netty.internal;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.wso2.carbon.messaging.CarbonCallback;
 import org.wso2.carbon.transport.http.netty.message.HTTPCarbonMessage;
 
 import java.util.HashMap;
@@ -31,10 +30,11 @@ import java.util.Map;
  */
 public class HandlerExecutor {
 
-    private static final Logger LOG = LoggerFactory.getLogger(org.wso2.carbon.messaging.handler.HandlerExecutor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(HandlerExecutor.class);
     private Map<String, MessagingHandler> handlers = new HashMap<>();
 
-    public boolean executeRequestContinuationValidator(HTTPCarbonMessage carbonMessage, CarbonCallback callback) {
+    // Couldn't find a usage of this. https://github.com/wso2/carbon-transports/issues/386
+    /*public boolean executeRequestContinuationValidator(HTTPCarbonMessage carbonMessage, CarbonCallback callback) {
         try {
             handlers.forEach((k, v) -> v.validateRequestContinuation(carbonMessage, callback));
             for (Map.Entry<String, MessagingHandler> messagingHandlerEntry : handlers.entrySet()) {
@@ -47,7 +47,7 @@ public class HandlerExecutor {
             LOG.error("Error while executing handler at Source connection initiation ", e);
         }
         return true;
-    }
+    }*/
 
     public void executeAtSourceConnectionInitiation(String metadata) {
         try {

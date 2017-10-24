@@ -18,15 +18,14 @@
  */
 package org.wso2.carbon.transport.http.netty.internal;
 
-import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
 /**
  * OSGi BundleActivator of the Netty transport component.
  */
-public class HTTPTransportActivator implements BundleActivator {
+@Deprecated
+public class HTTPTransportActivator /*implements BundleActivator*/ {
 
-    @Override
     public void start(BundleContext bundleContext) throws Exception {
         HTTPTransportContextHolder.getInstance().setBundleContext(bundleContext);
         HandlerExecutor handlerExecutor = new HandlerExecutor();
@@ -35,7 +34,6 @@ public class HTTPTransportActivator implements BundleActivator {
 //                .registerService(ServerConnectorProvider.class, new HTTPServerConnectorProvider(), null);
     }
 
-    @Override
     public void stop(BundleContext bundleContext) throws Exception {
 
     }

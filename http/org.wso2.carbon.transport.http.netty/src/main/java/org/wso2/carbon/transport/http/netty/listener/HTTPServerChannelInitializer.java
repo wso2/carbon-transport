@@ -26,7 +26,6 @@ import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.handler.timeout.IdleStateHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.wso2.carbon.messaging.CarbonTransportInitializer;
 import org.wso2.carbon.transport.http.netty.common.Constants;
 import org.wso2.carbon.transport.http.netty.common.ssl.SSLConfig;
 import org.wso2.carbon.transport.http.netty.common.ssl.SSLHandlerFactory;
@@ -39,8 +38,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * A class that responsible for build server side channels.
  */
-public class HTTPServerChannelInitializer extends ChannelInitializer<SocketChannel>
-        implements CarbonTransportInitializer {
+public class HTTPServerChannelInitializer extends ChannelInitializer<SocketChannel> {
 
     private static final Logger log = LoggerFactory.getLogger(HTTPServerChannelInitializer.class);
 
@@ -51,7 +49,6 @@ public class HTTPServerChannelInitializer extends ChannelInitializer<SocketChann
     private ServerConnectorFuture serverConnectorFuture;
     private RequestSizeValidationConfiguration requestSizeValidationConfig;
 
-    @Override
     public void setup(Map<String, String> parameters) {
     }
 
@@ -112,7 +109,6 @@ public class HTTPServerChannelInitializer extends ChannelInitializer<SocketChann
         }
     }
 
-    @Override
     public boolean isServerInitializer() {
         return true;
     }
