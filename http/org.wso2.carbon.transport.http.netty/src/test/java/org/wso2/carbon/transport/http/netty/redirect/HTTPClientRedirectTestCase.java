@@ -121,7 +121,7 @@ public class HTTPClientRedirectTestCase {
                 .set(createHttpRequest(Constants.HTTP_GET_METHOD, FINAL_DESTINATION));
         embeddedChannel.writeInbound(response);
         embeddedChannel.writeInbound(LastHttpContent.EMPTY_LAST_CONTENT);
-        assertNotNull(embeddedChannel.readOutbound());
+        assertNotNull("Unit test for a single redirect failed.", embeddedChannel.readOutbound());
     }
 
     /**
@@ -150,7 +150,7 @@ public class HTTPClientRedirectTestCase {
         embeddedChannel.attr(Constants.REDIRECT_COUNT).set(5);
         embeddedChannel.writeInbound(response);
         embeddedChannel.writeInbound(LastHttpContent.EMPTY_LAST_CONTENT);
-        assertNull(embeddedChannel.readOutbound());
+        assertNull(embeddedChannel.readOutbound(), "Unit test for redirect loop failed.");
     }
 
     /**
@@ -166,7 +166,8 @@ public class HTTPClientRedirectTestCase {
             Map<String, String> returnValue = (Map<String, String>) method
                     .invoke(redirectHandler, FINAL_DESTINATION, HttpResponseStatus.SEE_OTHER.code(),
                             createHttpRequest(Constants.HTTP_POST_METHOD, FINAL_DESTINATION));
-            assertEquals(Constants.HTTP_GET_METHOD, returnValue.get(Constants.HTTP_METHOD));
+            assertEquals(Constants.HTTP_GET_METHOD, returnValue.get(Constants.HTTP_METHOD),
+                    "Unit test for redirect " + "code 303 failed.");
         } catch (NoSuchMethodException e) {
             TestUtil.handleException("NoSuchMethodException occurred while running unitTestFor300", e);
         } catch (InvocationTargetException e) {
@@ -177,7 +178,7 @@ public class HTTPClientRedirectTestCase {
     }
 
     /**
-     * This unit test is applicable to redirect status codes 300, 305, 307 ans 308.
+     * This unit test is applicable to redirect status codes 300, 305, 307 and 308.
      */
     @Test
     public void unitTestForOriginalMethod() {
@@ -189,7 +190,8 @@ public class HTTPClientRedirectTestCase {
             Map<String, String> returnValue = (Map<String, String>) method
                     .invoke(redirectHandler, FINAL_DESTINATION, HttpResponseStatus.TEMPORARY_REDIRECT.code(),
                             createHttpRequest(Constants.HTTP_HEAD_METHOD, FINAL_DESTINATION));
-            assertEquals(Constants.HTTP_HEAD_METHOD, returnValue.get(Constants.HTTP_METHOD));
+            assertEquals(Constants.HTTP_HEAD_METHOD, returnValue.get(Constants.HTTP_METHOD),
+                    "Unit test for redirect" + " codes 300, 305, 307 ans 308 failed.");
         } catch (NoSuchMethodException e) {
             TestUtil.handleException("NoSuchMethodException occurred while running unitTestForOriginalMethod", e);
         } catch (InvocationTargetException e) {
@@ -212,7 +214,8 @@ public class HTTPClientRedirectTestCase {
             Map<String, String> returnValue = (Map<String, String>) method
                     .invoke(redirectHandler, FINAL_DESTINATION, HttpResponseStatus.MOVED_PERMANENTLY.code(),
                             createHttpRequest(Constants.HTTP_HEAD_METHOD, FINAL_DESTINATION));
-            assertEquals(Constants.HTTP_GET_METHOD, returnValue.get(Constants.HTTP_METHOD));
+            assertEquals(Constants.HTTP_GET_METHOD, returnValue.get(Constants.HTTP_METHOD),
+                    "Unit test for redirect " + "codes 301 and 302 failed.");
         } catch (NoSuchMethodException e) {
             TestUtil.handleException("NoSuchMethodException occurred while running unitTestForAlwaysGet", e);
         } catch (InvocationTargetException e) {
@@ -234,7 +237,7 @@ public class HTTPClientRedirectTestCase {
             method.setAccessible(true);
             boolean isCrossDomainURL = (boolean) method
                     .invoke(redirectHandler, FINAL_DESTINATION, createHttpRequest(Constants.HTTP_HEAD_METHOD, URL1));
-            assertEquals(true, isCrossDomainURL);
+            assertEquals(true, isCrossDomainURL, "Unit test for determining cross domain URL failed.");
         } catch (NoSuchMethodException e) {
             TestUtil.handleException("NoSuchMethodException occurred while running unitTestToDetermineCrossDomainURLs",
                     e);
@@ -259,7 +262,7 @@ public class HTTPClientRedirectTestCase {
             method.setAccessible(true);
             boolean isCrossDomainURL = (boolean) method
                     .invoke(redirectHandler, URL1, createHttpRequest(Constants.HTTP_HEAD_METHOD, URL2));
-            assertEquals(false, isCrossDomainURL);
+            assertEquals(false, isCrossDomainURL, "Unit test for determining same domain situation " + "failed.");
         } catch (NoSuchMethodException e) {
             TestUtil.handleException("NoSuchMethodException occurred while running unitTestForSameDomain", e);
         } catch (InvocationTargetException e) {
@@ -282,7 +285,9 @@ public class HTTPClientRedirectTestCase {
             method.setAccessible(true);
             String redirectUrl = (String) method
                     .invoke(redirectHandler, "/test", "/redirect1", "https", "localhost", 8080);
-            assertEquals("https://localhost:8080/redirect1", redirectUrl);
+            assertEquals("https://localhost:8080/redirect1", redirectUrl,
+                    "Unit test for building redirect url with" + " a relative path that starts with slash "
+                            + "failed.");
 
         } catch (NoSuchMethodException e) {
             TestUtil.handleException("NoSuchMethodException occurred while running relativePathStartsWithSlash", e);
@@ -306,8 +311,8 @@ public class HTTPClientRedirectTestCase {
             method.setAccessible(true);
             String redirectUrl = (String) method
                     .invoke(redirectHandler, "/test", "redirect1/", "https", "localhost", 8080);
-            assertEquals("https://localhost:8080/test/redirect1/", redirectUrl);
-
+            assertEquals("https://localhost:8080/test/redirect1/", redirectUrl,
+                    "Unit test for building redirect " + "url with a relative path that ends with slash " + "failed.");
         } catch (NoSuchMethodException e) {
             TestUtil.handleException("NoSuchMethodException occurred while running relativePathEndsWithSlash", e);
         } catch (InvocationTargetException e) {
@@ -330,7 +335,8 @@ public class HTTPClientRedirectTestCase {
             method.setAccessible(true);
             String redirectUrl = (String) method
                     .invoke(redirectHandler, "/test", "redirect1", "https", "localhost", 8080);
-            assertEquals("https://localhost:8080/test/redirect1", redirectUrl);
+            assertEquals("https://localhost:8080/test/redirect1", redirectUrl, "Unit test for building "
+                    + "redirect URL with a relative path that doesn't contain any slashes failed. ");
 
         } catch (NoSuchMethodException e) {
             TestUtil.handleException("NoSuchMethodException occurred while running justRelativePathName", e);
@@ -354,8 +360,8 @@ public class HTTPClientRedirectTestCase {
             method.setAccessible(true);
             String redirectUrl = (String) method
                     .invoke(redirectHandler, "test/", "/redirect1", "https", "localhost", 8080);
-            assertEquals("https://localhost:8080/redirect1", redirectUrl);
-
+            assertEquals("https://localhost:8080/redirect1", redirectUrl,
+                    "Unit test for building redirect URL when" + " the request path ends with a slash failed.");
         } catch (NoSuchMethodException e) {
             TestUtil.handleException("NoSuchMethodException occurred while running requestPathEndsWithSlash", e);
         } catch (InvocationTargetException e) {
@@ -394,7 +400,7 @@ public class HTTPClientRedirectTestCase {
                     new InputStreamReader(new HttpMessageDataStreamer(response).getInputStream())).lines()
                     .collect(Collectors.joining("\n"));
             //Output should match with the response given by 9000 server
-            assertEquals(testValue, result);
+            assertEquals(testValue, result, "Integration test for a single redirect failed.");
             redirectServer.shutdown();
             httpServer.shutdown();
         } catch (Exception e) {
@@ -441,7 +447,7 @@ public class HTTPClientRedirectTestCase {
                     new InputStreamReader(new HttpMessageDataStreamer(response).getInputStream())).lines()
                     .collect(Collectors.joining("\n"));
             //Response should be equal to the response receive from Server 2 as there cannot be any more redirects.
-            assertEquals(testValueForLoopRedirect, result);
+            assertEquals(testValueForLoopRedirect, result, "Integration test for redirect loop failed.");
             redirectServer1.shutdown();
             redirectServer2.shutdown();
 
@@ -487,7 +493,7 @@ public class HTTPClientRedirectTestCase {
             Throwable response = listener.getHttpErrorMessage();
             assertNotNull(response);
             String result = response.getMessage();
-            assertEquals("Endpoint timed out", result);
+            assertEquals("Endpoint timed out", result, "Integration test for redirection timeout failed.");
             redirectServer2.shutdown();
             httpServer.shutdown();
         } catch (Exception e) {
@@ -519,7 +525,8 @@ public class HTTPClientRedirectTestCase {
                     new InputStreamReader(new HttpMessageDataStreamer(response).getInputStream())).lines()
                     .collect(Collectors.joining("\n"));
             //Output should match with the response given by 9092 server
-            assertEquals(testValue, result);
+            assertEquals(testValue, result, "When redirect eligible, but the response is not a redirect, that "
+                    + " response is not received by the client.");
             httpServer.shutdown();
         } catch (Exception e) {
             TestUtil.handleException("Exception occurred while running singleRedirectionTest", e);

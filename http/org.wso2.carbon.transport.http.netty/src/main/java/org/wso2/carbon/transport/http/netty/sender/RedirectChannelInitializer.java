@@ -61,7 +61,7 @@ public class RedirectChannelInitializer extends ChannelInitializer<SocketChannel
         // e.g. SSL handler
         if (sslEngine != null) {
             if (log.isDebugEnabled()) {
-                log.debug("adding ssl handler");
+                log.debug("adding ssl handler for redirect channel.");
             }
             ch.pipeline().addLast("ssl", new SslHandler(this.sslEngine));
         }

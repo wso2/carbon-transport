@@ -269,22 +269,17 @@ public final class Constants {
     public static final String HTTP_TRACE_LOG_HANDLER = "http-trace-logger";
     public static final String WEBSOCKET_SERVER_HANDSHAKE_HANDLER = "websocket-server-handshake-handler";
 
-    public static final AttributeKey<Integer> REDIRECT_COUNT = AttributeKey.<Integer>valueOf
-            ("REDIRECT_COUNT");
-    public static final AttributeKey<HTTPCarbonMessage> ORIGINAL_REQUEST = AttributeKey.<HTTPCarbonMessage>valueOf
-            ("ORIGINAL_REQUEST");
-    public static final AttributeKey<HttpResponseFuture> RESPONSE_FUTURE_OF_ORIGINAL_CHANNEL = AttributeKey
-            .<HttpResponseFuture>valueOf
-            ("RESPONSE_FUTURE_OF_ORIGINAL_CHANNEL");
-    public static final AttributeKey<Long> ORIGINAL_CHANNEL_START_TIME = AttributeKey
-            .<Long>valueOf
-                    ("ORIGINAL_CHANNEL_START_TIME");
-    public static final AttributeKey<Integer> ORIGINAL_CHANNEL_TIMEOUT = AttributeKey
-            .<Integer>valueOf
-                    ("ORIGINAL_CHANNEL_TIMEOUT");
-    public static final AttributeKey<TargetChannel> TARGET_CHANNEL_REFERENCE = AttributeKey
-            .<TargetChannel>valueOf
-                    ("TARGET_CHANNEL_REFERENCE");
+    public static final AttributeKey<Integer> REDIRECT_COUNT = AttributeKey.<Integer>valueOf("REDIRECT_COUNT");
+    public static final AttributeKey<HTTPCarbonMessage> ORIGINAL_REQUEST = AttributeKey.<HTTPCarbonMessage>valueOf(
+            "ORIGINAL_REQUEST");
+    public static final AttributeKey<HttpResponseFuture> RESPONSE_FUTURE_OF_ORIGINAL_CHANNEL =  AttributeKey
+            .<HttpResponseFuture>valueOf("RESPONSE_FUTURE_OF_ORIGINAL_CHANNEL");
+    public static final AttributeKey<Long> ORIGINAL_CHANNEL_START_TIME = AttributeKey.<Long>valueOf(
+            "ORIGINAL_CHANNEL_START_TIME");
+    public static final AttributeKey<Integer> ORIGINAL_CHANNEL_TIMEOUT = AttributeKey.<Integer>valueOf(
+            "ORIGINAL_CHANNEL_TIMEOUT");
+    public static final AttributeKey<TargetChannel> TARGET_CHANNEL_REFERENCE = AttributeKey.<TargetChannel>valueOf(
+            "TARGET_CHANNEL_REFERENCE");
 
     public static final String UTF8 = "UTF-8";
     public static final String URL_AUTHORITY = "://";

@@ -435,30 +435,30 @@ public class RedirectHandler extends ChannelInboundHandlerAdapter {
                 originalRequest != null ? (String) originalRequest.getProperty(Constants.HTTP_METHOD) : null;
 
         switch (statusCode) {
-        case 300:
-        case 307:
-        case 308:
-        case 305:
-            if (Constants.HTTP_GET_METHOD.equals(originalRequestMethod) || Constants.HTTP_HEAD_METHOD
-                    .equals(originalRequestMethod)) {
-                redirectState.put(Constants.HTTP_METHOD, originalRequestMethod);
-                redirectState.put(Constants.LOCATION, getLocationURI(location, originalRequest));
-            }
-            break;
-        case 301:
-        case 302:
-            if (Constants.HTTP_GET_METHOD.equals(originalRequestMethod) || Constants.HTTP_HEAD_METHOD
-                    .equals(originalRequestMethod)) {
+            case 300:
+            case 307:
+            case 308:
+            case 305:
+                if (Constants.HTTP_GET_METHOD.equals(originalRequestMethod) || Constants.HTTP_HEAD_METHOD
+                        .equals(originalRequestMethod)) {
+                    redirectState.put(Constants.HTTP_METHOD, originalRequestMethod);
+                    redirectState.put(Constants.LOCATION, getLocationURI(location, originalRequest));
+                }
+                break;
+            case 301:
+            case 302:
+                if (Constants.HTTP_GET_METHOD.equals(originalRequestMethod) || Constants.HTTP_HEAD_METHOD
+                        .equals(originalRequestMethod)) {
+                    redirectState.put(Constants.HTTP_METHOD, Constants.HTTP_GET_METHOD);
+                    redirectState.put(Constants.LOCATION, getLocationURI(location, originalRequest));
+                }
+                break;
+            case 303:
                 redirectState.put(Constants.HTTP_METHOD, Constants.HTTP_GET_METHOD);
                 redirectState.put(Constants.LOCATION, getLocationURI(location, originalRequest));
-            }
-            break;
-        case 303:
-            redirectState.put(Constants.HTTP_METHOD, Constants.HTTP_GET_METHOD);
-            redirectState.put(Constants.LOCATION, getLocationURI(location, originalRequest));
-            break;
-        default:
-            return null;
+                break;
+            default:
+                return null;
         }
         return redirectState;
     }
