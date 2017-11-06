@@ -29,6 +29,11 @@ import io.netty.handler.codec.http.FullHttpMessage;
 import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpMessage;
 import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.LastHttpContent;
+import io.netty.handler.codec.http.multipart.Attribute;
+import io.netty.handler.codec.http.multipart.FileUpload;
+import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
+import io.netty.handler.codec.http.multipart.InterfaceHttpData;
 import io.netty.handler.timeout.IdleStateEvent;
 import org.apache.commons.pool.impl.GenericObjectPool;
 import org.slf4j.Logger;
@@ -41,7 +46,9 @@ import org.wso2.carbon.transport.http.netty.internal.HTTPTransportContextHolder;
 import org.wso2.carbon.transport.http.netty.internal.HandlerExecutor;
 import org.wso2.carbon.transport.http.netty.message.HTTPCarbonMessage;
 import org.wso2.carbon.transport.http.netty.message.HttpCarbonRequest;
+import org.wso2.carbon.transport.http.netty.message.multipart.MultipartMessageDataSource;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URISyntaxException;
 import java.util.Map;
@@ -59,6 +66,7 @@ public class SourceHandler extends ChannelInboundHandlerAdapter {
     private ServerConnectorFuture serverConnectorFuture;
     private String interfaceId;
     private HandlerExecutor handlerExecutor;
+    private HttpPostRequestDecoder postRequestDecoder;
 
     public SourceHandler(ServerConnectorFuture serverConnectorFuture, String interfaceId) throws Exception {
         this.serverConnectorFuture = serverConnectorFuture;
@@ -94,19 +102,24 @@ public class SourceHandler extends ChannelInboundHandlerAdapter {
             if (handlerExecutor != null) {
                 handlerExecutor.executeAtSourceRequestSending(sourceReqCmsg);
             }
-
         } else if (msg instanceof HttpRequest) {
             HttpRequest httpRequest = (HttpRequest) msg;
+            postRequestDecoder = new HttpPostRequestDecoder(httpRequest);
             sourceReqCmsg = setupCarbonMessage(httpRequest);
             notifyRequestListener(sourceReqCmsg, ctx);
         } else {
             if (sourceReqCmsg != null) {
                 if (msg instanceof HttpContent) {
                     HttpContent httpContent = (HttpContent) msg;
-                    sourceReqCmsg.addHttpContent(httpContent);
-                    if (Util.isLastHttpContent(httpContent)) {
-                        if (handlerExecutor != null) {
-                            handlerExecutor.executeAtSourceRequestSending(sourceReqCmsg);
+                    if (postRequestDecoder != null && postRequestDecoder.isMultipart()) {
+                        sourceReqCmsg.setMultipartBody(true);
+                        handleMultipartBody(httpContent);
+                    } else {
+                        sourceReqCmsg.addHttpContent(httpContent);
+                        if (Util.isLastHttpContent(httpContent)) {
+                            if (handlerExecutor != null) {
+                                handlerExecutor.executeAtSourceRequestSending(sourceReqCmsg);
+                            }
                         }
                     }
                 }
@@ -223,5 +236,87 @@ public class SourceHandler extends ChannelInboundHandlerAdapter {
         if (evt instanceof IdleStateEvent) {
             ctx.close();
         }
+    }
+
+    private void handleMultipartBody(HttpContent httpContent){
+        postRequestDecoder.offer(httpContent);
+        readChunkByChunk();
+        if (httpContent instanceof LastHttpContent) {
+            readChunkByChunk();
+            //sendResponse(ctx);
+            ByteBuf byteBuf = sourceReqCmsg.getMultipartBodyInByteBuff();
+            sourceReqCmsg.addMultipartMessageBody(byteBuf);
+            resetPostRequestDecoder();
+        }
+    }
+
+    private void readChunkByChunk() {
+        try {
+            while (postRequestDecoder.hasNext()) {
+                InterfaceHttpData data = postRequestDecoder.next();
+                if (data != null) {
+                    try {
+                        processChunk(data);
+                    } finally {
+                        data.release();
+                    }
+                }
+            }
+        } catch (HttpPostRequestDecoder.EndOfDataDecoderException e) {
+            // No more data to decode, that's fine
+        }
+    }
+
+    private void processChunk(InterfaceHttpData data) {
+        log.debug("HTTP Data Name: {}, Type: {}", data.getName(), data.getHttpDataType());
+
+        switch (data.getHttpDataType()) {
+            case Attribute:
+                Attribute attrib = (Attribute) data;
+               /* if (!"json".equals(attrib.getName())) {
+                    log.debug("Received unknown attribute: {}", attrib.getName());
+                    handleInvalidRequest(ctx, fullHttpRequest, BAD_REQUEST,
+                            copiedBuffer("Unknown Part Name: " + attrib.getName(), CharsetUtil.UTF_8));
+                    return;
+                }*/
+                try {
+                    // readData = attrib.getByteBuf().toString(CharsetUtil.UTF_8);
+                    //readBytes = attrib.getByteBuf();
+                    //log.debug("Content Size: {}, Content: {}", attrib.getByteBuf().readableBytes(), readData);
+                    MultipartMessageDataSource bodyPart = new MultipartMessageDataSource(attrib.getName(), attrib
+                            .get(), null, attrib
+                            .getByteBuf().readableBytes());
+                    sourceReqCmsg.addBodyPart(bodyPart);
+                    log.debug("Content Size: {}, Content: {}", attrib.getByteBuf().readableBytes());
+                } catch (IOException e) {
+                    log.error("Unable to read attribute content", e);
+                }
+
+                break;
+            case FileUpload:
+                FileUpload fileUpload = (FileUpload) data;
+                log.debug("File upload.");
+                MultipartMessageDataSource bodyPart = null;
+                try {
+                    bodyPart = new MultipartMessageDataSource(fileUpload.getName(), fileUpload
+                            .getFilename(), fileUpload
+                            .get(), fileUpload.getContentType(), fileUpload
+                            .getByteBuf().readableBytes());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                sourceReqCmsg.addBodyPart(bodyPart);
+                break;
+            default:
+                log.warn("Received unknown attribute type. Skipping.");
+                break;
+        }
+    }
+
+    private void resetPostRequestDecoder() {
+        //httpRequest = null;
+        //readData = null;
+        postRequestDecoder.destroy();
+        postRequestDecoder = null;
     }
 }

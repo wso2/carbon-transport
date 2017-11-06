@@ -57,24 +57,27 @@ public class HttpResponseListener implements HttpConnectorListener {
                 handlerExecutor.executeAtSourceResponseReceiving(httpResponseMessage);
             }
 
-            final HttpResponse response = Util
-                    .createHttpResponse(httpResponseMessage, connectionCloseAfterResponse);
+            final HttpResponse response = Util.createHttpResponse(httpResponseMessage, connectionCloseAfterResponse);
             sourceContext.write(response);
 
-            httpResponseMessage.getHttpContentAsync().setMessageListener(httpContent ->
-                    this.sourceContext.channel().eventLoop().execute(() -> {
-                if (Util.isLastHttpContent(httpContent)) {
-                    ChannelFuture future = sourceContext.writeAndFlush(httpContent);
-                    if (connectionCloseAfterResponse) {
-                        future.addListener(ChannelFutureListener.CLOSE);
-                    }
-                    if (handlerExecutor != null) {
-                        handlerExecutor.executeAtSourceResponseSending(httpResponseMessage);
-                    }
-                } else {
-                    sourceContext.write(httpContent);
-                }
-            }));
+            if (httpResponseMessage.isMultipartBody()) {
+
+            } else {
+                httpResponseMessage.getHttpContentAsync()
+                        .setMessageListener(httpContent -> this.sourceContext.channel().eventLoop().execute(() -> {
+                            if (Util.isLastHttpContent(httpContent)) {
+                                ChannelFuture future = sourceContext.writeAndFlush(httpContent);
+                                if (connectionCloseAfterResponse) {
+                                    future.addListener(ChannelFutureListener.CLOSE);
+                                }
+                                if (handlerExecutor != null) {
+                                    handlerExecutor.executeAtSourceResponseSending(httpResponseMessage);
+                                }
+                            } else {
+                                sourceContext.write(httpContent);
+                            }
+                        }));
+            }
         });
         Util.prepareBuiltMessageForTransfer(httpResponseMessage);
     }

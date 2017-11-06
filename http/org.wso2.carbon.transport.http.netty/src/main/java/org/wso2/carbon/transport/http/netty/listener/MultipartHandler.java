@@ -24,8 +24,8 @@ import io.netty.buffer.ByteBufOutputStream;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpContent;
+import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.LastHttpContent;
 import io.netty.handler.codec.http.multipart.Attribute;
 import io.netty.handler.codec.http.multipart.FileUpload;
@@ -47,7 +47,7 @@ public class MultipartHandler extends ChannelInboundHandlerAdapter {
     private final ServerConnectorFuture serverConnectorFuture;
     private final String interfaceId;
     private HttpPostRequestDecoder postRequestDecoder;
-    private FullHttpRequest fullHttpRequest;
+    private HttpRequest httpRequest;
     private String readData;
     private ByteBuf readBytes;
 
@@ -56,15 +56,13 @@ public class MultipartHandler extends ChannelInboundHandlerAdapter {
         this.interfaceId = interfaceId;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        if (msg instanceof FullHttpRequest) {
-            FullHttpRequest request = fullHttpRequest = (FullHttpRequest) msg;
+        if (msg instanceof HttpRequest) {
+            HttpRequest request = httpRequest = (HttpRequest) msg;
             postRequestDecoder = new HttpPostRequestDecoder(request);
-            postRequestDecoder.setDiscardThreshold(0);
+            //postRequestDecoder.setDiscardThreshold(0);
+            ctx.fireChannelRead(msg);
         }
 
         if (postRequestDecoder != null && postRequestDecoder.isMultipart()) {
@@ -133,7 +131,7 @@ public class MultipartHandler extends ChannelInboundHandlerAdapter {
     }
 
     private void resetPostRequestDecoder() {
-        fullHttpRequest = null;
+        httpRequest = null;
         readData = null;
         postRequestDecoder.destroy();
         postRequestDecoder = null;

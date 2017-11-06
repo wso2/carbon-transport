@@ -53,6 +53,8 @@ public interface EntityCollector {
      */
     void addMessageBody(ByteBuffer msgBody);
 
+    void addMessageBody(ByteBuf msgBody);
+
     /**
      * Get the full message body
      * @return complete message body
