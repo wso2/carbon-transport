@@ -18,8 +18,10 @@
  */
 package org.wso2.carbon.transport.http.netty.config;
 
+import org.wso2.carbon.transport.http.netty.common.ProxyServerConfiguration;
 import org.wso2.carbon.transport.http.netty.common.Util;
 import org.wso2.carbon.transport.http.netty.common.ssl.SSLConfig;
+
 import java.util.List;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -84,6 +86,8 @@ public class SenderConfiguration {
     private boolean followRedirect;
 
     private int maxRedirectCount;
+
+    private ProxyServerConfiguration proxyServerConfiguration;
 
     public SenderConfiguration() {
     }
@@ -217,5 +221,13 @@ public class SenderConfiguration {
 
     public void setMaxRedirectCount(int maxRedirectCount) {
         this.maxRedirectCount = maxRedirectCount;
+    }
+
+    public void setProxyServerConfiguration(ProxyServerConfiguration proxyServerConfiguration) {
+        this.proxyServerConfiguration = proxyServerConfiguration;
+    }
+
+    public ProxyServerConfiguration getProxyServerConfiguration() {
+        return proxyServerConfiguration;
     }
 }
