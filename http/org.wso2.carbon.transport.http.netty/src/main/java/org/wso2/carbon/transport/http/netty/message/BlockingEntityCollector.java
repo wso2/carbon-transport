@@ -199,6 +199,10 @@ public class BlockingEntityCollector implements EntityCollector {
         this.httpContentQueue.add(new DefaultLastHttpContent());
     }
 
+    public HttpContent peek() {
+        return this.httpContentQueue.peek();
+    }
+
     @Deprecated
     public synchronized void release() {
     }

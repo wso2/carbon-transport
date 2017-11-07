@@ -368,6 +368,17 @@ public class HTTPCarbonMessage {
         return blockingEntityCollector;
     }
 
+    /**
+     * Peek the head of the queue
+     */
+    public HttpContent peek() {
+        return this.blockingEntityCollector.peek();
+    }
+
+    public synchronized void removeHttpContentAsyncFuture() {
+        this.messageFuture = null;
+    }
+
     public Collection<MultipartMessageDataSource> getMultiparts() {
         return multiparts;
     }
