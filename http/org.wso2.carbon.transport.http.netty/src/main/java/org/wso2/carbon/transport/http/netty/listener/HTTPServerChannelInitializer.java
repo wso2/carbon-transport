@@ -105,8 +105,6 @@ public class HTTPServerChannelInitializer extends ChannelInitializer<SocketChann
                          new WebSocketServerHandshakeHandler(this.serverConnectorFuture, this.interfaceId));
 
         try {
-           /* pipeline.addLast(Constants.MULTIPART_HANDLER,
-                    new MultipartHandler(this.serverConnectorFuture, this.interfaceId));*/
             pipeline.addLast(Constants.HTTP_SOURCE_HANDLER,
                              new SourceHandler(this.serverConnectorFuture, this.interfaceId));
         } catch (Exception e) {

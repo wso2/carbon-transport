@@ -19,7 +19,6 @@
 package org.wso2.carbon.transport.http.netty.message;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.DefaultHttpHeaders;
 import io.netty.handler.codec.http.DefaultHttpRequest;
@@ -35,15 +34,9 @@ import org.wso2.carbon.transport.http.netty.contract.ServerConnectorException;
 import org.wso2.carbon.transport.http.netty.contract.ServerConnectorFuture;
 import org.wso2.carbon.transport.http.netty.contractimpl.HttpWsServerConnectorFuture;
 import org.wso2.carbon.transport.http.netty.listener.ServerBootstrapConfiguration;
-import org.wso2.carbon.transport.http.netty.message.multipart.MultipartMessageDataSource;
 import org.wso2.carbon.transport.http.netty.sender.channel.BootstrapConfiguration;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,8 +50,6 @@ public class HTTPCarbonMessage {
     protected HttpMessage httpMessage;
     private EntityCollector blockingEntityCollector;
     private Map<String, Object> properties = new HashMap<>();
-    private Collection<MultipartMessageDataSource> multiparts = new ArrayList<>();
-    private boolean isMultipartBody;
 
     private MessagingException messagingException = null;
     private MessageDataSource messageDataSource;
@@ -152,7 +143,7 @@ public class HTTPCarbonMessage {
         blockingEntityCollector.addMessageBody(msgBody);
     }
 
-    private void markMessageEnd() {
+    public void markMessageEnd() {
         blockingEntityCollector.markMessageEnd();
     }
 
@@ -378,45 +369,4 @@ public class HTTPCarbonMessage {
     public synchronized void removeHttpContentAsyncFuture() {
         this.messageFuture = null;
     }
-
-    public Collection<MultipartMessageDataSource> getMultiparts() {
-        return multiparts;
-    }
-
-    public void addBodyPart(MultipartMessageDataSource bodyPart) {
-        multiparts.add(bodyPart);
-    }
-
-    public boolean isMultipartBody() {
-        return isMultipartBody;
-    }
-
-    public void setMultipartBody(boolean multipartBody) {
-        isMultipartBody = multipartBody;
-    }
-
-    public ByteBuf getMultipartBodyInByteBuff() {
-        ByteBuf buffer = Unpooled.compositeBuffer();
-        for (MultipartMessageDataSource multipartMessageDataSource : multiparts) {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            ObjectOutputStream oos = null;
-            try {
-                oos = new ObjectOutputStream(baos);
-                oos.writeObject(multipartMessageDataSource);
-                oos.flush();
-                oos.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            //InputStream is = new ByteArrayInputStream(baos.toByteArray());
-            buffer.writeBytes(baos.toByteArray());
-        }
-        return buffer;
-    }
-/*
-    public HttpContent getMultipartContents(){
-        ByteBuf byteBuf =  getMultipartBodyInByteBuff();
-
-    }*/
 }

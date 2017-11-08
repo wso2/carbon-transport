@@ -34,6 +34,7 @@ import io.netty.handler.codec.http.multipart.Attribute;
 import io.netty.handler.codec.http.multipart.FileUpload;
 import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
 import io.netty.handler.codec.http.multipart.InterfaceHttpData;
+import io.netty.handler.codec.http.multipart.InterfaceHttpPostRequestDecoder;
 import io.netty.handler.timeout.IdleStateEvent;
 import org.apache.commons.pool.impl.GenericObjectPool;
 import org.slf4j.Logger;
@@ -48,9 +49,14 @@ import org.wso2.carbon.transport.http.netty.message.HTTPCarbonMessage;
 import org.wso2.carbon.transport.http.netty.message.HttpCarbonRequest;
 import org.wso2.carbon.transport.http.netty.message.multipart.MultipartMessageDataSource;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.net.InetSocketAddress;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -67,6 +73,9 @@ public class SourceHandler extends ChannelInboundHandlerAdapter {
     private String interfaceId;
     private HandlerExecutor handlerExecutor;
     private HttpPostRequestDecoder postRequestDecoder;
+    private boolean isMultipartRequest;
+    private Collection<MultipartMessageDataSource> multiparts = new ArrayList<>();
+    private InterfaceHttpPostRequestDecoder requestDecoder;
 
     public SourceHandler(ServerConnectorFuture serverConnectorFuture, String interfaceId) throws Exception {
         this.serverConnectorFuture = serverConnectorFuture;
@@ -104,22 +113,21 @@ public class SourceHandler extends ChannelInboundHandlerAdapter {
             }
         } else if (msg instanceof HttpRequest) {
             HttpRequest httpRequest = (HttpRequest) msg;
-            postRequestDecoder = new HttpPostRequestDecoder(httpRequest);
+            isMultipartRequest = isMultipartRequest(httpRequest);
             sourceReqCmsg = setupCarbonMessage(httpRequest);
             notifyRequestListener(sourceReqCmsg, ctx);
         } else {
             if (sourceReqCmsg != null) {
                 if (msg instanceof HttpContent) {
                     HttpContent httpContent = (HttpContent) msg;
-                    if (postRequestDecoder != null && postRequestDecoder.isMultipart()) {
-                        sourceReqCmsg.setMultipartBody(true);
+                    if (isMultipartRequest) {
                         handleMultipartBody(httpContent);
                     } else {
                         sourceReqCmsg.addHttpContent(httpContent);
-                        if (Util.isLastHttpContent(httpContent)) {
-                            if (handlerExecutor != null) {
-                                handlerExecutor.executeAtSourceRequestSending(sourceReqCmsg);
-                            }
+                    }
+                    if (Util.isLastHttpContent(httpContent)) {
+                        if (handlerExecutor != null) {
+                            handlerExecutor.executeAtSourceRequestSending(sourceReqCmsg);
                         }
                     }
                 }
@@ -238,18 +246,40 @@ public class SourceHandler extends ChannelInboundHandlerAdapter {
         }
     }
 
-    private void handleMultipartBody(HttpContent httpContent){
-        postRequestDecoder.offer(httpContent);
+    /**
+     * Check whether the request is a multipart request or not.
+     *
+     * @param httpRequest Http Request received
+     * @return a boolean to indicate whether the request is a multipart or not
+     */
+    private boolean isMultipartRequest(HttpRequest httpRequest) {
+        postRequestDecoder = new HttpPostRequestDecoder(httpRequest);
+        return postRequestDecoder.isMultipart();
+    }
+
+    /**
+     * Set the received multipart contents as the payload of carbon message.
+     *
+     * @param httpContent HttpContent
+     */
+    private void handleMultipartBody(HttpContent httpContent) {
+        requestDecoder = postRequestDecoder.offer(httpContent);
         readChunkByChunk();
         if (httpContent instanceof LastHttpContent) {
-            readChunkByChunk();
-            //sendResponse(ctx);
-            ByteBuf byteBuf = sourceReqCmsg.getMultipartBodyInByteBuff();
-            sourceReqCmsg.addMultipartMessageBody(byteBuf);
+            // readChunkByChunk(); might not need this
+            try {
+                sourceReqCmsg.addMultipartMessageBody(getMultipartBodyInByteBuff());
+            } catch (IOException e) {
+                log.error("Error occurred while converting multipart collection to a stream", e);
+            }
+            sourceReqCmsg.markMessageEnd();
             resetPostRequestDecoder();
         }
     }
 
+    /**
+     * Read data chunk by chunk and process them.
+     */
     private void readChunkByChunk() {
         try {
             while (postRequestDecoder.hasNext()) {
@@ -263,60 +293,70 @@ public class SourceHandler extends ChannelInboundHandlerAdapter {
                 }
             }
         } catch (HttpPostRequestDecoder.EndOfDataDecoderException e) {
-            // No more data to decode, that's fine
+            log.debug("EndOfDataDecoderException occurred since there's no more data to decode but that's fine");
         }
     }
 
+    /**
+     * Construct body parts from chunks and set the body parts in source carbon message.
+     *
+     * @param data InterfaceHttpData
+     */
     private void processChunk(InterfaceHttpData data) {
-        log.debug("HTTP Data Name: {}, Type: {}", data.getName(), data.getHttpDataType());
-
+        log.debug("Multipart HTTP Data Name: {}, Type: {}", data.getName(), data.getHttpDataType());
+        MultipartMessageDataSource bodyPart = null;
         switch (data.getHttpDataType()) {
             case Attribute:
-                Attribute attrib = (Attribute) data;
-               /* if (!"json".equals(attrib.getName())) {
-                    log.debug("Received unknown attribute: {}", attrib.getName());
-                    handleInvalidRequest(ctx, fullHttpRequest, BAD_REQUEST,
-                            copiedBuffer("Unknown Part Name: " + attrib.getName(), CharsetUtil.UTF_8));
-                    return;
-                }*/
+                Attribute attribute = (Attribute) data;
                 try {
-                    // readData = attrib.getByteBuf().toString(CharsetUtil.UTF_8);
-                    //readBytes = attrib.getByteBuf();
-                    //log.debug("Content Size: {}, Content: {}", attrib.getByteBuf().readableBytes(), readData);
-                    MultipartMessageDataSource bodyPart = new MultipartMessageDataSource(attrib.getName(), attrib
-                            .get(), null, attrib
-                            .getByteBuf().readableBytes());
-                    sourceReqCmsg.addBodyPart(bodyPart);
-                    log.debug("Content Size: {}, Content: {}", attrib.getByteBuf().readableBytes());
+                    log.debug("Attribute content size: {}", attribute.getByteBuf().readableBytes());
+                    bodyPart = new MultipartMessageDataSource(attribute.getName(), attribute.get(), null,
+                            attribute.getByteBuf().readableBytes());
                 } catch (IOException e) {
                     log.error("Unable to read attribute content", e);
                 }
-
                 break;
             case FileUpload:
                 FileUpload fileUpload = (FileUpload) data;
-                log.debug("File upload.");
-                MultipartMessageDataSource bodyPart = null;
                 try {
-                    bodyPart = new MultipartMessageDataSource(fileUpload.getName(), fileUpload
-                            .getFilename(), fileUpload
-                            .get(), fileUpload.getContentType(), fileUpload
-                            .getByteBuf().readableBytes());
+                    log.debug("Fileupload size: {}", fileUpload.getByteBuf().readableBytes());
+                    bodyPart = new MultipartMessageDataSource(fileUpload.getName(), fileUpload.getFilename(),
+                            fileUpload.get(), fileUpload.getContentType(), fileUpload.getByteBuf().readableBytes());
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    log.error("Unable to read fileupload content", e);
                 }
-                sourceReqCmsg.addBodyPart(bodyPart);
                 break;
             default:
                 log.warn("Received unknown attribute type. Skipping.");
                 break;
         }
+        multiparts.add(bodyPart);
     }
 
+    /**
+     * Convert multipart collection back to a stream.
+     *
+     * @return Stream in ByteBuf
+     * @throws IOException
+     */
+    private ByteBuf getMultipartBodyInByteBuff() throws IOException {
+        ByteBuf buffer = Unpooled.buffer();
+        ByteArrayOutputStream arrayOutputStream = new ByteArrayOutputStream();
+        ObjectOutputStream objectOutputStream = new ObjectOutputStream(arrayOutputStream);
+        objectOutputStream.writeObject(multiparts);
+        objectOutputStream.flush();
+        objectOutputStream.close();
+        buffer.writeBytes(arrayOutputStream.toByteArray());
+        return buffer;
+    }
+
+    /**
+     * Reset Request decoder.
+     */
     private void resetPostRequestDecoder() {
-        //httpRequest = null;
-        //readData = null;
+        requestDecoder.destroy();
         postRequestDecoder.destroy();
         postRequestDecoder = null;
+        multiparts = Collections.EMPTY_LIST;
     }
 }
