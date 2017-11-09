@@ -47,7 +47,7 @@ import org.wso2.carbon.transport.http.netty.internal.HTTPTransportContextHolder;
 import org.wso2.carbon.transport.http.netty.internal.HandlerExecutor;
 import org.wso2.carbon.transport.http.netty.message.HTTPCarbonMessage;
 import org.wso2.carbon.transport.http.netty.message.HttpCarbonRequest;
-import org.wso2.carbon.transport.http.netty.message.multipart.MultipartMessageDataSource;
+import org.wso2.carbon.transport.http.netty.message.multipart.HttpBodyPart;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -74,7 +74,7 @@ public class SourceHandler extends ChannelInboundHandlerAdapter {
     private HandlerExecutor handlerExecutor;
     private HttpPostRequestDecoder postRequestDecoder;
     private boolean isMultipartRequest;
-    private Collection<MultipartMessageDataSource> multiparts = new ArrayList<>();
+    private Collection<HttpBodyPart> multiparts = new ArrayList<>();
     private InterfaceHttpPostRequestDecoder requestDecoder;
 
     public SourceHandler(ServerConnectorFuture serverConnectorFuture, String interfaceId) throws Exception {
@@ -304,13 +304,13 @@ public class SourceHandler extends ChannelInboundHandlerAdapter {
      */
     private void processChunk(InterfaceHttpData data) {
         log.debug("Multipart HTTP Data Name: {}, Type: {}", data.getName(), data.getHttpDataType());
-        MultipartMessageDataSource bodyPart = null;
+        HttpBodyPart bodyPart = null;
         switch (data.getHttpDataType()) {
             case Attribute:
                 Attribute attribute = (Attribute) data;
                 try {
                     log.debug("Attribute content size: {}", attribute.getByteBuf().readableBytes());
-                    bodyPart = new MultipartMessageDataSource(attribute.getName(), attribute.get(), null,
+                    bodyPart = new HttpBodyPart(attribute.getName(), attribute.get(), null,
                             attribute.getByteBuf().readableBytes());
                 } catch (IOException e) {
                     log.error("Unable to read attribute content", e);
@@ -320,7 +320,7 @@ public class SourceHandler extends ChannelInboundHandlerAdapter {
                 FileUpload fileUpload = (FileUpload) data;
                 try {
                     log.debug("Fileupload size: {}", fileUpload.getByteBuf().readableBytes());
-                    bodyPart = new MultipartMessageDataSource(fileUpload.getName(), fileUpload.getFilename(),
+                    bodyPart = new HttpBodyPart(fileUpload.getName(), fileUpload.getFilename(),
                             fileUpload.get(), fileUpload.getContentType(), fileUpload.getByteBuf().readableBytes());
                 } catch (IOException e) {
                     log.error("Unable to read fileupload content", e);
