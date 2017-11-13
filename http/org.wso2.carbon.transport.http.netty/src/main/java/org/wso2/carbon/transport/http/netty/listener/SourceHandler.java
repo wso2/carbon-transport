@@ -220,18 +220,19 @@ public class SourceHandler extends ChannelInboundHandlerAdapter {
         sourceReqCmsg.setProperty(Constants.HTTP_VERSION, httpRequest.getProtocolVersion().text());
         sourceReqCmsg.setProperty(Constants.HTTP_METHOD, httpRequest.getMethod().name());
 
-        InetSocketAddress localAddress = (InetSocketAddress) ctx.channel().localAddress();
-        sourceReqCmsg.setProperty(org.wso2.carbon.messaging.Constants.LISTENER_PORT, localAddress.getPort());
+        InetSocketAddress localAddress = (ctx != null ? (InetSocketAddress) ctx.channel().localAddress() : null);
+        sourceReqCmsg.setProperty(org.wso2.carbon.messaging.Constants.LISTENER_PORT, localAddress != null ? localAddress
+                .getPort() : null);
         sourceReqCmsg.setProperty(org.wso2.carbon.messaging.Constants.LISTENER_INTERFACE_ID, interfaceId);
         sourceReqCmsg.setProperty(org.wso2.carbon.messaging.Constants.PROTOCOL, Constants.HTTP_SCHEME);
 
         boolean isSecuredConnection = false;
-        if (ctx.channel().pipeline().get(Constants.SSL_HANDLER) != null) {
+        if (ctx != null && ctx.channel().pipeline().get(Constants.SSL_HANDLER) != null) {
             isSecuredConnection = true;
         }
         sourceReqCmsg.setProperty(Constants.IS_SECURED_CONNECTION, isSecuredConnection);
 
-        sourceReqCmsg.setProperty(Constants.LOCAL_ADDRESS, ctx.channel().localAddress());
+        sourceReqCmsg.setProperty(Constants.LOCAL_ADDRESS, ctx != null ? ctx.channel().localAddress() : null);
         sourceReqCmsg.setProperty(Constants.REQUEST_URL, httpRequest.getUri());
         sourceReqCmsg.setProperty(Constants.TO, httpRequest.getUri());
         //Added protocol name as a string
@@ -266,7 +267,6 @@ public class SourceHandler extends ChannelInboundHandlerAdapter {
         requestDecoder = postRequestDecoder.offer(httpContent);
         readChunkByChunk();
         if (httpContent instanceof LastHttpContent) {
-            // readChunkByChunk(); might not need this
             try {
                 sourceReqCmsg.addMultipartMessageBody(getMultipartBodyInByteBuff());
             } catch (IOException e) {
@@ -303,13 +303,17 @@ public class SourceHandler extends ChannelInboundHandlerAdapter {
      * @param data InterfaceHttpData
      */
     private void processChunk(InterfaceHttpData data) {
-        log.debug("Multipart HTTP Data Name: {}, Type: {}", data.getName(), data.getHttpDataType());
+        if (log.isDebugEnabled()) {
+            log.debug("Multipart HTTP Data Name: {}, Type: {}", data.getName(), data.getHttpDataType());
+        }
         HttpBodyPart bodyPart = null;
         switch (data.getHttpDataType()) {
             case Attribute:
                 Attribute attribute = (Attribute) data;
                 try {
-                    log.debug("Attribute content size: {}", attribute.getByteBuf().readableBytes());
+                    if (log.isDebugEnabled()) {
+                        log.debug("Attribute content size: {}", attribute.getByteBuf().readableBytes());
+                    }
                     bodyPart = new HttpBodyPart(attribute.getName(), attribute.get(), null,
                             attribute.getByteBuf().readableBytes());
                 } catch (IOException e) {
@@ -319,9 +323,11 @@ public class SourceHandler extends ChannelInboundHandlerAdapter {
             case FileUpload:
                 FileUpload fileUpload = (FileUpload) data;
                 try {
-                    log.debug("Fileupload size: {}", fileUpload.getByteBuf().readableBytes());
-                    bodyPart = new HttpBodyPart(fileUpload.getName(), fileUpload.getFilename(),
-                            fileUpload.get(), fileUpload.getContentType(), fileUpload.getByteBuf().readableBytes());
+                    if (log.isDebugEnabled()) {
+                        log.debug("Fileupload size: {}", fileUpload.getByteBuf().readableBytes());
+                    }
+                    bodyPart = new HttpBodyPart(fileUpload.getName(), fileUpload.getFilename(), fileUpload.get(),
+                            fileUpload.getContentType(), fileUpload.getByteBuf().readableBytes());
                 } catch (IOException e) {
                     log.error("Unable to read fileupload content", e);
                 }
@@ -355,7 +361,6 @@ public class SourceHandler extends ChannelInboundHandlerAdapter {
      */
     private void resetPostRequestDecoder() {
         requestDecoder.destroy();
-        postRequestDecoder.destroy();
         postRequestDecoder = null;
         multiparts = Collections.EMPTY_LIST;
     }
