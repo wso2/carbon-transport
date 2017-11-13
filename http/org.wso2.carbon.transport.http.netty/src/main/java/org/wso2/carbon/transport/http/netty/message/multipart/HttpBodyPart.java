@@ -26,7 +26,6 @@ public class HttpBodyPart implements Serializable {
         this.partName = partName;
         this.fileName = fileName;
         this.content = Arrays.copyOf(content, content.length);
-        ;
         this.contentType = contentType;
         this.size = size;
     }

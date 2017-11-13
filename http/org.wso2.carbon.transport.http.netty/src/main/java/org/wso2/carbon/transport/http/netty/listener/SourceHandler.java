@@ -314,7 +314,7 @@ public class SourceHandler extends ChannelInboundHandlerAdapter {
                     if (log.isDebugEnabled()) {
                         log.debug("Attribute content size: {}", attribute.getByteBuf().readableBytes());
                     }
-                    bodyPart = new HttpBodyPart(attribute.getName(), attribute.get(), null,
+                    bodyPart = new HttpBodyPart(attribute.getName(), attribute.get(), Constants.TEXT_PLAIN,
                             attribute.getByteBuf().readableBytes());
                 } catch (IOException e) {
                     log.error("Unable to read attribute content", e);

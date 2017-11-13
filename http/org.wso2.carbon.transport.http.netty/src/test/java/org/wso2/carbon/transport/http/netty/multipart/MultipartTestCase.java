@@ -53,6 +53,9 @@ import java.util.List;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
+/**
+ * Test case for multipart handling.
+ */
 public class MultipartTestCase {
 
     private final HttpDataFactory dataFactory = new DefaultHttpDataFactory(DefaultHttpDataFactory.MINSIZE);
@@ -116,7 +119,7 @@ public class MultipartTestCase {
      *
      * @param request HttpRequest
      * @param factory HttpDataFactory
-     * @return
+     * @return InterfaceHttpData
      * @throws IOException
      */
     private InterfaceHttpData createJSONAttribute(HttpRequest request, HttpDataFactory factory) throws IOException {
@@ -131,7 +134,7 @@ public class MultipartTestCase {
      *
      * @param request HttpRequest
      * @param factory HttpDataFactory
-     * @return
+     * @return InterfaceHttpData
      * @throws IOException
      */
     private InterfaceHttpData createFileUpload(HttpRequest request, HttpDataFactory factory) throws IOException {
