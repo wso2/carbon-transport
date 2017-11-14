@@ -74,7 +74,6 @@ public class HttpResponseListener implements HttpConnectorListener {
                             sourceContext.write(httpContent);
                         }
                     }));
-
         });
         Util.prepareBuiltMessageForTransfer(httpResponseMessage);
     }

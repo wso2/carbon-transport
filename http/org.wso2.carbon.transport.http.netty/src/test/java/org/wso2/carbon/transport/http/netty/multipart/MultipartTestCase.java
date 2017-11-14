@@ -148,5 +148,4 @@ public class MultipartTestCase {
         fileUpload.setContent(file);
         return fileUpload;
     }
-
 }
