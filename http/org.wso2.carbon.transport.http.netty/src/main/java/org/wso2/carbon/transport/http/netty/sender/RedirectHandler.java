@@ -74,17 +74,17 @@ public class RedirectHandler extends ChannelInboundHandlerAdapter {
     private ChannelHandlerContext originalChannelContext;
     private boolean isIdleHandlerOfTargetChannelRemoved = false;
 
-    public RedirectHandler(SSLEngine sslEngine, boolean httpTraceLogEnabled, int maxRedirectCount
-            , boolean chunkDisabled) {
+    public RedirectHandler(SSLEngine sslEngine, boolean httpTraceLogEnabled, int maxRedirectCount,
+            boolean chunkDisabled) {
         this.sslEngine = sslEngine;
         this.httpTraceLogEnabled = httpTraceLogEnabled;
         this.maxRedirectCount = maxRedirectCount;
         this.chunkDisabled = chunkDisabled;
     }
 
-    public RedirectHandler(SSLEngine sslEngine, boolean httpTraceLogEnabled, int maxRedirectCount
-            , boolean chunkDisabled, ChannelHandlerContext originalChannelContext
-            , boolean isIdleHandlerOfTargetChannelRemoved) {
+    public RedirectHandler(SSLEngine sslEngine, boolean httpTraceLogEnabled, int maxRedirectCount,
+            boolean chunkDisabled, ChannelHandlerContext originalChannelContext,
+            boolean isIdleHandlerOfTargetChannelRemoved) {
         this.sslEngine = sslEngine;
         this.httpTraceLogEnabled = httpTraceLogEnabled;
         this.maxRedirectCount = maxRedirectCount;
@@ -126,7 +126,7 @@ public class RedirectHandler extends ChannelInboundHandlerAdapter {
     }
 
     /**
-     * When an exception occurs, notify the listener.
+     * When an exception occurs in channel pipeline, log error and notify the listener.
      *
      * @param ctx   Channel context
      * @param cause Exception occurred
@@ -135,6 +135,16 @@ public class RedirectHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         LOG.error("Exception occurred in RedirectHandler.", cause);
+        handleException(ctx, cause);
+    }
+
+    /**
+     * Notify listener about the exception and close the channel.
+     *
+     * @param ctx   Channel context
+     * @param cause Exception occurred
+     */
+    private void handleException(ChannelHandlerContext ctx, Throwable cause) {
         if (ctx != null && ctx.channel().isActive()) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug(" And Channel ID is : " + ctx.channel().id());
@@ -251,10 +261,10 @@ public class RedirectHandler extends ChannelInboundHandlerAdapter {
         } catch (UnsupportedEncodingException exception) {
             LOG.error("UnsupportedEncodingException occurred when deciding whether a redirection is required",
                     exception);
-            exceptionCaught(ctx, exception.getCause());
+            handleException(ctx, exception.getCause());
         } catch (MalformedURLException exception) {
             LOG.error("MalformedURLException occurred when deciding whether a redirection is required", exception);
-            exceptionCaught(ctx, exception.getCause());
+            handleException(ctx, exception.getCause());
         }
     }
 
@@ -282,10 +292,10 @@ public class RedirectHandler extends ChannelInboundHandlerAdapter {
                 }
             } catch (MalformedURLException exception) {
                 LOG.error("Error occurred when parsing redirect url", exception);
-                exceptionCaught(ctx, exception.getCause());
+                handleException(ctx, exception.getCause());
             } catch (Exception exception) {
                 LOG.error("Error occurred during redirection", exception);
-                exceptionCaught(ctx, exception.getCause());
+                handleException(ctx, exception.getCause());
             }
         } else {
             if (LOG.isDebugEnabled()) {
@@ -354,7 +364,7 @@ public class RedirectHandler extends ChannelInboundHandlerAdapter {
                     "Error occurred while returning target channel " + targetChannel.getChannel().id() + " from current"
                             + " channel" + ctx.channel().id() + " " + "to its pool in " + "markEndOfMessage",
                     exception);
-            exceptionCaught(ctx, exception.getCause());
+            handleException(ctx, exception.getCause());
         }
     }
 
@@ -435,30 +445,30 @@ public class RedirectHandler extends ChannelInboundHandlerAdapter {
                 originalRequest != null ? (String) originalRequest.getProperty(Constants.HTTP_METHOD) : null;
 
         switch (statusCode) {
-        case 300:
-        case 307:
-        case 308:
-        case 305:
-            if (Constants.HTTP_GET_METHOD.equals(originalRequestMethod) || Constants.HTTP_HEAD_METHOD
-                    .equals(originalRequestMethod)) {
-                redirectState.put(Constants.HTTP_METHOD, originalRequestMethod);
-                redirectState.put(Constants.LOCATION, getLocationURI(location, originalRequest));
-            }
-            break;
-        case 301:
-        case 302:
-            if (Constants.HTTP_GET_METHOD.equals(originalRequestMethod) || Constants.HTTP_HEAD_METHOD
-                    .equals(originalRequestMethod)) {
+            case 300:
+            case 307:
+            case 308:
+            case 305:
+                if (Constants.HTTP_GET_METHOD.equals(originalRequestMethod) || Constants.HTTP_HEAD_METHOD
+                        .equals(originalRequestMethod)) {
+                    redirectState.put(Constants.HTTP_METHOD, originalRequestMethod);
+                    redirectState.put(Constants.LOCATION, getLocationURI(location, originalRequest));
+                }
+                break;
+            case 301:
+            case 302:
+                if (Constants.HTTP_GET_METHOD.equals(originalRequestMethod) || Constants.HTTP_HEAD_METHOD
+                        .equals(originalRequestMethod)) {
+                    redirectState.put(Constants.HTTP_METHOD, Constants.HTTP_GET_METHOD);
+                    redirectState.put(Constants.LOCATION, getLocationURI(location, originalRequest));
+                }
+                break;
+            case 303:
                 redirectState.put(Constants.HTTP_METHOD, Constants.HTTP_GET_METHOD);
                 redirectState.put(Constants.LOCATION, getLocationURI(location, originalRequest));
-            }
-            break;
-        case 303:
-            redirectState.put(Constants.HTTP_METHOD, Constants.HTTP_GET_METHOD);
-            redirectState.put(Constants.LOCATION, getLocationURI(location, originalRequest));
-            break;
-        default:
-            return null;
+                break;
+            default:
+                return null;
         }
         return redirectState;
     }
@@ -666,8 +676,8 @@ public class RedirectHandler extends ChannelInboundHandlerAdapter {
                 new InetSocketAddress(redirectUrl.getHost(), redirectUrl.getPort() != -1 ?
                         redirectUrl.getPort() :
                         getDefaultPort(redirectUrl.getProtocol()))).handler(
-                new RedirectChannelInitializer(sslEngine, httpTraceLogEnabled, maxRedirectCount, chunkDisabled
-                        , originalChannelContext, isIdleHandlerOfTargetChannelRemoved));
+                new RedirectChannelInitializer(sslEngine, httpTraceLogEnabled, maxRedirectCount, chunkDisabled,
+                        originalChannelContext, isIdleHandlerOfTargetChannelRemoved));
         clientBootstrap.option(ChannelOption.SO_KEEPALIVE, true).option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 15000);
         ChannelFuture channelFuture = clientBootstrap.connect();
         registerListener(channelHandlerContext, channelFuture, httpCarbonRequest, httpRequest);
@@ -714,7 +724,7 @@ public class RedirectHandler extends ChannelInboundHandlerAdapter {
                     }
                 } else {
                     LOG.error("Error occurred while trying to connect to redirect channel.", future.cause());
-                    exceptionCaught(channelHandlerContext, future.cause());
+                    handleException(channelHandlerContext, future.cause());
                 }
             }
         });

@@ -268,6 +268,7 @@ public final class Constants {
     public static final String IDLE_STATE_HANDLER = "idleStateHandler";
     public static final String HTTP_TRACE_LOG_HANDLER = "http-trace-logger";
     public static final String WEBSOCKET_SERVER_HANDSHAKE_HANDLER = "websocket-server-handshake-handler";
+    public static final String MULTIPART_HANDLER = "MultipartHandler";
 
     public static final AttributeKey<Integer> REDIRECT_COUNT = AttributeKey.<Integer>valueOf
             ("REDIRECT_COUNT");

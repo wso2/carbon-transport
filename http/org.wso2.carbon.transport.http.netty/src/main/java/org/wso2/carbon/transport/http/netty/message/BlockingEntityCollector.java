@@ -89,6 +89,12 @@ public class BlockingEntityCollector implements EntityCollector {
         httpContentQueue.add(new DefaultHttpContent(Unpooled.copiedBuffer(msgBody)));
     }
 
+    @Override
+    public void addMessageBody(ByteBuf msgBody) {
+        isConsumed.set(false);
+        httpContentQueue.add(new DefaultHttpContent(Unpooled.copiedBuffer(msgBody)));
+    }
+
     public ByteBuf getMessageBody() {
         HttpContent httpContent = getHttpContent();
         if (httpContent != null) {

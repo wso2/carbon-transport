@@ -139,7 +139,11 @@ public class HTTPCarbonMessage {
         blockingEntityCollector.addMessageBody(msgBody);
     }
 
-    private void markMessageEnd() {
+    public void addMultipartMessageBody(ByteBuf msgBody) {
+        blockingEntityCollector.addMessageBody(msgBody);
+    }
+
+    public void markMessageEnd() {
         blockingEntityCollector.markMessageEnd();
     }
 
