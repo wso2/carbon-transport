@@ -15,6 +15,7 @@
 
 package org.wso2.carbon.transport.http.netty.sender;
 
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.http.HttpRequestEncoder;
@@ -25,6 +26,7 @@ import io.netty.handler.stream.ChunkedWriteHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wso2.carbon.transport.http.netty.common.Constants;
+import org.wso2.carbon.transport.http.netty.config.SenderConfiguration;
 import org.wso2.carbon.transport.http.netty.listener.CustomHttpContentCompressor;
 import org.wso2.carbon.transport.http.netty.listener.HTTPTraceLoggingHandler;
 
@@ -43,14 +45,24 @@ public class HTTPClientInitializer extends ChannelInitializer<SocketChannel> {
     private boolean followRedirect;
     private int maxRedirectCount;
     private boolean chunkDisabled;
+    private boolean isKeepAlive;
 
-    public HTTPClientInitializer(SSLEngine sslEngine, boolean httpTraceLogEnabled, boolean chunkDisabled
-            , boolean followRedirect, int maxRedirectCount) {
+//    public HTTPClientInitializer(SSLEngine sslEngine, boolean httpTraceLogEnabled, boolean chunkDisabled
+//            , boolean followRedirect, int maxRedirectCount) {
+//        this.sslEngine = sslEngine;
+//        this.httpTraceLogEnabled = httpTraceLogEnabled;
+//        this.followRedirect = followRedirect;
+//        this.maxRedirectCount = maxRedirectCount;
+//        this.chunkDisabled = chunkDisabled;
+//    }
+
+    public HTTPClientInitializer(SenderConfiguration senderConfiguration, SSLEngine sslEngine) {
         this.sslEngine = sslEngine;
-        this.httpTraceLogEnabled = httpTraceLogEnabled;
-        this.followRedirect = followRedirect;
-        this.maxRedirectCount = maxRedirectCount;
-        this.chunkDisabled = chunkDisabled;
+        this.httpTraceLogEnabled = senderConfiguration.isHttpTraceLogEnabled();
+        this.followRedirect = senderConfiguration.isFollowRedirect();
+        this.maxRedirectCount = senderConfiguration.getMaxRedirectCount(Constants.MAX_REDIRECT_COUNT);
+        this.chunkDisabled = senderConfiguration.isChunkDisabled();
+        this.isKeepAlive = senderConfiguration.isKeepAlive();
     }
 
     @Override
@@ -78,10 +90,15 @@ public class HTTPClientInitializer extends ChannelInitializer<SocketChannel> {
             ch.pipeline().addLast(Constants.REDIRECT_HANDLER, redirectHandler);
         }
         handler = new TargetHandler();
+        handler.setKeepAlive(isKeepAlive);
         ch.pipeline().addLast(Constants.TARGET_HANDLER, handler);
     }
 
     public TargetHandler getTargetHandler() {
         return handler;
+    }
+
+    public boolean isKeepAlive() {
+        return isKeepAlive;
     }
 }
