@@ -14,10 +14,6 @@
  */
 package org.wso2.carbon.transport.http.netty.sender;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.HttpContent;
@@ -25,7 +21,6 @@ import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
-import io.netty.util.NetUtil;
 import io.netty.util.ReferenceCountUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -98,8 +93,9 @@ public class TargetHandler extends ChannelInboundHandlerAdapter {
 
                         targetChannel.getChannel().pipeline().remove(Constants.IDLE_STATE_HANDLER);
                         connectionManager.returnChannel(targetChannel);
+
                         if (!isKeepAlive) {
-                            closeAndCleanupChannel(ctx);
+                            closeChannel(ctx);
                         }
                     }
                 }
@@ -109,8 +105,9 @@ public class TargetHandler extends ChannelInboundHandlerAdapter {
                 LOG.warn("Received a response for an obsolete request");
             }
             ReferenceCountUtil.release(msg);
+
             if (!isKeepAlive) {
-                closeAndCleanupChannel(ctx);
+                closeChannel(ctx);
             }
         }
     }
@@ -141,7 +138,14 @@ public class TargetHandler extends ChannelInboundHandlerAdapter {
         if (LOG.isDebugEnabled()) {
             LOG.debug("Channel " + ctx.channel().id() + " gets inactive so closing it from Target handler.");
         }
-        closeAndCleanupChannel(ctx);
+
+        closeChannel(ctx);
+        connectionManager.invalidateTargetChannel(targetChannel);
+
+        if (handlerExecutor != null) {
+            handlerExecutor.executeAtTargetConnectionTermination(Integer.toString(ctx.hashCode()));
+            handlerExecutor = null;
+        }
     }
 
     public void setHttpResponseFuture(HttpResponseFuture httpResponseFuture) {
@@ -196,13 +200,9 @@ public class TargetHandler extends ChannelInboundHandlerAdapter {
         }
     }
 
-    private void closeAndCleanupChannel(ChannelHandlerContext ctx) throws Exception {
-        ctx.close();
-        connectionManager.invalidateTargetChannel(targetChannel);
-
-        if (handlerExecutor != null) {
-            handlerExecutor.executeAtTargetConnectionTermination(Integer.toString(ctx.hashCode()));
-            handlerExecutor = null;
+    private void closeChannel(ChannelHandlerContext ctx) throws Exception {
+        if (ctx.channel().isActive()) {
+            ctx.close();
         }
     }
 }

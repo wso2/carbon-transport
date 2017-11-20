@@ -15,7 +15,6 @@
 
 package org.wso2.carbon.transport.http.netty.sender;
 
-import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.http.HttpRequestEncoder;
