@@ -21,6 +21,7 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.http.HttpRequestEncoder;
 import io.netty.handler.codec.http.HttpResponseDecoder;
 import io.netty.handler.logging.LogLevel;
+import io.netty.handler.proxy.HttpProxyHandler;
 import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.stream.ChunkedWriteHandler;
 import org.slf4j.Logger;
@@ -46,6 +47,7 @@ public class HTTPClientInitializer extends ChannelInitializer<SocketChannel> {
     private int maxRedirectCount;
     private boolean chunkDisabled;
     private boolean isKeepAlive;
+    private ProxyServerConfiguration proxyServerConfiguration;
 
 //    public HTTPClientInitializer(SSLEngine sslEngine, boolean httpTraceLogEnabled, boolean chunkDisabled
 //            , boolean followRedirect, int maxRedirectCount) {
@@ -69,6 +71,18 @@ public class HTTPClientInitializer extends ChannelInitializer<SocketChannel> {
     protected void initChannel(SocketChannel ch) throws Exception {
         // Add the generic handlers to the pipeline
         // e.g. SSL handler
+        if (proxyServerConfiguration != null) {
+            if (proxyServerConfiguration.getProxyUsername() != null
+                    && proxyServerConfiguration.getProxyPassword() != null) {
+                ch.pipeline().addLast("proxyServer",
+                        new HttpProxyHandler(proxyServerConfiguration.getInetSocketAddress(),
+                                proxyServerConfiguration.getProxyUsername(),
+                                proxyServerConfiguration.getProxyPassword()));
+            } else {
+                ch.pipeline()
+                        .addLast("proxyServer", new HttpProxyHandler(proxyServerConfiguration.getInetSocketAddress()));
+            }
+        }
         if (sslEngine != null) {
             log.debug("adding ssl handler");
             ch.pipeline().addLast("ssl", new SslHandler(this.sslEngine));

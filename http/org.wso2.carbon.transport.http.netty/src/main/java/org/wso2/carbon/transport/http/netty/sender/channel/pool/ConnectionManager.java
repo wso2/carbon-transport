@@ -22,6 +22,7 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import org.apache.commons.pool.impl.GenericObjectPool;
 import org.wso2.carbon.transport.http.netty.common.Constants;
 import org.wso2.carbon.transport.http.netty.common.HttpRoute;
+import org.wso2.carbon.transport.http.netty.common.ProxyServerConfiguration;
 import org.wso2.carbon.transport.http.netty.common.Util;
 import org.wso2.carbon.transport.http.netty.config.SenderConfiguration;
 import org.wso2.carbon.transport.http.netty.listener.SourceHandler;

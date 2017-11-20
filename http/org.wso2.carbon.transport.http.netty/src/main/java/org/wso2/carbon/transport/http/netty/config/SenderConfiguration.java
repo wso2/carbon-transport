@@ -18,6 +18,7 @@
  */
 package org.wso2.carbon.transport.http.netty.config;
 
+import org.wso2.carbon.transport.http.netty.common.ProxyServerConfiguration;
 import org.wso2.carbon.transport.http.netty.common.Util;
 import org.wso2.carbon.transport.http.netty.common.ssl.SSLConfig;
 import java.util.List;
@@ -90,6 +91,10 @@ public class SenderConfiguration {
     @XmlAttribute
     private boolean isKeepAlive = true;
 
+    private String tlsStoreType;
+
+    private ProxyServerConfiguration proxyServerConfiguration;
+
     public SenderConfiguration() {
     }
 
@@ -108,6 +113,14 @@ public class SenderConfiguration {
 
     public String getCertPass() {
         return certPass;
+    }
+
+    public String getTlsStoreType() {
+        return tlsStoreType;
+    }
+
+    public void setTlsStoreType(String storeType) {
+        this.tlsStoreType = storeType;
     }
 
     public void setCertPass(String certPass) {
@@ -175,7 +188,7 @@ public class SenderConfiguration {
             return null;
         }
         return Util.getSSLConfigForSender(certPass, keyStorePassword, keyStoreFile, trustStoreFile, trustStorePass,
-                parameters, sslProtocol);
+                parameters, sslProtocol, tlsStoreType);
     }
 
     public int getSocketIdleTimeout(int defaultValue) {
@@ -230,5 +243,13 @@ public class SenderConfiguration {
 
     public void setKeepAlive(boolean keepAlive) {
         isKeepAlive = keepAlive;
+    }
+
+    public void setProxyServerConfiguration(ProxyServerConfiguration proxyServerConfiguration) {
+        this.proxyServerConfiguration = proxyServerConfiguration;
+    }
+
+    public ProxyServerConfiguration getProxyServerConfiguration() {
+        return proxyServerConfiguration;
     }
 }

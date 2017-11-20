@@ -24,6 +24,7 @@ import org.apache.commons.pool.PoolableObjectFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wso2.carbon.transport.http.netty.common.HttpRoute;
+import org.wso2.carbon.transport.http.netty.common.ProxyServerConfiguration;
 import org.wso2.carbon.transport.http.netty.common.ssl.SSLConfig;
 import org.wso2.carbon.transport.http.netty.common.ssl.SSLHandlerFactory;
 import org.wso2.carbon.transport.http.netty.config.SenderConfiguration;
@@ -53,6 +54,7 @@ public class PoolableTargetChannelFactory implements PoolableObjectFactory {
         this.httpRoute = httpRoute;
         this.senderConfiguration = senderConfiguration;
     }
+
 
     @Override
     public Object makeObject() throws Exception {

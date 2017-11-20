@@ -27,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wso2.carbon.transport.http.netty.common.Constants;
 import org.wso2.carbon.transport.http.netty.common.HttpRoute;
+import org.wso2.carbon.transport.http.netty.common.ProxyServerConfiguration;
 import org.wso2.carbon.transport.http.netty.common.Util;
 import org.wso2.carbon.transport.http.netty.common.ssl.SSLConfig;
 import org.wso2.carbon.transport.http.netty.config.SenderConfiguration;
@@ -51,6 +52,7 @@ public class HttpClientConnectorImpl implements HttpClientConnector {
     private int socketIdleTimeout;
     private boolean followRedirect;
     private boolean chunkDisabled;
+    private ProxyServerConfiguration proxyServerConfiguration;
 
     public HttpClientConnectorImpl(ConnectionManager connectionManager, SenderConfiguration senderConfiguration) {
         this.connectionManager = connectionManager;
