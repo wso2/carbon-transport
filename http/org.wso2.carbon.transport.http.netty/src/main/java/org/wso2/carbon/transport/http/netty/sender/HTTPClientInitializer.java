@@ -27,6 +27,7 @@ import io.netty.handler.stream.ChunkedWriteHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wso2.carbon.transport.http.netty.common.Constants;
+import org.wso2.carbon.transport.http.netty.common.ProxyServerConfiguration;
 import org.wso2.carbon.transport.http.netty.config.SenderConfiguration;
 import org.wso2.carbon.transport.http.netty.listener.CustomHttpContentCompressor;
 import org.wso2.carbon.transport.http.netty.listener.HTTPTraceLoggingHandler;
@@ -65,6 +66,7 @@ public class HTTPClientInitializer extends ChannelInitializer<SocketChannel> {
         this.maxRedirectCount = senderConfiguration.getMaxRedirectCount(Constants.MAX_REDIRECT_COUNT);
         this.chunkDisabled = senderConfiguration.isChunkDisabled();
         this.isKeepAlive = senderConfiguration.isKeepAlive();
+        this.proxyServerConfiguration = senderConfiguration.getProxyServerConfiguration();
     }
 
     @Override
