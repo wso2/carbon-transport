@@ -19,6 +19,7 @@
 package org.wso2.carbon.transport.email.server.connector;
 
 import com.sun.mail.imap.IMAPFolder;
+import org.owasp.encoder.Encode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wso2.carbon.transport.email.contract.EmailMessageListener;
@@ -327,7 +328,7 @@ public class EmailConsumer {
 
             if (store.isConnected()) {
                 if (log.isDebugEnabled()) {
-                    log.debug("Connected to the server: " + store);
+                    log.debug(getEncodedString("Connected to the server: " + store));
                 }
 
                 // To keep the single instance of the folder
@@ -626,5 +627,14 @@ public class EmailConsumer {
             throw new EmailConnectorException("Error is encountered while reading the content of a message"
                     + " by the email server connector with service id '" + serviceId + "'" + e.getMessage(), e);
         }
+    }
+
+    private static String getEncodedString(String str) {
+        String cleanedString = str.replace('\n', '_').replace('\r', '_');
+        cleanedString = Encode.forHtml(cleanedString);
+        if (!cleanedString.equals(str)) {
+            cleanedString += " (Encoded)";
+        }
+        return cleanedString;
     }
 }
