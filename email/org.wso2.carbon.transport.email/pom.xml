@@ -43,6 +43,10 @@
             <artifactId>org.wso2.carbon.connector.framework</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.wso2.orbit.org.owasp.encoder</groupId>
+            <artifactId>encoder</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
             <scope>test</scope>
@@ -96,6 +100,7 @@
             org.wso2.carbon.messaging.*;version="${carbon.messaging.package.import.version.range}",
             com.sun.mail.*;version="${com.sun.mail.import.version.range}",
             org.wso2.carbon.connector.framework.*;version="${connector.framework.package.export.version}",
+            org.wso2.orbit.org.owasp.encoder.*;version="0.0.0"
         </import.package>
     </properties>
 </project>
